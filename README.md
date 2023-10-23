@@ -3,7 +3,7 @@
 First of all we created Get route with simple response.
 
 
-Start the application.
+Start the application./
 ```
 yarn install
 
