@@ -1,14 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
 import { TestikService } from './testik.service';
-import {Testik} from "./entities/testik.entity";
+import {Testik} from "./interface/testik.interface";
 
 @Controller('/')
 export class TestikController {
   constructor(private readonly testikService: TestikService) {}
 
   @Get()
-  findAll():Testik {
-    return this.testikService.findAll();
+   async findAll():Promise<Testik> {
+    return await this.testikService.findAll();
   }
 
 
