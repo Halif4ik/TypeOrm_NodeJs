@@ -9,7 +9,16 @@ yarn install
 
 nest start --watch
 ```
+If you would like start this app in Docker make next steps:
+```
+docker build -t health-check-img . 
 
-
+docker run -p 3000:3009 --name healthCheckContainer --rm health-check-img
+ 
+```
+For stops application execute next command(application will be stoped and container will be removed) 
+```
+docker stop healthCheckContainer
+```
 
  
