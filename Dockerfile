@@ -1,15 +1,13 @@
-FROM node
+FROM node:20.6.1
 
-WORKDIR .
+WORKDIR /app
 
-COPY package.json .
-COPY package-lock.json .
+COPY package.json ./
 
 RUN yarn install
 
 COPY . .
 
-ENV PORT 3009
-EXPOSE $PORT
+EXPOSE 3008
 
-CMD ["npm", "run","start:dev"]
+CMD ["yarn", "run","start:dev"]
