@@ -12,13 +12,24 @@ import {User} from "./user/entities/user.entity";
     ConfigModule.forRoot({
       envFilePath: `.env`
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
+    /*TypeOrmModule.forRoot({
+      type: 'mysql',
       host: process.env.POSTGRES_HOST,
       port: +process.env.POSTGRES_DOCKER_PORT,
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_ROOT_PASSWORD,
       database: process.env.POSTGRES_DATABASE,
+      entities: [User],
+      synchronize: true,//only for course
+      autoLoadEntities: true,
+    }), */
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: 'gremlin2',
+      database: 'chat_spa_loc2',
       entities: [User],
       synchronize: true,//only for course
       autoLoadEntities: true,

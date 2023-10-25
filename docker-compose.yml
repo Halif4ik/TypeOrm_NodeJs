@@ -1,23 +1,21 @@
 version: '3.8'
 
 services:
-  postgredb:
-    image: postgres:16.0-alpine3.17
+  mysqldb:
+    image: mysql
     restart: unless-stopped
     env_file: ./.env
     environment:
-      - PGDATA=/var/lib/postgresql/data
-      - POSTGRES_PASSWORD=${POSTGRES_ROOT_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DATABASE}
+      - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
+      - MYSQL_DATABASE=$MYSQLDB_DATABASE
     ports:
-      - ${POSTGRES_PORT}:${POSTGRES_DOCKER_PORT}
+      - ${MYSQLDB_LOCAL_PORT}:${MYSQLDB_DOCKER_PORT}
     volumes:
-      - db:/var/lib/postgresql/data
-  #folder in host comp : folder in server in container
+      - db:/var/lib/mysql
 
   app:
     depends_on:
-      - postgredb
+      - mysqldb
     build: ./
     restart: unless-stopped
     env_file: ./.env
