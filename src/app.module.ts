@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import {ConfigModule} from "@nestjs/config";
 import { UserModule } from './user/user.module';
 import {User} from "./user/entities/user.entity";
+import { AuthModule } from './auth/auth.module';
 @Module({
   controllers: [TestikController],
   providers: [TestikService],
@@ -24,6 +25,7 @@ import {User} from "./user/entities/user.entity";
       autoLoadEntities: true,
     }),
     UserModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

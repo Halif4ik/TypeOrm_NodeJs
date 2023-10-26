@@ -10,11 +10,10 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_ROOT_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DATABASE}
     ports:
-      - ${POSTGRES_PORT}:${POSTGRES_DOCKER_PORT}
+      - ${POSTGRES_LOCAL_PORT}:${POSTGRES_DOCKER_PORT}
     volumes:
-      - db:/var/lib/postgresql/data
+      - ./pgdata:/var/lib/postgresql/data
   #folder in host comp : folder in server in container
-
   app:
     depends_on:
       - postgredb
