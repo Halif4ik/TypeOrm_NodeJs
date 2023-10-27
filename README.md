@@ -21,4 +21,17 @@ For stops application execute next command(application will be stoped and contai
 docker stop healthCheckContainer
 ```
 
- 
+For run application in Docker Compose with database execute next command:
+```
+docker compose up
+```
+For create migration execute next command:
+```
+typeorm migration:create ./src/migrations/init
+```
+Rub the command you can see a new file generated in the "migration" directory named {TIMESTAMP}-init.ts
+```
+typeorm migration:create ./src/migrations/init
+yarn add ts-node --dev
+typeorm migration:generate init -d ./src/typeorm.config.ts
+```
