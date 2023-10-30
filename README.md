@@ -28,10 +28,10 @@ docker compose up
 For create migration execute next command:
 ```
 typeorm migration:create ./src/migrations/init
+typeorm migration:generate Monday -d src/typeorm.config.ts
 ```
 Rub the command you can see a new file generated in the "migration" directory named {TIMESTAMP}-init.ts
 ```
-typeorm migration:create ./src/migrations/init
 yarn add ts-node --dev
 typeorm migration:generate init -d ./src/typeorm.config.ts
 ```
