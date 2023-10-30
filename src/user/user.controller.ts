@@ -1,5 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import {Body, Controller, Get, Param, Post, UsePipes, ValidationPipe} from '@nestjs/common';
 import { UserService } from './user.service';
+import {CreateUserDto} from "./dto/create-user.dto";
+import {User} from "./entities/user.entity";
 
 @Controller('user')
 export class UserController {
@@ -9,17 +11,18 @@ export class UserController {
   findAll() {
     return this.userService.findAll();
   }
-
-  /*@Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  @UsePipes(ValidationPipe)
+  @Post()
+  create(@Body() user: User) {
+    return  this.userService.create(user);
   }
 
-  @Get(':id')
+/*  @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(+id);
-  }
+  }*/
 
+/*
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(+id, updateUserDto);

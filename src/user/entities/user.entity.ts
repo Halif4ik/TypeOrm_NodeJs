@@ -9,7 +9,7 @@ export class User {
     firstName: string;
 
     @Column()
-    lastName: string;
+    email: string;
 
     @Column({ default: true })
     isActive: boolean;
