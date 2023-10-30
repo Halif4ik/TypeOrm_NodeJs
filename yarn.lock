@@ -1517,6 +1517,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/validator@npm:^13.7.10":
+  version: 13.11.5
+  resolution: "@types/validator@npm:13.11.5"
+  checksum: 30b48b4171e0e812e1d5c47dba3a218e1adc30ad024e58e6911d8ed1e381e5db689154c09318c561b8c3b7ca047c1da2b0ac602bf802fd27c9b3773fa2f98099
+  languageName: node
+  linkType: hard
+
 "@types/yargs-parser@npm:*":
   version: 21.0.2
   resolution: "@types/yargs-parser@npm:21.0.2"
@@ -2542,6 +2549,24 @@ __metadata:
   version: 1.2.3
   resolution: "cjs-module-lexer@npm:1.2.3"
   checksum: 5ea3cb867a9bb609b6d476cd86590d105f3cfd6514db38ff71f63992ab40939c2feb68967faa15a6d2b1f90daa6416b79ea2de486e9e2485a6f8b66a21b4fb0a
+  languageName: node
+  linkType: hard
+
+"class-transformer@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "class-transformer@npm:0.5.1"
+  checksum: f191c8b4cc4239990f5efdd790cabdd852c243ed66248e39f6616a349c910c6eed2d9fd1fbf7ee6ea89f69b4f1d0b493b27347fe0cd0ae26b47c3745a805b6d3
+  languageName: node
+  linkType: hard
+
+"class-validator@npm:^0.14.0":
+  version: 0.14.0
+  resolution: "class-validator@npm:0.14.0"
+  dependencies:
+    "@types/validator": ^13.7.10
+    libphonenumber-js: ^1.10.14
+    validator: ^13.7.0
+  checksum: f62e4a0ad24cee68f4b2bc70d32b96de90cb598f96bde362b4dbf4234151af8eb6ae225458312a38fc49fa3959844cf61c60e731a8205e9a570454cff8de2710
   languageName: node
   linkType: hard
 
@@ -4333,6 +4358,8 @@ __metadata:
     "@types/supertest": ^2.0.12
     "@typescript-eslint/eslint-plugin": ^6.0.0
     "@typescript-eslint/parser": ^6.0.0
+    class-transformer: ^0.5.1
+    class-validator: ^0.14.0
     dotenv: ^16.3.1
     eslint: ^8.42.0
     eslint-config-prettier: ^9.0.0
@@ -5207,6 +5234,13 @@ __metadata:
     prelude-ls: ^1.2.1
     type-check: ~0.4.0
   checksum: 12c5021c859bd0f5248561bf139121f0358285ec545ebf48bb3d346820d5c61a4309535c7f387ed7d84361cf821e124ce346c6b7cef8ee09a67c1473b46d0fc4
+  languageName: node
+  linkType: hard
+
+"libphonenumber-js@npm:^1.10.14":
+  version: 1.10.49
+  resolution: "libphonenumber-js@npm:1.10.49"
+  checksum: 596b4ed05fbf8c99f384cda802e6afb111accdaf96f9baf2a3ac32c885602583f3e9cba4c4475c3922e9c4f79c63bcdf7e592666b7e14b258cad26f34f51c2e0
   languageName: node
   linkType: hard
 
@@ -7753,6 +7787,13 @@ __metadata:
     "@types/istanbul-lib-coverage": ^2.0.1
     convert-source-map: ^2.0.0
   checksum: 5d592ab3d186b386065dace8e01c543a922a904b3cfac39667de172455a6b3d0e8e1401574fecb8a12092ad0809b5a8fd15f1cc14d0666139a1bb77cd6ac2cf8
+  languageName: node
+  linkType: hard
+
+"validator@npm:^13.7.0":
+  version: 13.11.0
+  resolution: "validator@npm:13.11.0"
+  checksum: d1e0c27022681420756da25bc03eb08d5f0c66fb008f8ff02ebc95812b77c6be6e03d3bd05cf80ca702e23eeb73dadd66b4b3683173ea2a0bc7cc72820bee131
   languageName: node
   linkType: hard
 
