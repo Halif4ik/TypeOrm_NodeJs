@@ -25,13 +25,18 @@ For run application in Docker Compose with database execute next command:
 ```
 docker compose up
 ```
-For create migration execute next command:
+For migration i added dotenv packedje to  typeorm.config.ts
+For create empty migration for handler contains execute next command:
 ```
 typeorm migration:create ./src/migrations/init
-typeorm migration:generate Monday -d src/typeorm.config.ts
 ```
-Rub the command you can see a new file generated in the "migration" directory named {TIMESTAMP}-init.ts
+Run this command you can see a new file generated in the "migrations" directory named {TIMESTAMP}-monday.ts and
+we can run it, and it will create a new table in our database.
 ```
-yarn add ts-node --dev
-typeorm migration:generate init -d ./src/typeorm.config.ts
+npm run migration:generate -- src/migrations/monday
+
+yarn run migration:run
+
+yarn run migration:revert
+
 ```
