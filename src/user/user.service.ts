@@ -12,7 +12,9 @@ export class UserService {
     constructor(@InjectRepository(User) private usersRepository: Repository<User>) {
     }
 
-    findAll(): Promise<User[]> {
+    findAll(page,revert): Promise<User[]> {
+        console.log('page-', page);
+        console.log('revert-', revert);
         return this.usersRepository.find();
     }
 
@@ -28,22 +30,20 @@ export class UserService {
         return this.usersRepository.findOneBy({id});
     }
 
-    async remove(id: number): Promise<void> {
-        await this.usersRepository.delete(id);
+    async remove(email: string):Promise<User> {
+        const userFromBd: User = await this.usersRepository.findOneBy({email:email});
+        if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        return this.usersRepository.remove(userFromBd);
     }
 
     async update(updateUserDto: UpdateUserDto) {
-        console.log('updateUserDto-', updateUserDto);
         const userFromBd: User = await this.usersRepository.findOneBy({email: updateUserDto.email});
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-// Update the user's properties
+        // Update the user's properties
         userFromBd.firstName = updateUserDto.firstName;
-        if (updateUserDto.email) {
-            userFromBd.email = updateUserDto.email;
-        }
+        //if (updateUserDto.email) userFromBd.email = updateUserDto.email;
 
         const updatedUser: User = await this.usersRepository.save(userFromBd);
-        console.log('updatedUser-', updatedUser);
 
         const result: IResponse = {
             "status_code": 200,

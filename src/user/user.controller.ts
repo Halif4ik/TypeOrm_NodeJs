@@ -1,11 +1,11 @@
 import {
     Body,
-    Controller,
+    Controller, Delete,
     Get,
     HttpException, HttpStatus,
     NotFoundException,
     Param, Patch,
-    Post,
+    Post, Query,
     UsePipes,
     ValidationPipe
 } from '@nestjs/common';
@@ -21,14 +21,15 @@ export class UserController {
     }
 
     @Get()
-    findAll() {
-        return this.userService.findAll();
+    findAll(@Query() query: { page: number, revert: string }): Promise<User[]> {
+        const { page, revert } = query;
+        return this.userService.findAll(page, revert);
     }
 
     //create user
     @UsePipes(ValidationPipe)
     @Post()
-    async create(@Body() user: User):Promise<IResponse> {
+    async create(@Body() user: User): Promise<IResponse> {
         const createdUser: User = await this.userService.create(user);
         const result: IResponse = {
             "status_code": 200,
@@ -42,7 +43,7 @@ export class UserController {
 
     //get user by id
     @Get(':id')
-    async findOne(@Param('id') id: number):Promise<User> {
+    async findOne(@Param('id') id: number): Promise<User> {
         const user: User | null = await this.userService.findOne(id);
         if (!user) {
             throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
@@ -53,13 +54,20 @@ export class UserController {
     }
 
 
-      @Patch()
-      async update( @Body() userData: UpdateUserDto):Promise<IResponse> {
-          return this.userService.update(userData);
-      }
-/*
-      @Delete(':id')
-      remove(@Param('id') id: string) {
-        return this.userService.remove(+id);
-      }*/
+    @Patch()
+    async update(@Body() userData: UpdateUserDto): Promise<IResponse> {
+        return this.userService.update(userData);
+    }
+
+    @Delete()
+    async remove(@Query('email') email: string): Promise<IResponse> {
+        const result: IResponse = {
+            "status_code": 200,
+            "detail": {
+                "user": await this.userService.remove(email)
+            },
+            "result": "working"
+        };
+        return result;
+    }
 }
