@@ -18,7 +18,7 @@ export class User {
     @Column({ default: true })
     isActive: boolean;
 
-    @OneToOne(() => Auth, (auth) => auth.user)
-    auth: Auth;
+   /* @OneToOne(() => Auth)
+    auth: Auth;*/
 
 }

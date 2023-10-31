@@ -28,6 +28,6 @@ export class Auth {
     @Column()
     deleteAt: Date;
 
-    @OneToOne(() => User, (user) => user.auth, { eager: true })
-    user: User;
+    /*@OneToOne(() => User)
+    user: User;*/
 }

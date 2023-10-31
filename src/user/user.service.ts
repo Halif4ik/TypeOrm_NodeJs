@@ -28,7 +28,7 @@ export class UserService {
         });
     }
 
-    async createUser(user: Partial<User>) {
+    async createUser(user: Partial<User>): Promise<User> {
         const hashPassword = await bcrypt.hash(user.password, 5);
         const newUser = this.usersRepository.create({...user, password: hashPassword});
         // Save the new user to the database
