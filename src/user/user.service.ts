@@ -6,16 +6,26 @@ import {Repository} from "typeorm";
 import {IResponse} from "./entities/responce.interface";
 import * as bcrypt from "bcryptjs";
 import {UpdateUserDto} from "./dto/update-user.dto";
+import * as process from "process";
 
 @Injectable()
 export class UserService {
     constructor(@InjectRepository(User) private usersRepository: Repository<User>) {
     }
 
-    findAll(page,revert): Promise<User[]> {
-        console.log('page-', page);
-        console.log('revert-', revert);
-        return this.usersRepository.find();
+    findAll(needPage: string, revert: string): Promise<User[]> {
+        if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = "1";
+        const needPageParse: number = parseInt(needPage);
+        const order = revert === 'true' ? 'ASC' : 'DESC';
+       /* console.log('needPage-', needPage);
+        console.log('order-', order);*/
+        return this.usersRepository.find({
+            take: +process.env.PAGE_PAGINATION,
+            skip: (needPageParse - 1) * (+process.env.PAGE_PAGINATION),
+            order: {
+                id: order
+            }
+        });
     }
 
     async create(user: Partial<User>) {
@@ -30,8 +40,8 @@ export class UserService {
         return this.usersRepository.findOneBy({id});
     }
 
-    async remove(email: string):Promise<User> {
-        const userFromBd: User = await this.usersRepository.findOneBy({email:email});
+    async remove(email: string): Promise<User> {
+        const userFromBd: User = await this.usersRepository.findOneBy({email: email});
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         return this.usersRepository.remove(userFromBd);
     }

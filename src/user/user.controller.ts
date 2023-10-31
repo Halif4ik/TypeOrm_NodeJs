@@ -21,8 +21,8 @@ export class UserController {
     }
 
     @Get()
-    findAll(@Query() query: { page: number, revert: string }): Promise<User[]> {
-        const { page, revert } = query;
+    findAll(@Query() query: { page: string | undefined, revert: string | undefined }): Promise<User[]> {
+        const {page, revert} = query;
         return this.userService.findAll(page, revert);
     }
 
