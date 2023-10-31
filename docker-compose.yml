@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgredb:
+    image: postgres:16.0-alpine3.17
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - PGDATA=/var/lib/postgresql/data
+      - POSTGRES_PASSWORD=${POSTGRES_ROOT_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DATABASE}
+    ports:
+      - ${POSTGRES_LOCAL_PORT}:${POSTGRES_DOCKER_PORT}
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+  #folder in host comp : folder in server in container
+  app:
+    depends_on:
+      - postgredb
+    build: ./
+    restart: unless-stopped
+    env_file: ./.env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - ${NODE_DOCKER_PORT}:${NODE_LOCAL_PORT}
+    stdin_open: true
+    tty: true
+  #specivy what folder in host comp will be create
+volumes:
+  db:
