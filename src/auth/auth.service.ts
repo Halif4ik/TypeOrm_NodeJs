@@ -1,26 +1,31 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {CreateUserDto} from "../user/dto/create-user.dto";
+import {UserService} from "../user/user.service";
+import {JwtService} from "@nestjs/jwt";
+import {User} from "../user/entities/user.entity";
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
-  }
+    private bcrypt: any;
 
-  findAll() {
-    return `This action returns all auth`;
-  }
+    constructor(private userService: UserService, private jwtService: JwtService) {
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
+    login(userDto: CreateUserDto) {
+    }
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
+    async registration(userDto: CreateUserDto) {
+        const candidate:User = await this.userService.getUserByEmail(userDto.email);
+        if (candidate) throw new HttpException("User are present with this E-mail", HttpStatus.BAD_REQUEST);
+        const hashPassword = await this.bcrypt.hash(userDto.password, 5);
+        const user: User = await this.userService.createUser({...userDto, password: hashPassword});
+        return this.generateToken(user);
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
-  }
+    private generateToken(user: User): { token: string } {
+        const payload = {email: user.email, id: user.id, firstName: user.firstName, isActive: user.isActive};
+        return {
+            token: this.jwtService.sign(payload)
+        };
+    }
 }

@@ -30,7 +30,7 @@ export class UserController {
     @UsePipes(ValidationPipe)
     @Post()
     async create(@Body() user: User): Promise<IResponse> {
-        const createdUser: User = await this.userService.create(user);
+        const createdUser: User = await this.userService.createUser(user);
         const result: IResponse = {
             "status_code": 200,
             "detail": {

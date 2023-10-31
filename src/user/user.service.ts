@@ -17,8 +17,8 @@ export class UserService {
         if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = "1";
         const needPageParse: number = parseInt(needPage);
         const order = revert === 'true' ? 'ASC' : 'DESC';
-       /* console.log('needPage-', needPage);
-        console.log('order-', order);*/
+        /* console.log('needPage-', needPage);
+         console.log('order-', order);*/
         return this.usersRepository.find({
             take: +process.env.PAGE_PAGINATION,
             skip: (needPageParse - 1) * (+process.env.PAGE_PAGINATION),
@@ -28,7 +28,7 @@ export class UserService {
         });
     }
 
-    async create(user: Partial<User>) {
+    async createUser(user: Partial<User>) {
         const hashPassword = await bcrypt.hash(user.password, 5);
         const newUser = this.usersRepository.create({...user, password: hashPassword});
         // Save the new user to the database
@@ -47,7 +47,8 @@ export class UserService {
     }
 
     async update(updateUserDto: UpdateUserDto) {
-        const userFromBd: User = await this.usersRepository.findOneBy({email: updateUserDto.email});
+
+        const userFromBd: User | null = await this.getUserByEmail(updateUserDto.email);
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         // Update the user's properties
         userFromBd.firstName = updateUserDto.firstName;
@@ -63,5 +64,9 @@ export class UserService {
             "result": "working"
         };
         return result;
+    }
+
+    async getUserByEmail(email: string): Promise<User | null> {
+        return await this.usersRepository.findOneBy({email});
     }
 }
