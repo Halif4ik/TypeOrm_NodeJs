@@ -1,4 +1,6 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, OneToOne, PrimaryGeneratedColumn} from "typeorm";
+import {User} from "../../user/entities/user.entity";
+
 
 @Entity()
 export class Auth {
@@ -25,4 +27,7 @@ export class Auth {
 
     @Column()
     deleteAt: Date;
+
+    @OneToOne(() => User, (user) => user.auth, { eager: true })
+    user: User;
 }
