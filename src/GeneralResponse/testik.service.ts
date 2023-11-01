@@ -1,11 +1,8 @@
 import {HttpStatus, Injectable} from '@nestjs/common';
-import {Testik} from "./interface/testik.interface";
+import {Testik} from "./interface/generalResponse.interface";
 
 @Injectable()
 export class TestikService {
-    /*create(createTestikDto: CreateTestikDto) {
-      return 'This action adds a new testik';
-    }*/
     async findAll(): Promise<Testik> {
         return {
             "status_code": HttpStatus.OK,

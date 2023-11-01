@@ -1,10 +1,19 @@
-import { IsEmail, IsString, Length } from "class-validator";
+import {IsBoolean, IsEmail, IsOptional, IsString, Length} from "class-validator";
 export class CreateUserDto {
-
     @IsEmail({},{message: 'E-mail, should be string'})
     readonly email:string;
 
-    @IsString({message: 'It should be string'})
-    @Length(4, 10,{ message:'Min lenth 4 max length 10'})
+    @IsString({message: 'Password should be string'})
+    @Length(4, 20,{ message:'Password Min lenth 4 max length 20'})
     readonly password:string;
+
+    @IsString({message: 'FirstName should be string'})
+    @Length(2, 255,{ message:' firstName Min lenth 2 max length 255'})
+    readonly firstName:string;
+
+    @IsBoolean({message: 'isActive should be boolean true/false'})
+    @Length(2, 255,{ message:'isActive true/false'})
+    @IsOptional()
+    readonly isActive?:string;
+
 }
