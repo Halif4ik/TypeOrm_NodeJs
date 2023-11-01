@@ -2,8 +2,6 @@ import {
     Body,
     Controller, Delete,
     Get,
-    HttpException, HttpStatus,
-    NotFoundException,
     Param, Patch,
     Post, Query,
     UsePipes,
@@ -14,6 +12,8 @@ import {CreateUserDto} from "./dto/create-user.dto";
 import {User} from "./entities/user.entity";
 import {IResponse} from "./entities/responce.interface";
 import {UpdateUserDto} from "./dto/update-user.dto";
+import {PaginationsUserDto} from "./dto/pagination-user.dto";
+import {RemoveUserDto} from "./dto/remove-user.dto";
 
 @Controller('user')
 export class UserController {
@@ -21,7 +21,7 @@ export class UserController {
     }
 
     @Get()
-    findAll(@Query() query: { page: string | undefined, revert: string | undefined }): Promise<User[]> {
+    findAll(@Query() query: PaginationsUserDto): Promise<User[]> {
         const {page, revert} = query;
         return this.userService.findAll(page, revert);
     }
@@ -29,30 +29,15 @@ export class UserController {
     //create user
     @UsePipes(ValidationPipe)
     @Post()
-    async create(@Body() user: User): Promise<IResponse> {
-        const createdUser: User = await this.userService.create(user);
-        const result: IResponse = {
-            "status_code": 200,
-            "detail": {
-                "user": createdUser
-            },
-            "result": "working"
-        }
-        return result
+     create(@Body() createUserDto: CreateUserDto):Promise<IResponse> {
+      return this.userService.create(createUserDto);
     }
 
     //get user by id
     @Get(':id')
-    async findOne(@Param('id') id: number): Promise<User> {
-        const user: User | null = await this.userService.findOne(id);
-        if (!user) {
-            throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
-            /*throw new NotFoundException('User does not exist!');*/
-        } else {
-            return user;
-        }
+     findOne(@Param('id') id: number): Promise<IResponse> {
+        return  this.userService.findOne(id);
     }
-
 
     @Patch()
     async update(@Body() userData: UpdateUserDto): Promise<IResponse> {
@@ -60,14 +45,8 @@ export class UserController {
     }
 
     @Delete()
-    async remove(@Query('email') email: string): Promise<IResponse> {
-        const result: IResponse = {
-            "status_code": 200,
-            "detail": {
-                "user": await this.userService.remove(email)
-            },
-            "result": "working"
-        };
-        return result;
+     remove(@Query() emailQuery: RemoveUserDto):Promise<IResponse> {
+        const {email} = emailQuery;
+        return  this.userService.remove(email)
     }
 }
