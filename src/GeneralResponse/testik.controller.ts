@@ -1,6 +1,6 @@
 import {Controller, Get} from '@nestjs/common';
 import {TestikService} from './testik.service';
-import {Testik} from "./interface/testik.interface";
+import {Testik} from "./interface/generalResponse.interface";
 
 @Controller('/')
 export class TestikController {
