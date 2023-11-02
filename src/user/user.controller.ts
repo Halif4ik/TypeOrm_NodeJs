@@ -1,32 +1,52 @@
-import { Controller, Get } from '@nestjs/common';
-import { UserService } from './user.service';
+import {
+    Body,
+    Controller, Delete,
+    Get,
+    Param, Patch,
+    Post, Query,
+    UsePipes,
+    ValidationPipe
+} from '@nestjs/common';
+import {UserService} from './user.service';
+import {CreateUserDto} from "./dto/create-user.dto";
+import {User} from "./entities/user.entity";
+import {IResponse} from "./entities/responce.interface";
+import {UpdateUserDto} from "./dto/update-user.dto";
+import {PaginationsUserDto} from "./dto/pagination-user.dto";
+import {RemoveUserDto} from "./dto/remove-user.dto";
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+    constructor(private readonly userService: UserService) {
+    }
 
-  @Get()
-  findAll() {
-    return this.userService.findAll();
-  }
+    @Get()
+    findAll(@Query() query: PaginationsUserDto): Promise<User[]> {
+        const {page, revert} = query;
+        return this.userService.findAll(page, revert);
+    }
 
-  /*@Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
-  }
+    //create user
+    @UsePipes(ValidationPipe)
+    @Post()
+     create(@Body() createUserDto: CreateUserDto):Promise<IResponse> {
+      return this.userService.create(createUserDto);
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
-  }
+    //get user by id
+    @Get(':id')
+     findOne(@Param('id') id: number): Promise<IResponse> {
+        return  this.userService.findOne(id);
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
+    @Patch()
+    async update(@Body() userData: UpdateUserDto): Promise<IResponse> {
+        return this.userService.update(userData);
+    }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
-  }*/
+    @Delete()
+     remove(@Query() emailQuery: RemoveUserDto):Promise<IResponse> {
+        const {email} = emailQuery;
+        return  this.userService.remove(email)
+    }
 }
