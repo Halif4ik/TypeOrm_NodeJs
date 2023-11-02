@@ -40,3 +40,16 @@ yarn run migration:run
 yarn run migration:revert
 
 ```
+Added CRUD functionality for User handler. Created User api:
+```
+http://localhost:3008/user
+body: {
+    "firstName":"Apple",
+     "email":"Apple@mail.ua",
+      "password":"1234"
+}
+```
+Get all users with pagination:
+```
+http://localhost:3008/user?page=1&revert=false
+```
