@@ -16,7 +16,7 @@ const AppDataSource = new DataSource({
         __dirname + '/**/*.entity{.js,.ts}',
     ],
     migrations: ["src/migrations/*.ts"],
-    /*logging: "all",*/
+    logging: "all",
 })
 
 AppDataSource.initialize()
@@ -28,7 +28,4 @@ AppDataSource.initialize()
     });
 export default AppDataSource;
 /*host: configService.get<string>('POSTGRES_HOST'),
-    port: configService.get<number>('POSTGRES_DOCKER_PORT'),
-    username: configService.get<string>('POSTGRES_USER'),
-    password:  configService.get<string>('POSTGRES_ROOT_PASSWORD'),
     database:  configService.get<string>('POSTGRES_DATABASE'),*/

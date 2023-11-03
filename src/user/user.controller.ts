@@ -29,24 +29,26 @@ export class UserController {
     //create user
     @UsePipes(ValidationPipe)
     @Post()
-     create(@Body() createUserDto: CreateUserDto):Promise<IResponse> {
-      return this.userService.create(createUserDto);
+    create(@Body() createUserDto: CreateUserDto): Promise<IResponse> {
+        return this.userService.createUser(createUserDto);
     }
 
     //get user by id
     @Get(':id')
-     findOne(@Param('id') id: number): Promise<IResponse> {
-        return  this.userService.findOne(id);
+    findOne(@Param('id') id: number): Promise<IResponse> {
+        return this.userService.findOne(id);
     }
 
+    @UsePipes(ValidationPipe)
     @Patch()
     async update(@Body() userData: UpdateUserDto): Promise<IResponse> {
         return this.userService.update(userData);
     }
 
+    @UsePipes(ValidationPipe)
     @Delete()
-     remove(@Query() emailQuery: RemoveUserDto):Promise<IResponse> {
+    remove(@Query() emailQuery: RemoveUserDto): Promise<IResponse> {
         const {email} = emailQuery;
-        return  this.userService.remove(email)
+        return this.userService.remove(email)
     }
 }

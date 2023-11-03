@@ -10,7 +10,7 @@ import {CreateUserDto} from "./dto/create-user.dto";
 
 @Injectable()
 export class UserService {
-    private readonly logger:Logger = new Logger(UserService.name);
+    private readonly logger: Logger = new Logger(UserService.name);
 
     constructor(@InjectRepository(User) private usersRepository: Repository<User>) {
     }
@@ -27,7 +27,7 @@ export class UserService {
         });
     }
 
-    async create(createUserDto: CreateUserDto): Promise<IResponse> {
+    async createUser(createUserDto: CreateUserDto): Promise<IResponse> {
         const userFromBd: User = await this.usersRepository.findOneBy({email: createUserDto.email});
         if (userFromBd) throw new HttpException('User exist in bd', HttpStatus.CONFLICT);
 
@@ -46,6 +46,12 @@ export class UserService {
         }
         this.logger.log(`Created new user- ${createdUser.email}`);
         return result
+    }
+
+    async getUserByEmail(email: string): Promise<User | null> {
+        return await this.usersRepository.findOne({
+            where: {email}
+        });
     }
 
     async findOne(id: number): Promise<IResponse> {
@@ -79,7 +85,7 @@ export class UserService {
         return result;
     }
 
-    async update(updateUserDto: UpdateUserDto):Promise<IResponse> {
+    async update(updateUserDto: UpdateUserDto): Promise<IResponse> {
         const userFromBd: User = await this.usersRepository.findOneBy({email: updateUserDto.email});
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         // Update the user's properties

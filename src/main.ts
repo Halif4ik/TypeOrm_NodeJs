@@ -13,6 +13,9 @@ import { AppModule } from './app.module';
             'https://www.google.com',
             'http://91.214.247.147',
             'http://127.0.0.1:3008',
+            'http://localhost:3000',
+            'https://romanxeo.github.io',
+            'https://romanxeo.github.io/internship-token',
         ],
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         credentials: true, // Enable cookies and authentication headers
