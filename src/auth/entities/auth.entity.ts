@@ -1,4 +1,12 @@
-import {Column, Entity, OneToOne, PrimaryGeneratedColumn} from "typeorm";
+import {
+    Column,
+    CreateDateColumn,
+    DeleteDateColumn,
+    Entity,
+    OneToOne,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn
+} from "typeorm";
 import {User} from "../../user/entities/user.entity";
 
 
@@ -10,24 +18,24 @@ export class Auth {
     @Column()
     userId: number;
 
-    @Column()
+    @Column({ type: "varchar", width: 255 , unique: true})
     action_token: string;
 
-    @Column()
+    @Column({ type: "varchar", width: 255 })
     refreshToken: string;
 
-    @Column()
+    @Column({ type: "varchar", width: 255 })
     accessToken: string;
 
-    @Column()
+    @CreateDateColumn()
     createAt: Date;
 
-    @Column()
+    @UpdateDateColumn()
     upadateAt: Date;
 
-    @Column()
+    @DeleteDateColumn()
     deleteAt: Date;
 
-    /*@OneToOne(() => User)
-    user: User;*/
+    @OneToOne(() => User, user => user.auth)
+    user: User;
 }
