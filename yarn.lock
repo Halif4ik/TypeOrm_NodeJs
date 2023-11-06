@@ -3544,6 +3544,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"express-oauth2-jwt-bearer@npm:^1.6.0":
+  version: 1.6.0
+  resolution: "express-oauth2-jwt-bearer@npm:1.6.0"
+  dependencies:
+    jose: ^4.13.1
+  checksum: 9ad8634d5484a287f7b9a7d29845b44a9902c802fd0e081b2b0ed83cf3f6ce77b5a93274b4a915f3b45a378564be370a0e901cb85a70d38c9ff851127b22961b
+  languageName: node
+  linkType: hard
+
 "express@npm:4.18.2, express@npm:^4.18.2":
   version: 4.18.2
   resolution: "express@npm:4.18.2"
@@ -4411,6 +4420,7 @@ __metadata:
     eslint-config-prettier: ^9.0.0
     eslint-plugin-prettier: ^5.0.0
     express: ^4.18.2
+    express-oauth2-jwt-bearer: ^1.6.0
     jest: ^29.5.0
     mysql2: ^3.6.2
     pg: ^8.11.3
@@ -5144,6 +5154,13 @@ __metadata:
   bin:
     jest: bin/jest.js
   checksum: 17ca8d67504a7dbb1998cf3c3077ec9031ba3eb512da8d71cb91bcabb2b8995c4e4b292b740cb9bf1cbff5ce3e110b3f7c777b0cefb6f41ab05445f248d0ee0b
+  languageName: node
+  linkType: hard
+
+"jose@npm:^4.13.1":
+  version: 4.15.4
+  resolution: "jose@npm:4.15.4"
+  checksum: dccad91cb3357f36423774a0b89ad830dd84b31090de65cd139b85488439f16a00f8c59c0773825e8a1adb0dd9d13ad725ad66e6ea33880ecb3959bb99e1ea5b
   languageName: node
   linkType: hard
 
