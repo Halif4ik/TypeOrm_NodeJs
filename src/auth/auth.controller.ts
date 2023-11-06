@@ -18,16 +18,16 @@ export class AuthController {
         return this.authService.login(loginDto);
     }
 
+    @Get("/me")
+    @UseGuards(Auth0Guard)
+    /*@UseGuards(JwtAuthGuard)*/
+    userInfo(@Headers('Authorization') authToken: string): Promise<User> {
+        return this.authService.getUserInfo(authToken);
+    }
+
     @Post("/registration")
     registration(@Body() userDto: CreateUserDto): Promise<IResponse> {
         return this.authService.registration(userDto);
-    }
-
-    @Get("/me")
-    @UseGuards(JwtAuthGuard)
-    @UseGuards(Auth0Guard)
-    userInfo(@Headers('Authorization') authToken: string): Promise<User> {
-        return this.authService.getUserInfo(authToken);
     }
 
     @Post("/refresh")
