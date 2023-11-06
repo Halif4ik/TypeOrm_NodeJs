@@ -35,7 +35,7 @@ export class UserController {
 
     //get user by id
     @Get(':id')
-    findOne(@Param('id') id: number): Promise<IResponse> {
+    findOne(@Param('id') id: number): Promise<User> {
         return this.userService.findOne(id);
     }
 

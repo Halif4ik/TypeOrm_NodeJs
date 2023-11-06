@@ -54,18 +54,12 @@ export class UserService {
         });
     }
 
-    async findOne(id: number): Promise<IResponse> {
+    async findOne(id: number):Promise<User>{
         const user: User = await this.usersRepository.findOneBy({id});
         if (!user) {
             throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
         } else {
-            const result: IResponse = {
-                "status_code": 200,
-                "detail": {
-                    "user": user,
-                },
-                "result": "working"
-            };
+            const result: User = user;
             return result;
         }
     }
