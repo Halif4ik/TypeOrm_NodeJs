@@ -64,13 +64,12 @@ export class AuthService {
     }*/
 
 
-    getUserInfo(token: any) {
+    getUserInfo(token: any):Promise<User> {
         const user = this.jwtService.decode(token.slice(7));
         return this.userService.getUserByEmail(user['email']);
     }
 
-    async refresh(authToken: string) {
-        /*todo*/
+    async refresh(authToken: string):Promise<Auth> {
         const user = this.jwtService.decode(authToken.slice(7));
         const userFromBd:User = await this.userService.findOne(user['id']);
         console.log('userFromBd-',userFromBd);
