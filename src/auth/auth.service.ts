@@ -119,4 +119,14 @@ export class AuthService {
         }
         return authDataSave;
     }
+
+    async validateUser(email: string, pass: string): Promise<any> {
+        const user = await this.userService.getUserByEmail(email);
+        if (user && await bcrypt.compare(pass, user.password)) {
+            const { password, ...result } = user;
+            return result;
+        }
+        return null;
+    }
+
 }

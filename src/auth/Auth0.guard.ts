@@ -1,9 +1,13 @@
 import {CanActivate, ExecutionContext, Injectable, UnauthorizedException} from "@nestjs/common";
 import { Observable } from "rxjs";
 import { AuthenticationClient } from 'auth0';
+import { verify } from "jsonwebtoken";
+import { passportJwtSecret } from 'jwks-rsa';
+const { auth } = require('express-oauth2-jwt-bearer');
 @Injectable()
 export class Auth0Guard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
+        const issuer= 'https://dev-trabj1pqb1r44ipw.us.auth0.com/';
         const req = context.switchToHttp().getRequest();
         const auth0 = new AuthenticationClient({
             domain: 'dev-trabj1pqb1r44ipw.us.auth0.com',
@@ -19,13 +23,31 @@ export class Auth0Guard implements CanActivate {
                 token = authHeder.split(" ")[1];
             }
             if (bearer !== "Bearer" || !token) throw new UnauthorizedException({ message: "User doesn't authorized with this token" });
-            console.log('options+-+--',token);
-            const { data: user } = await auth0.passwordless
-            console.log('user+-+--',user);
+
+
+             auth({
+                audience: 'https://internship-api/',
+                issuerBaseURL: issuer,
+            });
+            console.log('decodedToken-');
+
+           /* await validateJwt(req, null);*/
             return true;
         } catch (e) {
-            throw new UnauthorizedException({message: "+++User doesn't authorized with this token"});
+            throw new UnauthorizedException({message: "++User doesn't authorized with this token"});
         }
     }
+    private verifyToken(token: string, getKey: (header: any, callback: (err: any, key: string) => void) => void): Promise<any> {
+        return new Promise((resolve, reject) => {
+            verify(token, getKey, (err, decoded) => {
+                if (err) reject(err);
+                resolve(decoded);
+            });
+        });
+    }
+
+
+
+
 
 }
