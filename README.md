@@ -53,3 +53,6 @@ Get all users with pagination:
 ```
 http://localhost:3008/user?page=1&revert=false
 ```
+Application can return users info in http://localhost:3008/auth/me route, with JWT or Auth0 token in header.
+Added two strategies for auth: JWT and Auth0.
+```

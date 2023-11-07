@@ -3,10 +3,8 @@ import {AuthService} from './auth.service';
 import {CreateUserDto} from "../user/dto/create-user.dto";
 import {IResponse} from "../user/entities/responce.interface";
 import {LoginUserDto} from "./dto/login-auth.dto";
-import {JwtAuthGuard} from "./jwt-auth.guard";
 import {User} from "../user/entities/user.entity";
 import {JwtAuthRefreshGuard} from "./jwt-Refresh.guard";
-import {Auth0Guard} from "./Auth0.guard";
 import {Auth} from "./entities/auth.entity";
 import {AuthGuard} from "@nestjs/passport";
 
@@ -20,9 +18,7 @@ export class AuthController {
     }
 
     @Get("/me")
-    @UseGuards(AuthGuard('local'))
-    /*@UseGuards(Auth0Guard)*/
-    /*@UseGuards(JwtAuthGuard)*/
+    @UseGuards(AuthGuard(['auth0','jwt-auth']))
     userInfo(@Headers('Authorization') authToken: string): Promise<User> {
         return this.authService.getUserInfo(authToken);
     }

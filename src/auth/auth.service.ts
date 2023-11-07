@@ -11,7 +11,6 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {LoginUserDto} from "./dto/login-auth.dto";
 
 
-
 @Injectable()
 export class AuthService {
     private readonly logger: Logger = new Logger(UserService.name);
@@ -28,7 +27,6 @@ export class AuthService {
         const passwordCompare = await bcrypt.compare(loginDto.password, userFromBd.password);
         if (!passwordCompare) throw new UnauthorizedException({message: "Incorect password for this E-mail"});
 
-
         /*contain auth table */
         return this.containOrRefreshBdAuth(userFromBd);
     }
@@ -42,45 +40,24 @@ export class AuthService {
         return newUser;
     }
 
-    /*async createUserAuth(createUserDto: CreateUserDto): Promise<IResponse> {
-        const userFromBd: User = await this.usersRepository.findOneBy({email: createUserDto.email});
-        if (userFromBd) throw new HttpException('User exist in bd', HttpStatus.CONFLICT);
 
-        const hashPassword = await bcrypt.hash(createUserDto.password, 5);
-        // @ts-ignore
-        const newUser: User = this.usersRepository.create({...createUserDto, password: hashPassword});
-        // Save the new user to the database
-        const createdUser: User = await this.usersRepository.save(newUser);
-
-        const result: IResponse = {
-            "status_code": HttpStatus.OK,
-            "detail": {
-                "user": createdUser
-            },
-            "result": "working"
-        }
-        this.logger.log(`Created new user- ${createdUser.email}`);
-        return result
-    }*/
-
-
-    getUserInfo(token: any):Promise<User> {
+    getUserInfo(token: string): Promise<User> {
         const user = this.jwtService.decode(token.slice(7));
         return this.userService.getUserByEmail(user['email']);
     }
 
-    async refresh(authToken: string):Promise<Auth> {
+    async refresh(authToken: string): Promise<Auth> {
         const user = this.jwtService.decode(authToken.slice(7));
-        const userFromBd:User = await this.userService.findOne(user['id']);
-        console.log('userFromBd-',userFromBd);
+        const userFromBd: User = await this.userService.findOne(user['id']);
+        console.log('userFromBd-', userFromBd);
         if (!userFromBd) throw new UnauthorizedException({message: "Incorrect Token for refresh"});
 
         this.logger.log(`Refresh token for user- ${userFromBd.email}`);
-        return  this.containOrRefreshBdAuth(userFromBd);
+        return this.containOrRefreshBdAuth(userFromBd);
     }
 
-     private async containOrRefreshBdAuth(userFromBd: User):Promise<Auth> {
-         let authData: Auth | undefined = await this.authRepository.findOne({where: {userId: userFromBd.id}});
+    private async containOrRefreshBdAuth(userFromBd: User): Promise<Auth> {
+        let authData: Auth | undefined = await this.authRepository.findOne({where: {userId: userFromBd.id}});
 
         const action_token: string = this.jwtService.sign({
             email: userFromBd.email,
@@ -120,12 +97,9 @@ export class AuthService {
         return authDataSave;
     }
 
-    async validateUser(email: string, pass: string): Promise<any> {
-        const user = await this.userService.getUserByEmail(email);
-        if (user && await bcrypt.compare(pass, user.password)) {
-            const { password, ...result } = user;
-            return result;
-        }
+    async validateUser(email: string, pass: string): Promise<User> {
+        const user: User = await this.userService.getUserByEmail(email);
+        if (user && await bcrypt.compare(pass, user.password)) return user;
         return null;
     }
 
