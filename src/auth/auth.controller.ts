@@ -8,6 +8,7 @@ import {User} from "../user/entities/user.entity";
 import {JwtAuthRefreshGuard} from "./jwt-Refresh.guard";
 import {Auth0Guard} from "./Auth0.guard";
 import {Auth} from "./entities/auth.entity";
+import {AuthGuard} from "@nestjs/passport";
 
 @Controller('auth')
 export class AuthController {
@@ -19,7 +20,8 @@ export class AuthController {
     }
 
     @Get("/me")
-    @UseGuards(Auth0Guard)
+    @UseGuards(AuthGuard('local'))
+    /*@UseGuards(Auth0Guard)*/
     /*@UseGuards(JwtAuthGuard)*/
     userInfo(@Headers('Authorization') authToken: string): Promise<User> {
         return this.authService.getUserInfo(authToken);
