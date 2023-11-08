@@ -11,7 +11,6 @@ import {CreateUserDto} from "./dto/create-user.dto";
 @Injectable()
 export class UserService {
     private readonly logger: Logger = new Logger(UserService.name);
-
     constructor(@InjectRepository(User) private usersRepository: Repository<User>) {
     }
 
