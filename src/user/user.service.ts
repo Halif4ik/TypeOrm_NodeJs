@@ -15,7 +15,7 @@ export class UserService {
     constructor(@InjectRepository(User) private usersRepository: Repository<User>) {
     }
 
-    findAll(needPage: number, revert: string): Promise<User[]> {
+    async findAll(needPage: number, revert: string): Promise<User[]> {
         if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
         const order = revert === 'true' ? 'ASC' : 'DESC';
         return this.usersRepository.find({
