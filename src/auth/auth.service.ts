@@ -22,13 +22,15 @@ export class AuthService {
     async login(loginDto: LoginUserDto): Promise<Auth> {
         // should rewrite all tokens return one token
         const userFromBd: User = await this.userService.getUserByEmail(loginDto.email);
-        if (!userFromBd) throw new UnauthorizedException({message: "Incorrect E-mail"});
-
-        const passwordCompare = await bcrypt.compare(loginDto.password, userFromBd.password);
-        if (!passwordCompare) throw new UnauthorizedException({message: "Incorect password for this E-mail"});
-
+        await this.checkUser(userFromBd,loginDto);
         /*contain auth table */
         return this.containOrRefreshBdAuth(userFromBd);
+    }
+
+    private async checkUser(userFromBd: User,loginDto:LoginUserDto):Promise<void> {
+        if (!userFromBd) throw new UnauthorizedException({message: "Incorrect credentials"});
+        const passwordCompare = await bcrypt.compare(loginDto.password, userFromBd.password);
+        if (!passwordCompare) throw new UnauthorizedException({message: "Incorrect credentials"});
     }
 
     async registration(userDto: CreateUserDto): Promise<IResponse> {
@@ -49,7 +51,6 @@ export class AuthService {
     async refresh(authToken: string): Promise<Auth> {
         const user = this.jwtService.decode(authToken.slice(7));
         const userFromBd: User = await this.userService.findOne(user['id']);
-        console.log('userFromBd-', userFromBd);
         if (!userFromBd) throw new UnauthorizedException({message: "Incorrect Token for refresh"});
 
         this.logger.log(`Refresh token for user- ${userFromBd.email}`);
@@ -64,19 +65,19 @@ export class AuthService {
             id: userFromBd.id,
             firstName: userFromBd.firstName,
             isActive: userFromBd.isActive
-        }, {expiresIn: '24h', secret: process.env.SECRET_ACTION});
+        }, {expiresIn: process.env.EXPIRE_ACTION, secret: process.env.SECRET_ACTION});
         const refreshToken: string = this.jwtService.sign({
             email: userFromBd.email,
             id: userFromBd.id,
             firstName: userFromBd.firstName,
             isActive: userFromBd.isActive
-        }, {expiresIn: '1h', secret: process.env.SECRET_REFRESH});
+        }, {expiresIn: process.env.EXPIRE_REFRESH, secret: process.env.SECRET_REFRESH});
         const accessToken: string = this.jwtService.sign({
             email: userFromBd.email,
             id: userFromBd.id,
             firstName: userFromBd.firstName,
             isActive: userFromBd.isActive
-        }, {expiresIn: 300, secret: process.env.SECRET_ACCESS});
+        }, {expiresIn: +process.env.EXPIRE_ACCESS, secret: process.env.SECRET_ACCESS});
         let authDataSave: Auth;
         if (authData) {
             authData.refreshToken = refreshToken;
@@ -95,12 +96,6 @@ export class AuthService {
             this.logger.log(`Created tokens for userId- ${authDataSave.userId}`);
         }
         return authDataSave;
-    }
-
-    async validateUser(email: string, pass: string): Promise<User> {
-        const user: User = await this.userService.getUserByEmail(email);
-        if (user && await bcrypt.compare(pass, user.password)) return user;
-        return null;
     }
 
 }

@@ -12,25 +12,26 @@ import {AuthGuard} from "@nestjs/passport";
 export class AuthController {
     constructor(private readonly authService: AuthService) {
     }
+
     @Post('/login')
-    login(@Body() loginDto: LoginUserDto):Promise<Auth> {
+    async login(@Body() loginDto: LoginUserDto): Promise<Auth> {
         return this.authService.login(loginDto);
     }
 
     @Get("/me")
-    @UseGuards(AuthGuard(['auth0','jwt-auth']))
-    userInfo(@Headers('Authorization') authToken: string): Promise<User> {
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    async userInfo(@Headers('Authorization') authToken: string): Promise<User> {
         return this.authService.getUserInfo(authToken);
     }
 
     @Post("/registration")
-    registration(@Body() userDto: CreateUserDto): Promise<IResponse> {
+    async registration(@Body() userDto: CreateUserDto): Promise<IResponse> {
         return this.authService.registration(userDto);
     }
 
     @Post("/refresh")
     @UseGuards(JwtAuthRefreshGuard)
-    refresh(@Headers('Authorization') authToken: string): Promise<Auth> {
+    async refresh(@Headers('Authorization') authToken: string): Promise<Auth> {
         return this.authService.refresh(authToken);
     }
 

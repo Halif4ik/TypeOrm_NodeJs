@@ -21,7 +21,7 @@ export class UserController {
     }
 
     @Get()
-    findAll(@Query() query: PaginationsUserDto): Promise<User[]> {
+    async findAll(@Query() query: PaginationsUserDto): Promise<User[]> {
         const {page, revert} = query;
         return this.userService.findAll(page, revert);
     }
@@ -29,13 +29,13 @@ export class UserController {
     //create user
     @UsePipes(ValidationPipe)
     @Post()
-    create(@Body() createUserDto: CreateUserDto): Promise<IResponse> {
+    async create(@Body() createUserDto: CreateUserDto): Promise<IResponse> {
         return this.userService.createUser(createUserDto);
     }
 
     //get user by id
     @Get(':id')
-    findOne(@Param('id') id: number): Promise<User> {
+    async findOne(@Param('id') id: number): Promise<User> {
         return this.userService.findOne(id);
     }
 
@@ -47,7 +47,7 @@ export class UserController {
 
     @UsePipes(ValidationPipe)
     @Delete()
-    remove(@Query() emailQuery: RemoveUserDto): Promise<IResponse> {
+    async remove(@Query() emailQuery: RemoveUserDto): Promise<IResponse> {
         const {email} = emailQuery;
         return this.userService.remove(email)
     }
