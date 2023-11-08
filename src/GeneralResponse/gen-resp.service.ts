@@ -1,9 +1,9 @@
 import {HttpStatus, Injectable} from '@nestjs/common';
-import {Testik} from "./interface/generalResponse.interface";
+import {GeneralResponse} from "./interface/generalResponse.interface";
 
 @Injectable()
-export class TestikService {
-    async findAll(): Promise<Testik> {
+export class GenRespService {
+    async findAll(): Promise<GeneralResponse> {
         return {
             "status_code": HttpStatus.OK,
             "detail": "ok",

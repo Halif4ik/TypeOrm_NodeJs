@@ -1,13 +1,11 @@
 import {ExtractJwt, Strategy} from "passport-jwt";
 import {PassportStrategy} from "@nestjs/passport";
 import {Injectable, UnauthorizedException} from "@nestjs/common";
-import {ConfigService} from "@nestjs/config";
 import {passportJwtSecret} from "jwks-rsa";
-
 import {User} from "../user/entities/user.entity";
 import {UserService} from "../user/user.service";
 import * as process from "process";
-import {IResponse} from "../user/entities/responce.interface";
+import {IResponseUser} from "../user/entities/responce.interface";
 
 @Injectable()
 export class Auth0Strategy extends PassportStrategy(Strategy, "auth0") {
@@ -34,7 +32,7 @@ export class Auth0Strategy extends PassportStrategy(Strategy, "auth0") {
         const userFromBd: User | null = email ? await this.userService.getUserByEmail(email) : null;
         /*create user in bd*/
         if (!userFromBd) {
-            const createdUser:IResponse = await this.userService.createUser({
+            const createdUser:IResponseUser = await this.userService.createUser({
                 email: email,
                 password: email + firstName,
                 firstName
