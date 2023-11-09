@@ -7,6 +7,7 @@ import * as bcrypt from "bcryptjs";
 import {UpdateUserDto} from "./dto/update-user.dto";
 import * as process from "process";
 import {CreateUserDto} from "./dto/create-user.dto";
+import passport from "passport";
 
 @Injectable()
 export class UserService {
@@ -15,29 +16,30 @@ export class UserService {
     constructor(@InjectRepository(User) private usersRepository: Repository<User>) {
     }
 
-    async findAll(needPage: number, revert: string): Promise<User[]> {
+    async findAll(needPage: number, revert: string) {
         if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
         const order = revert === 'true' ? 'ASC' : 'DESC';
 
-        const queryBuilder: SelectQueryBuilder<User> = this.usersRepository.createQueryBuilder('user');
-
-        queryBuilder
-            .leftJoinAndSelect("user.auth", "auth")
-            .where("user.id = :name", {name: "Timber"})
-            .orderBy('user.id', order)
-            .skip((+needPage - 1) * (+process.env.PAGE_PAGINATION))
-            .take(+process.env.PAGE_PAGINATION);
-
-        return queryBuilder.getMany();
+        return this.usersRepository.find({
+            take: +process.env.PAGE_PAGINATION,
+            skip: (+needPage - 1) * (+process.env.PAGE_PAGINATION),
+            order: {
+                id: order,
+            },
+            relations: [
+                "auth", // Include the Auth relation
+            ],
+        });
     }
+
 
     async createUser(createUserDto: CreateUserDto): Promise<IResponseUser> {
         const userFromBd: User = await this.usersRepository.findOneBy({email: createUserDto.email});
         if (userFromBd) throw new HttpException('User exist in bd', HttpStatus.CONFLICT);
+        const hashPassword: string = await bcrypt.hash(createUserDto.password, 5);
 
-        const hashPassword : string = await bcrypt.hash(createUserDto.password, 5);
-        const temp = {...createUserDto, password: hashPassword} as User;
-        const newUser: User = this.usersRepository.create(temp);
+        const newUser: User = this.usersRepository.create({...createUserDto, password: hashPassword});
+        console.log('newUser-', newUser);
         // Save the new user to the database
         const createdUser: User = await this.usersRepository.save(newUser);
 
@@ -54,8 +56,10 @@ export class UserService {
 
     async getUserByEmail(email: string): Promise<User | null> {
         return this.usersRepository.findOne({
-            where: {email}
+            where: {email},
+            relations: ['auth']
         });
+
     }
 
     async findOne(id: number): Promise<User> {
@@ -87,8 +91,10 @@ export class UserService {
         const userFromBd: User = await this.usersRepository.findOneBy({email: updateUserDto.email});
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         // Update the user's properties
-        userFromBd.firstName = updateUserDto.firstName;
-        //if (updateUserDto.email) userFromBd.email = updateUserDto.email;
+        if (updateUserDto.firstName || updateUserDto.password){
+            if (updateUserDto.password) userFromBd.password = await bcrypt.hash(updateUserDto.password, 5);
+            if (updateUserDto.firstName) userFromBd.firstName = updateUserDto.firstName;
+        } else throw new HttpException('Absent filds firstName or password ', HttpStatus.BAD_REQUEST);
 
         const updatedUser: User = await this.usersRepository.save(userFromBd);
 

@@ -15,13 +15,13 @@ export class Auth {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: "varchar", width: 255 , unique: true})
+    @Column({type: "varchar", width: 255, unique: true})
     action_token: string;
 
-    @Column({ type: "varchar", width: 255 })
+    @Column({type: "varchar", width: 255})
     refreshToken: string;
 
-    @Column({ type: "varchar", width: 255 })
+    @Column({type: "varchar", width: 255})
     accessToken: string;
 
     @CreateDateColumn()
@@ -31,7 +31,7 @@ export class Auth {
     upadateAt: Date;
 
     @DeleteDateColumn()
-    deleteAt: Date;
+    deleteAt: Date ;
 
     @OneToOne(() => User, user => user.auth)
     @JoinColumn({name: "userId"})

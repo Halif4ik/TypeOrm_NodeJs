@@ -8,6 +8,7 @@ import {JwtAuthRefreshGuard} from "./jwt-Refresh.guard";
 import {Auth} from "./entities/auth.entity";
 import {AuthGuard} from "@nestjs/passport";
 import {IResponseAuth} from "./entities/responce-auth.interface";
+import {UpdateUserDto} from "../user/dto/update-user.dto";
 
 @Controller('auth')
 export class AuthController {
@@ -21,8 +22,14 @@ export class AuthController {
 
     @Get("/me")
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async userInfo(@Headers('Authorization') authToken: string):Promise<IResponseUser> {
+    async userInfo(@Headers('Authorization') authToken: string): Promise<IResponseUser> {
         return this.authService.getUserInfo(authToken);
+    }
+
+    @Patch("/update")
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    async updateUserInfo(@Headers('Authorization') authToken: string, @Body() userData: UpdateUserDto): Promise<IResponseUser> {
+        return this.authService.updateUserInfo(authToken,userData);
     }
 
     @Post("/registration")
@@ -32,7 +39,7 @@ export class AuthController {
 
     @Post("/refresh")
     @UseGuards(JwtAuthRefreshGuard)
-    async refresh(@Headers('Authorization') authToken: string){
+    async refresh(@Headers('Authorization') authToken: string) {
         return this.authService.refresh(authToken);
     }
 

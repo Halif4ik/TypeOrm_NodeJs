@@ -10,7 +10,8 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {LoginUserDto} from "./dto/login-auth.dto";
 import {IResponseAuth} from "./entities/responce-auth.interface";
 import {IResponseUser} from "../user/entities/responce.interface";
-
+import process from "process";
+import {UpdateUserDto} from "../user/dto/update-user.dto";
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,9 @@ export class AuthService {
     async login(loginDto: LoginUserDto): Promise<IResponseAuth> {
         // should rewrite all tokens return one token
         const userFromBd: User = await this.userService.getUserByEmail(loginDto.email);
-        await this.checkUser(userFromBd, loginDto);
+
+
+        await this.checkUserCredentials(userFromBd, loginDto);
         /*contain auth table */
         return {
             "status_code": HttpStatus.OK,
@@ -35,7 +38,7 @@ export class AuthService {
 
     }
 
-    private async checkUser(userFromBd: User, loginDto: LoginUserDto): Promise<void> {
+    private async checkUserCredentials(userFromBd: User, loginDto: LoginUserDto): Promise<void> {
         if (!userFromBd) throw new UnauthorizedException({message: "Incorrect credentials"});
         const passwordCompare = await bcrypt.compare(loginDto.password, userFromBd.password);
         if (!passwordCompare) throw new UnauthorizedException({message: "Incorrect credentials"});
@@ -50,6 +53,14 @@ export class AuthService {
 
     async getUserInfo(token: string): Promise<IResponseUser> {
         const user = this.jwtService.decode(token.slice(7));
+        return user
+    }
+
+    async updateUserInfo(token: string,userData:UpdateUserDto) {
+        const user = this.jwtService.decode(token.slice(7));
+
+        console.log('user-',user);
+        console.log('userData-',userData);
         return
     }
 
@@ -70,7 +81,8 @@ export class AuthService {
     }
 
     private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
-        /*let authData: Auth | undefined = await this.authRepository.findOne({where: {userId: userFromBd.id}});
+        let authData: Auth | undefined = userFromBd.auth;
+
 
         const action_token: string = this.jwtService.sign({
             email: userFromBd.email,
@@ -96,18 +108,17 @@ export class AuthService {
             authData.accessToken = accessToken;
             authData.action_token = action_token;
             authUserDataSave = await this.authRepository.save(authData);
-            this.logger.log(`Updated tokens for userId- ${authUserDataSave.userId}`);
+            this.logger.log(`Updated tokens for userId- ${userFromBd.id}`);
         } else {
             const authDataNewUser: Auth = this.authRepository.create({
-                userId: userFromBd.id,
                 refreshToken,
                 accessToken,
                 action_token
             });
             authUserDataSave = await this.authRepository.save(authDataNewUser);
-            this.logger.log(`Created tokens for userId- ${authUserDataSave.userId}`);
-        }*/
-        return {}as Auth;
+            this.logger.log(`Created tokens for userId- ${userFromBd.id}`);
+        }
+        return authUserDataSave;
     }
 
 }
