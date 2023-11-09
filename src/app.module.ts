@@ -1,14 +1,14 @@
-import {TestikController} from "./GeneralResponse/testik.controller";
+import {GenRespController} from "./GeneralResponse/gen-resp.controller";
 import {Module} from "@nestjs/common";
-import {TestikService} from "./GeneralResponse/testik.service";
+import {GenRespService} from "./GeneralResponse/gen-resp.service";
 import {TypeOrmModule} from '@nestjs/typeorm';
 import {ConfigModule} from "@nestjs/config";
 import {UserModule} from './user/user.module';
 import {AuthModule} from './auth/auth.module';
 
 @Module({
-    controllers: [TestikController],
-    providers: [TestikService],
+    controllers: [GenRespController],
+    providers: [GenRespService],
     imports: [
         ConfigModule.forRoot({
             envFilePath: `.env`
