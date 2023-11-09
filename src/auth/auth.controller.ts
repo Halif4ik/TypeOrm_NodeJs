@@ -4,7 +4,6 @@ import {
     Post,
     Body,
     Patch,
-    Param,
     Delete,
     Headers,
     UseGuards,
@@ -15,9 +14,7 @@ import {AuthService} from './auth.service';
 import {CreateUserDto} from "../user/dto/create-user.dto";
 import {IResponseUser} from "../user/entities/responce.interface";
 import {LoginUserDto} from "./dto/login-auth.dto";
-import {User} from "../user/entities/user.entity";
 import {JwtAuthRefreshGuard} from "./jwt-Refresh.guard";
-import {Auth} from "./entities/auth.entity";
 import {AuthGuard} from "@nestjs/passport";
 import {IResponseAuth} from "./entities/responce-auth.interface";
 import {UpdateUserDto} from "../user/dto/update-user.dto";
