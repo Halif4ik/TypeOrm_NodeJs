@@ -28,8 +28,14 @@ export class AuthController {
 
     @Patch("/update")
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async updateUserInfo(@Headers('Authorization') authToken: string, @Body() userData: UpdateUserDto): Promise<IResponseUser> {
-        return this.authService.updateUserInfo(authToken,userData);
+    async updateUserInfo(@Headers('Authorization') authTokenCurrentUser: string, @Body() userData: UpdateUserDto):Promise<IResponseUser> {
+        return this.authService.updateUserInfo(authTokenCurrentUser,userData);
+    }
+
+    @Delete("/delete")
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    async deleteUser(@Headers('Authorization') authTokenCurrentUser: string, @Body() userData: UpdateUserDto):Promise<IResponseUser> {
+        return this.authService.deleteUser(authTokenCurrentUser,userData);
     }
 
     @Post("/registration")

@@ -10,7 +10,7 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {LoginUserDto} from "./dto/login-auth.dto";
 import {IResponseAuth} from "./entities/responce-auth.interface";
 import {IResponseUser} from "../user/entities/responce.interface";
-import process from "process";
+import * as process from "process";
 import {UpdateUserDto} from "../user/dto/update-user.dto";
 
 @Injectable()
@@ -25,7 +25,6 @@ export class AuthService {
         // should rewrite all tokens return one token
         const userFromBd: User = await this.userService.getUserByEmail(loginDto.email);
 
-
         await this.checkUserCredentials(userFromBd, loginDto);
         /*contain auth table */
         return {
@@ -38,36 +37,41 @@ export class AuthService {
 
     }
 
-    private async checkUserCredentials(userFromBd: User, loginDto: LoginUserDto): Promise<void> {
-        if (!userFromBd) throw new UnauthorizedException({message: "Incorrect credentials"});
-        const passwordCompare = await bcrypt.compare(loginDto.password, userFromBd.password);
-        if (!passwordCompare) throw new UnauthorizedException({message: "Incorrect credentials"});
-    }
-
     async registration(userDto: CreateUserDto): Promise<IResponseUser> {
         const newUser: IResponseUser = await this.userService.createUser(userDto);
         this.logger.log(`Registered user- ${newUser.detail.user.email}`);
         return newUser;
     }
 
-
     async getUserInfo(token: string): Promise<IResponseUser> {
-        const user = this.jwtService.decode(token.slice(7));
-        return user
+        const userFromToken = this.jwtService.decode(token.slice(7));
+        const userFromBd: User = await this.userService.getUserByEmail(userFromToken['email']);
+        return {
+            "status_code": HttpStatus.OK,
+            "detail": {
+                "user": userFromBd,
+            },
+            "result": "working"
+        };
     }
 
-    async updateUserInfo(token: string,userData:UpdateUserDto) {
-        const user = this.jwtService.decode(token.slice(7));
+    async updateUserInfo(token: string, userData: UpdateUserDto):Promise<IResponseUser> {
+        const userFromToken = this.jwtService.decode(token.slice(7));
+        if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
+        const userFromBd: IResponseUser = await this.userService.update(userData);
+        return userFromBd;
+    }
 
-        console.log('user-',user);
-        console.log('userData-',userData);
-        return
+    async deleteUser(token: string, userData: UpdateUserDto):Promise<IResponseUser> {
+        const userFromToken = this.jwtService.decode(token.slice(7));
+        if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
+        const userFromBd: IResponseUser = await this.userService.remove(userData.email);
+        return userFromBd;
     }
 
     async refresh(authToken: string): Promise<IResponseAuth> {
         const user = this.jwtService.decode(authToken.slice(7));
         const userFromBd: User = await this.userService.findOne(user['id']);
-        if (!userFromBd) throw new UnauthorizedException({message: "Incorrect Token for refresh"});
 
         this.logger.log(`Refresh token for user- ${userFromBd.email}`);
         return {
@@ -82,8 +86,6 @@ export class AuthService {
 
     private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
         let authData: Auth | undefined = userFromBd.auth;
-
-
         const action_token: string = this.jwtService.sign({
             email: userFromBd.email,
             id: userFromBd.id,
@@ -119,6 +121,12 @@ export class AuthService {
             this.logger.log(`Created tokens for userId- ${userFromBd.id}`);
         }
         return authUserDataSave;
+    }
+
+    private async checkUserCredentials(userFromBd: User, loginDto: LoginUserDto): Promise<void> {
+        if (!userFromBd) throw new UnauthorizedException({message: "Incorrect credentials"});
+        const passwordCompare = await bcrypt.compare(loginDto.password, userFromBd.password);
+        if (!passwordCompare) throw new UnauthorizedException({message: "Incorrect credentials"});
     }
 
 }
