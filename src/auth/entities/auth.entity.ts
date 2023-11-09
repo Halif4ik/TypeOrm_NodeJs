@@ -2,7 +2,7 @@ import {
     Column,
     CreateDateColumn,
     DeleteDateColumn,
-    Entity,
+    Entity, JoinColumn,
     OneToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn
@@ -14,9 +14,6 @@ import {User} from "../../user/entities/user.entity";
 export class Auth {
     @PrimaryGeneratedColumn()
     id: number;
-
-    @Column()
-    userId: number;
 
     @Column({ type: "varchar", width: 255 , unique: true})
     action_token: string;
@@ -37,5 +34,6 @@ export class Auth {
     deleteAt: Date;
 
     @OneToOne(() => User, user => user.auth)
+    @JoinColumn({name: "userId"})
     user: User;
 }

@@ -70,7 +70,7 @@ export class AuthService {
     }
 
     private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
-        let authData: Auth | undefined = await this.authRepository.findOne({where: {userId: userFromBd.id}});
+        /*let authData: Auth | undefined = await this.authRepository.findOne({where: {userId: userFromBd.id}});
 
         const action_token: string = this.jwtService.sign({
             email: userFromBd.email,
@@ -106,8 +106,8 @@ export class AuthService {
             });
             authUserDataSave = await this.authRepository.save(authDataNewUser);
             this.logger.log(`Created tokens for userId- ${authUserDataSave.userId}`);
-        }
-        return authUserDataSave;
+        }*/
+        return {}as Auth;
     }
 
 }
