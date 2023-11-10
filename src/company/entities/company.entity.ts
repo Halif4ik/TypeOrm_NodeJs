@@ -13,7 +13,7 @@ export class Company {
     @Column({type: "varchar", width: 255})
     description: string;
 
-    @ManyToOne(() => User, user => user.company)
+    @ManyToOne(() => User, user => user.company,{eager: true})
     @JoinColumn({name: "ownerId"})
     owner: User;
 

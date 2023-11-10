@@ -15,6 +15,9 @@ import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import {AuthGuard} from "@nestjs/passport";
+import {UpdateUserDto} from "../user/dto/update-user.dto";
+import {IResponseUser} from "../user/entities/responce.interface";
+import {IResponseCompany} from "./entities/responce-company.interface";
 
 @Controller('company')
 export class CompanyController {
@@ -24,7 +27,14 @@ export class CompanyController {
   @UsePipes(ValidationPipe)
   @Post()
   @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-  async createCompany(@Headers('Authorization') authTokenCurrentUser: string, @Body() companyData: CreateCompanyDto) {
+  async createCompany(@Headers('Authorization') authTokenCurrentUser: string, @Body() companyData: CreateCompanyDto): Promise<IResponseCompany> {
+    return this.companyService.create(authTokenCurrentUser, companyData);
+  }
+
+  @UsePipes(ValidationPipe)
+  @Patch("/update")
+  @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+  async updateUserInfo(@Headers('Authorization') authTokenCurrentUser: string, @Body() companyData: CreateCompanyDto): Promise<IResponseCompany> {
     return this.companyService.create(authTokenCurrentUser, companyData);
   }
 

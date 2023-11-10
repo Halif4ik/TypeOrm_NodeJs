@@ -19,7 +19,7 @@ export class User {
     @Column({default: true})
     isActive: boolean;
 
-    @OneToOne(() => Auth, auth => auth.user, {cascade: true})
+    @OneToOne(() => Auth, auth => auth.user, {onDelete: 'CASCADE'})
     auth: Auth;
 
     @OneToMany(() => Company, company => company.owner, {onDelete: 'CASCADE'})

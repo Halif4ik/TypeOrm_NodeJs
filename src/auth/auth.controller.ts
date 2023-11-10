@@ -37,6 +37,7 @@ export class AuthController {
         return this.authService.getUserInfo(authToken);
     }
 
+    /*todo move */
     @UsePipes(ValidationPipe)
     @Patch("/update")
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
@@ -44,6 +45,7 @@ export class AuthController {
         return this.authService.updateUserInfo(authTokenCurrentUser, userData);
     }
 
+    /*todo delete*/
     @UsePipes(ValidationPipe)
     @Delete("/delete")
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
