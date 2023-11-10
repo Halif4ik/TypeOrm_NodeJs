@@ -55,20 +55,6 @@ export class AuthService {
         };
     }
 
-    async updateUserInfo(token: string, userData: UpdateUserDto):Promise<IResponseUser> {
-        const userFromToken = this.jwtService.decode(token.slice(7));
-        if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
-        const userFromBd: IResponseUser = await this.userService.update(userData);
-        return userFromBd;
-    }
-
-    async deleteUser(token: string, userData: UpdateUserDto):Promise<IResponseUser> {
-        const userFromToken = this.jwtService.decode(token.slice(7));
-        if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
-        const userFromBd: IResponseUser = await this.userService.remove(userData.email);
-        return userFromBd;
-    }
-
     async refresh(authToken: string): Promise<IResponseAuth> {
         const user = this.jwtService.decode(authToken.slice(7));
         const userFromBd: User = await this.userService.findOne(user['id']);

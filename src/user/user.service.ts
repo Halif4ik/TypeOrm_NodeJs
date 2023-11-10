@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "./entities/user.entity";
 import {Repository, SelectQueryBuilder} from "typeorm";
@@ -8,12 +8,14 @@ import {UpdateUserDto} from "./dto/update-user.dto";
 import * as process from "process";
 import {CreateUserDto} from "./dto/create-user.dto";
 import passport from "passport";
+import {JwtService} from "@nestjs/jwt";
 
 @Injectable()
 export class UserService {
     private readonly logger: Logger = new Logger(UserService.name);
 
-    constructor(@InjectRepository(User) private usersRepository: Repository<User>) {
+    constructor(@InjectRepository(User) private usersRepository: Repository<User>,
+                private jwtService: JwtService,) {
     }
 
     async findAll(needPage: number, revert: string) {
@@ -71,9 +73,13 @@ export class UserService {
         }
     }
 
-    async remove(email: string): Promise<IResponseUser> {
-        const userFromBd: User = await this.usersRepository.findOneBy({email: email});
+    async deleteUser(token: string, userData: UpdateUserDto): Promise<IResponseUser> {
+        const userFromToken = this.jwtService.decode(token.slice(7));
+        if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
+
+        const userFromBd: User = await this.usersRepository.findOneBy({email: userData.email});
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
         const removedUserFromBd: User = await this.usersRepository.remove(userFromBd);
         const result: IResponseUser = {
             "status_code": 200,
@@ -84,16 +90,21 @@ export class UserService {
         };
         this.logger.log(`Removed  user- ${removedUserFromBd.email}`);
         return result;
+
     }
 
-    async update(updateUserDto: UpdateUserDto): Promise<IResponseUser> {
+
+    async updateUserInfo(token: string, updateUserDto: UpdateUserDto): Promise<IResponseUser> {
+        const userFromToken = this.jwtService.decode(token.slice(7));
+        if (updateUserDto.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
+
         const userFromBd: User = await this.usersRepository.findOneBy({email: updateUserDto.email});
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         // Update the user's properties
-        if (updateUserDto.firstName || updateUserDto.password){
+        if (updateUserDto.firstName || updateUserDto.password) {
             if (updateUserDto.password) userFromBd.password = await bcrypt.hash(updateUserDto.password, 5);
             if (updateUserDto.firstName) userFromBd.firstName = updateUserDto.firstName;
-        } else throw new HttpException('Absent filds firstName or password ', HttpStatus.BAD_REQUEST);
+        } else throw new HttpException('Absent fields firstName or password ', HttpStatus.BAD_REQUEST);
 
         const updatedUser: User = await this.usersRepository.save(userFromBd);
 
@@ -107,4 +118,6 @@ export class UserService {
         this.logger.log(`updated new - ${updatedUser.email}`);
         return result;
     }
+
+
 }
