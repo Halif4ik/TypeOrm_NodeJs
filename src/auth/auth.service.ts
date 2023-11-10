@@ -71,9 +71,7 @@ export class AuthService {
     }
 
     private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
-        console.log('userFromBd-',userFromBd);
         let authData: Auth | undefined = userFromBd.auth;
-        console.log('authData-',authData);
 
         const action_token: string = this.jwtService.sign({
             email: userFromBd.email,
