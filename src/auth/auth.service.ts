@@ -24,7 +24,7 @@ export class AuthService {
     async login(loginDto: LoginUserDto): Promise<IResponseAuth> {
         // should rewrite all tokens return one token
         const userFromBd: User = await this.userService.getUserByEmail(loginDto.email);
-
+        console.log('LOGINuserFromBd-',userFromBd);
         await this.checkUserCredentials(userFromBd, loginDto);
         /*contain auth table */
         return {
@@ -71,7 +71,10 @@ export class AuthService {
     }
 
     private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
+        console.log('userFromBd-',userFromBd);
         let authData: Auth | undefined = userFromBd.auth;
+        console.log('authData-',authData);
+
         const action_token: string = this.jwtService.sign({
             email: userFromBd.email,
             id: userFromBd.id,
