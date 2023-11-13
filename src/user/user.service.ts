@@ -1,24 +1,25 @@
 import {HttpException, HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "./entities/user.entity";
-import {Repository, SelectQueryBuilder} from "typeorm";
+import {Repository} from "typeorm";
 import {IResponseUser} from "./entities/responce.interface";
 import * as bcrypt from "bcryptjs";
 import {UpdateUserDto} from "./dto/update-user.dto";
 import * as process from "process";
 import {CreateUserDto} from "./dto/create-user.dto";
-import passport from "passport";
 import {JwtService} from "@nestjs/jwt";
+import {Auth} from "../auth/entities/auth.entity";
+import {AuthService} from "../auth/auth.service";
 
 @Injectable()
 export class UserService {
     private readonly logger: Logger = new Logger(UserService.name);
 
     constructor(@InjectRepository(User) private usersRepository: Repository<User>,
-                private jwtService: JwtService,) {
+                private jwtService: JwtService, private authService: AuthService) {
     }
 
-    async findAll(needPage: number, revert: string) {
+    async findAll(needPage: number, revert: string): Promise<User[]> {
         if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
         const order = revert === 'true' ? 'ASC' : 'DESC';
 
@@ -33,7 +34,6 @@ export class UserService {
             ],
         });
     }
-
 
     async createUser(createUserDto: CreateUserDto): Promise<IResponseUser> {
         const userFromBd: User = await this.usersRepository.findOneBy({email: createUserDto.email});
@@ -60,7 +60,6 @@ export class UserService {
             where: {email},
             relations: ['auth']
         });
-
     }
 
     async findOne(id: number): Promise<User> {
@@ -77,10 +76,16 @@ export class UserService {
         const userFromToken = this.jwtService.decode(token.slice(7));
         if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
 
-        const userFromBd: User = await this.usersRepository.findOneBy({email: userData.email});
+        const userFromBd: User = await this.getUserByEmail(userData.email);
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        console.log('**userFromBd-', userFromBd);
+        // Check if the user has an associated auth record todo temporary manaally delete auth
+        if (userFromBd.auth)
+            // Use remove method on the Auth entity to delete the associated auth record
+            await this.authService.deleteAuth(userFromBd);
 
         const removedUserFromBd: User = await this.usersRepository.remove(userFromBd);
+        console.log('removedUserFromBd-', userFromBd);
         const result: IResponseUser = {
             "status_code": 200,
             "detail": {
@@ -120,4 +125,10 @@ export class UserService {
     }
 
 
+    async addRelationAuth(authDataNewUser: Auth, userFromBd: User): Promise<User> {
+        userFromBd.auth = authDataNewUser;
+        const temp: User = await this.usersRepository.save(userFromBd);
+        this.logger.log(`add relation auth for user - ${userFromBd.email}`);
+        return temp;
+    }
 }

@@ -47,7 +47,7 @@ export class AuthController {
     @UsePipes(ValidationPipe)
     @Post("/refresh")
     @UseGuards(JwtAuthRefreshGuard)
-    async refresh(@Headers('Authorization') authToken: string) {
+    async refresh(@Headers('Authorization') authToken: string): Promise<IResponseAuth> {
         return this.authService.refresh(authToken);
     }
 

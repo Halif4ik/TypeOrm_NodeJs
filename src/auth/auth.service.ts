@@ -11,7 +11,6 @@ import {LoginUserDto} from "./dto/login-auth.dto";
 import {IResponseAuth} from "./entities/responce-auth.interface";
 import {IResponseUser} from "../user/entities/responce.interface";
 import * as process from "process";
-import {UpdateUserDto} from "../user/dto/update-user.dto";
 
 @Injectable()
 export class AuthService {
@@ -24,7 +23,6 @@ export class AuthService {
     async login(loginDto: LoginUserDto): Promise<IResponseAuth> {
         // should rewrite all tokens return one token
         const userFromBd: User = await this.userService.getUserByEmail(loginDto.email);
-        console.log('LOGINuserFromBd-',userFromBd);
         await this.checkUserCredentials(userFromBd, loginDto);
         /*contain auth table */
         return {
@@ -70,9 +68,23 @@ export class AuthService {
 
     }
 
-    private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
-        let authData: Auth | undefined = userFromBd.auth;
+    async deleteAuth(userFromBd: User): Promise<IResponseAuth> {
+        console.log('!deleteAuth-',userFromBd);
+        const temp = await this.authRepository.remove(userFromBd.auth);
+        this.logger.log(`Deleted auth for user- ${userFromBd.email}`);
+        return {
+            "status_code": 200,
+            "detail": {
+                "user": temp,
+            },
+            "result": "working"
+        };
 
+    }
+
+    private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
+        console.log('***userFromBd-',userFromBd);
+        let authData: Auth | undefined = userFromBd.auth;
         const action_token: string = this.jwtService.sign({
             email: userFromBd.email,
             id: userFromBd.id,
@@ -102,8 +114,14 @@ export class AuthService {
             const authDataNewUser: Auth = this.authRepository.create({
                 refreshToken,
                 accessToken,
-                action_token
+                action_token,
+                user: userFromBd
             });
+            console.log('ELSE authDataNewUser-',authDataNewUser);
+            /*and add relation in user table*/
+            userFromBd.auth = authDataNewUser;
+            await this.userService.addRelationAuth(authDataNewUser,userFromBd);
+
             authUserDataSave = await this.authRepository.save(authDataNewUser);
             this.logger.log(`Created tokens for userId- ${userFromBd.id}`);
         }

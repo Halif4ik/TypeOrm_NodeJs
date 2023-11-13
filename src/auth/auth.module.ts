@@ -15,7 +15,9 @@ import {JwtStrategyAuth} from "./jwt.strategy";
     imports: [
         UserModule,
         TypeOrmModule.forFeature([Auth]),
-        JwtModule,PassportModule]
+        JwtModule,PassportModule
+    ],
+    exports: [AuthService]
 })
 export class AuthModule {
 }
