@@ -12,7 +12,7 @@ import {CreateUserDto} from "./dto/create-user.dto";
 import {User} from "./entities/user.entity";
 import {IResponseUser} from "./entities/responce.interface";
 import {UpdateUserDto} from "./dto/update-user.dto";
-import {PaginationsUserDto} from "./dto/pagination-user.dto";
+import {PaginationsDto} from "./dto/pagination-user.dto";
 import {RemoveUserDto} from "./dto/remove-user.dto";
 import {AuthGuard} from "@nestjs/passport";
 
@@ -22,7 +22,7 @@ export class UserController {
     }
 
     @Get()
-    async findAll(@Query() query: PaginationsUserDto): Promise<User[]> {
+    async findAll(@Query() query: PaginationsDto): Promise<User[]> {
         const {page, revert} = query;
         return this.userService.findAll(page, revert);
     }
@@ -34,7 +34,7 @@ export class UserController {
         return this.userService.createUser(createUserDto);
     }
 
-    //get user by id doesn't return Genaral responce brkose it will be private method
+    //get user by id doesn't return Genaral responce because it will be private method perhaps
     @Get(':id')
     async findOne(@Param('id') id: number): Promise<User> {
         return this.userService.findOne(id);

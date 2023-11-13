@@ -9,7 +9,6 @@ import * as process from "process";
 import {CreateUserDto} from "./dto/create-user.dto";
 import {JwtService} from "@nestjs/jwt";
 import {Auth} from "../auth/entities/auth.entity";
-import {AuthService} from "../auth/auth.service";
 
 @Injectable()
 export class UserService {
@@ -19,8 +18,9 @@ export class UserService {
                 private jwtService: JwtService, /*private authService: AuthService*/) {
     }
 
-    async findAll(needPage: number, revert: string): Promise<User[]> {
-        if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
+    async findAll(needPage: string, revert: string): Promise<User[]> {
+        /*if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;*/
+        if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = '1'
         const order = revert === 'true' ? 'ASC' : 'DESC';
 
         return this.usersRepository.find({

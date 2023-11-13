@@ -9,6 +9,7 @@ import {Company} from "./entities/company.entity";
 import {IResponseCompany} from "./entities/responce-company.interface";
 import {User} from "../user/entities/user.entity";
 import {DeleteCompanyDto} from "./dto/delete-company.dto";
+import * as process from "process";
 
 @Injectable()
 export class CompanyService {
@@ -20,7 +21,7 @@ export class CompanyService {
 
     async create(token: string, companyData: CreateCompanyDto): Promise<IResponseCompany> {
         const fetureOwnerFromBd: User = await this.tookUserFromBd(token);
-        const findedCompany:Company = fetureOwnerFromBd.company.find((company: Company):boolean => company.name === companyData.name);
+        const findedCompany: Company = fetureOwnerFromBd.company.find((company: Company): boolean => company.name === companyData.name);
         if (findedCompany) throw new HttpException("Company with this name present in current user", HttpStatus.CONFLICT);
         const newCompany: Company = this.companyRepository.create({...companyData, owner: fetureOwnerFromBd});
         const result: IResponseCompany = {
@@ -38,7 +39,7 @@ export class CompanyService {
     async update(token: string, updateCompanyData: UpdateCompanyDto): Promise<IResponseCompany> {
         const ownerFromBd: User = await this.tookUserFromBd(token);
 
-        const findedCompany:Company = ownerFromBd.company.find((company: Company):boolean => company.name === updateCompanyData.oldName);
+        const findedCompany: Company = ownerFromBd.company.find((company: Company): boolean => company.name === updateCompanyData.oldName);
         if (!findedCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
         if (updateCompanyData.newName) findedCompany.name = updateCompanyData.newName;
         if (updateCompanyData.description) findedCompany.description = updateCompanyData.description;
@@ -57,14 +58,12 @@ export class CompanyService {
 
     }
 
-    async delete(authTokenCurrentUser: string, deleteCompanyData: DeleteCompanyDto) {
+    async delete(authTokenCurrentUser: string, deleteCompanyData: DeleteCompanyDto): Promise<IResponseCompany> {
         const ownerFromBd: User = await this.tookUserFromBd(authTokenCurrentUser);
-        const findedCompany:Company = ownerFromBd.company.find((company: Company):boolean => company.name === deleteCompanyData.name);
+        const findedCompany: Company = ownerFromBd.company.find((company: Company): boolean => company.name === deleteCompanyData.name);
         if (!findedCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
-        console.log('DELETE-',findedCompany);
 
         const removedCompany: Company = await this.companyRepository.remove(findedCompany);
-        console.log('removedCompany-',findedCompany);
         const result: IResponseCompany = {
             "status_code": HttpStatus.OK,
             "detail": {
@@ -77,10 +76,27 @@ export class CompanyService {
         return result;
     }
 
-    private async tookUserFromBd(token):Promise<User> {
+    private async tookUserFromBd(token): Promise<User> {
         const userFromToken = this.jwtService.decode(token.slice(7));
         if (!userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
-        return this.userService.getUserByEmailWithCompany(userFromToken['email']);;
+        return this.userService.getUserByEmailWithCompany(userFromToken['email']);
+        ;
     }
+
+    async findAll(needPage: string, revert: string): Promise<Company[]> {
+
+        /*if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;*/
+        if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = '1'
+        const order = revert === 'true' ? 'ASC' : 'DESC';
+        return this.companyRepository.find({
+            take: +process.env.PAGE_PAGINATION,
+            skip: (+needPage - 1) * (+process.env.PAGE_PAGINATION),
+            order: {
+                id: order,
+            },
+            relations: ["owner"],
+        });
+    }
+
 
 }
