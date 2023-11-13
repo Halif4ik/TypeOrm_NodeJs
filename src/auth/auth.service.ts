@@ -28,7 +28,7 @@ export class AuthService {
         return {
             "status_code": HttpStatus.OK,
             "detail": {
-                "user": await this.containOrRefreshTokenAuthBd(userFromBd),
+                "auth": await this.containOrRefreshTokenAuthBd(userFromBd),
             },
             "result": "working"
         };
@@ -61,7 +61,7 @@ export class AuthService {
         return {
             "status_code": 200,
             "detail": {
-                "user": await this.containOrRefreshTokenAuthBd(userFromBd),
+                "auth": await this.containOrRefreshTokenAuthBd(userFromBd),
             },
             "result": "working"
         };
@@ -69,7 +69,6 @@ export class AuthService {
     }
 
     private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
-        console.log('//userFromBd-',userFromBd);
         let authData: Auth | undefined = userFromBd.auth;
         const action_token: string = this.jwtService.sign({
             email: userFromBd.email,

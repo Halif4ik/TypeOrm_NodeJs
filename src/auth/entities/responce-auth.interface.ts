@@ -3,7 +3,7 @@ import {Auth} from "../../auth/entities/auth.entity";
 export interface IResponseAuth extends GeneralResponse {
     status_code: number;
     detail: {
-        "user": Auth
+        "auth": Auth
     };
     result: string;
 }

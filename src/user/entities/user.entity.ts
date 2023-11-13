@@ -19,14 +19,13 @@ export class User {
     @Column({default: true})
     isActive: boolean;
 
-
     @OneToOne(() => Auth, auth => auth.user)
     auth: Auth;
 
-    @OneToMany(() => Company, company => company.owner, {onDelete: 'CASCADE'})
+    @OneToMany(() => Company, company => company.owner)
     company: Company[];
 
-    @ManyToOne(() => Company, company => company.members)
+    @ManyToOne(() => Company, company => company.members,{onDelete: 'CASCADE'})
     companyMember: Company;
 
 

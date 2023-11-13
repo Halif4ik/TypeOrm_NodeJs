@@ -1,4 +1,4 @@
-import {HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
 import {CreateCompanyDto} from './dto/create-company.dto';
 import {UpdateCompanyDto} from './dto/update-company.dto';
 import {UserService} from "../user/user.service";
@@ -17,7 +17,6 @@ export class CompanyService {
                 @InjectRepository(Company) private companyRepository: Repository<Company>) {
     }
 
-    /*update if exist or create company */
     async create(token: string, companyData: CreateCompanyDto): Promise<IResponseCompany> {
         const userFromToken = this.jwtService.decode(token.slice(7));
         if (!userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
@@ -37,6 +36,29 @@ export class CompanyService {
     }
 
 
+    async update(token: string, updateCompanyData: UpdateCompanyDto): Promise<IResponseCompany> {
+        const userFromToken = this.jwtService.decode(token.slice(7));
+        if (!userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
+        const ownerFromBd: User = await this.userService.getUserByEmailWithCompany(userFromToken['email']);
+        const findedCompany:Company = ownerFromBd.company.find((company: Company):boolean => company.name === updateCompanyData.oldName);
+        if (!findedCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
+        if (updateCompanyData.newName) findedCompany.name = updateCompanyData.newName;
+        if (updateCompanyData.description) findedCompany.description = updateCompanyData.description;
+        let deleteOwnerFromResult: Company = await this.companyRepository.save(findedCompany);
+        deleteOwnerFromResult = {...deleteOwnerFromResult, owner: null}
+        const result: IResponseCompany = {
+            "status_code": HttpStatus.OK,
+            "detail": {
+                "user": deleteOwnerFromResult,
+            },
+            "result": "working"
+        }
+
+        this.logger.log(`Changed name/description for-'${updateCompanyData.oldName}' company`);
+        return result;
+
+    }
+
 
     findAll() {
         return `This action returns all company`;
@@ -44,10 +66,6 @@ export class CompanyService {
 
     findOne(id: number) {
         return `This action returns a #${id} company`;
-    }
-
-    update(id: number, updateCompanyDto: UpdateCompanyDto) {
-        return `This action updates a #${id} company`;
     }
 
     remove(id: number) {

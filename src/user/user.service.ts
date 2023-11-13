@@ -62,6 +62,13 @@ export class UserService {
         });
     }
 
+    async getUserByEmailWithCompany(email: string): Promise<User | null> {
+        return this.usersRepository.findOne({
+            where: {email},
+            relations: ['company']
+        });
+    }
+
     async findOne(id: number): Promise<User> {
         const user: User = await this.usersRepository.findOneBy({id},);
         if (!user) {
