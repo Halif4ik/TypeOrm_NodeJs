@@ -11,11 +11,10 @@ import {LoginUserDto} from "./dto/login-auth.dto";
 import {IResponseAuth} from "./entities/responce-auth.interface";
 import {IResponseUser} from "../user/entities/responce.interface";
 import * as process from "process";
-import {UpdateUserDto} from "../user/dto/update-user.dto";
 
 @Injectable()
 export class AuthService {
-    private readonly logger: Logger = new Logger(UserService.name);
+    private readonly logger: Logger = new Logger(AuthService.name);
 
     constructor(private userService: UserService, private jwtService: JwtService,
                 @InjectRepository(Auth) private authRepository: Repository<Auth>) {
@@ -24,7 +23,6 @@ export class AuthService {
     async login(loginDto: LoginUserDto): Promise<IResponseAuth> {
         // should rewrite all tokens return one token
         const userFromBd: User = await this.userService.getUserByEmail(loginDto.email);
-
         await this.checkUserCredentials(userFromBd, loginDto);
         /*contain auth table */
         return {
@@ -55,20 +53,6 @@ export class AuthService {
         };
     }
 
-    async updateUserInfo(token: string, userData: UpdateUserDto):Promise<IResponseUser> {
-        const userFromToken = this.jwtService.decode(token.slice(7));
-        if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
-        const userFromBd: IResponseUser = await this.userService.update(userData);
-        return userFromBd;
-    }
-
-    async deleteUser(token: string, userData: UpdateUserDto):Promise<IResponseUser> {
-        const userFromToken = this.jwtService.decode(token.slice(7));
-        if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
-        const userFromBd: IResponseUser = await this.userService.remove(userData.email);
-        return userFromBd;
-    }
-
     async refresh(authToken: string): Promise<IResponseAuth> {
         const user = this.jwtService.decode(authToken.slice(7));
         const userFromBd: User = await this.userService.findOne(user['id']);
@@ -85,6 +69,7 @@ export class AuthService {
     }
 
     private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
+        console.log('//userFromBd-',userFromBd);
         let authData: Auth | undefined = userFromBd.auth;
         const action_token: string = this.jwtService.sign({
             email: userFromBd.email,
@@ -115,8 +100,13 @@ export class AuthService {
             const authDataNewUser: Auth = this.authRepository.create({
                 refreshToken,
                 accessToken,
-                action_token
+                action_token,
+                user: userFromBd
             });
+            /*and add relation in user table*/
+            userFromBd.auth = authDataNewUser;
+            await this.userService.addRelationAuth(authDataNewUser,userFromBd);
+
             authUserDataSave = await this.authRepository.save(authDataNewUser);
             this.logger.log(`Created tokens for userId- ${userFromBd.id}`);
         }

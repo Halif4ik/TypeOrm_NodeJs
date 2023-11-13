@@ -9,12 +9,12 @@ export class JwtStrategyAuth extends PassportStrategy(Strategy, "jwt-auth") {
     constructor(private readonly userService: UserService) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            ignoreExpiration: false,
+            ignoreExpiration: process.env.IGNORE_EXPIRATION_TOKEN === 'true',
             secretOrKey: process.env.SECRET_ACCESS,
         });
     }
 
-    async validate(payload: unknown):Promise<User> {
+    async validate(payload: unknown): Promise<User> {
         const email: string | undefined = payload['email'];
         return this.userService.getUserByEmail(email);
     }

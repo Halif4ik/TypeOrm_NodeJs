@@ -1,9 +1,9 @@
 import {
     Body,
     Controller, Delete,
-    Get,
+    Get, Headers,
     Param, Patch,
-    Post, Query,
+    Post, Query, UseGuards,
     UsePipes,
     ValidationPipe
 } from '@nestjs/common';
@@ -14,6 +14,7 @@ import {IResponseUser} from "./entities/responce.interface";
 import {UpdateUserDto} from "./dto/update-user.dto";
 import {PaginationsUserDto} from "./dto/pagination-user.dto";
 import {RemoveUserDto} from "./dto/remove-user.dto";
+import {AuthGuard} from "@nestjs/passport";
 
 @Controller('user')
 export class UserController {
@@ -40,15 +41,17 @@ export class UserController {
     }
 
     @UsePipes(ValidationPipe)
-    @Patch()
-    async update(@Body() userData: UpdateUserDto): Promise<IResponseUser> {
-        return this.userService.update(userData);
+    @Patch("/update")
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    async updateUserInfo(@Headers('Authorization') authTokenCurrentUser: string, @Body() userData: UpdateUserDto):Promise<IResponseUser> {
+        return this.userService.updateUserInfo(authTokenCurrentUser,userData);
     }
 
     @UsePipes(ValidationPipe)
     @Delete()
-    async remove(@Query() emailQuery: RemoveUserDto): Promise<IResponseUser> {
-        const {email} = emailQuery;
-        return this.userService.remove(email)
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    async deleteUser(@Headers('Authorization') authTokenCurrentUser: string, @Body() userData: UpdateUserDto): Promise<IResponseUser> {
+      return this.userService.deleteUser(authTokenCurrentUser, userData);
     }
+
 }

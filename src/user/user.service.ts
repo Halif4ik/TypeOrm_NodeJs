@@ -1,22 +1,25 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "./entities/user.entity";
-import {Repository, SelectQueryBuilder} from "typeorm";
+import {Repository} from "typeorm";
 import {IResponseUser} from "./entities/responce.interface";
 import * as bcrypt from "bcryptjs";
 import {UpdateUserDto} from "./dto/update-user.dto";
 import * as process from "process";
 import {CreateUserDto} from "./dto/create-user.dto";
-import passport from "passport";
+import {JwtService} from "@nestjs/jwt";
+import {Auth} from "../auth/entities/auth.entity";
+import {AuthService} from "../auth/auth.service";
 
 @Injectable()
 export class UserService {
     private readonly logger: Logger = new Logger(UserService.name);
 
-    constructor(@InjectRepository(User) private usersRepository: Repository<User>) {
+    constructor(@InjectRepository(User) private usersRepository: Repository<User>,
+                private jwtService: JwtService, /*private authService: AuthService*/) {
     }
 
-    async findAll(needPage: number, revert: string) {
+    async findAll(needPage: number, revert: string): Promise<User[]> {
         if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
         const order = revert === 'true' ? 'ASC' : 'DESC';
 
@@ -31,7 +34,6 @@ export class UserService {
             ],
         });
     }
-
 
     async createUser(createUserDto: CreateUserDto): Promise<IResponseUser> {
         const userFromBd: User = await this.usersRepository.findOneBy({email: createUserDto.email});
@@ -58,11 +60,10 @@ export class UserService {
             where: {email},
             relations: ['auth']
         });
-
     }
 
     async findOne(id: number): Promise<User> {
-        const user: User = await this.usersRepository.findOneBy({id});
+        const user: User = await this.usersRepository.findOneBy({id},);
         if (!user) {
             throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
         } else {
@@ -71,9 +72,13 @@ export class UserService {
         }
     }
 
-    async remove(email: string): Promise<IResponseUser> {
-        const userFromBd: User = await this.usersRepository.findOneBy({email: email});
+    async deleteUser(token: string, userData: UpdateUserDto): Promise<IResponseUser> {
+        const userFromToken = this.jwtService.decode(token.slice(7));
+        if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
+
+        const userFromBd: User = await this.getUserByEmail(userData.email);
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
         const removedUserFromBd: User = await this.usersRepository.remove(userFromBd);
         const result: IResponseUser = {
             "status_code": 200,
@@ -84,16 +89,21 @@ export class UserService {
         };
         this.logger.log(`Removed  user- ${removedUserFromBd.email}`);
         return result;
+
     }
 
-    async update(updateUserDto: UpdateUserDto): Promise<IResponseUser> {
+
+    async updateUserInfo(token: string, updateUserDto: UpdateUserDto): Promise<IResponseUser> {
+        const userFromToken = this.jwtService.decode(token.slice(7));
+        if (updateUserDto.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
+
         const userFromBd: User = await this.usersRepository.findOneBy({email: updateUserDto.email});
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         // Update the user's properties
-        if (updateUserDto.firstName || updateUserDto.password){
+        if (updateUserDto.firstName || updateUserDto.password) {
             if (updateUserDto.password) userFromBd.password = await bcrypt.hash(updateUserDto.password, 5);
             if (updateUserDto.firstName) userFromBd.firstName = updateUserDto.firstName;
-        } else throw new HttpException('Absent filds firstName or password ', HttpStatus.BAD_REQUEST);
+        } else throw new HttpException('Absent fields firstName or password ', HttpStatus.BAD_REQUEST);
 
         const updatedUser: User = await this.usersRepository.save(userFromBd);
 
@@ -106,5 +116,13 @@ export class UserService {
         };
         this.logger.log(`updated new - ${updatedUser.email}`);
         return result;
+    }
+
+
+    async addRelationAuth(authDataNewUser: Auth, userFromBd: User): Promise<User> {
+        userFromBd.auth = authDataNewUser;
+        const temp: User = await this.usersRepository.save(userFromBd);
+        this.logger.log(`add relation auth for user - ${userFromBd.email}`);
+        return temp;
     }
 }

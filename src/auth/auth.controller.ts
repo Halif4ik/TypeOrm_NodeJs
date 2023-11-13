@@ -37,22 +37,6 @@ export class AuthController {
         return this.authService.getUserInfo(authToken);
     }
 
-    /*todo move */
-    @UsePipes(ValidationPipe)
-    @Patch("/update")
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async updateUserInfo(@Headers('Authorization') authTokenCurrentUser: string, @Body() userData: UpdateUserDto): Promise<IResponseUser> {
-        return this.authService.updateUserInfo(authTokenCurrentUser, userData);
-    }
-
-    /*todo delete*/
-    @UsePipes(ValidationPipe)
-    @Delete("/delete")
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async deleteUser(@Headers('Authorization') authTokenCurrentUser: string, @Body() userData: UpdateUserDto): Promise<IResponseUser> {
-        return this.authService.deleteUser(authTokenCurrentUser, userData);
-    }
-
     @UsePipes(ValidationPipe)
     @Post("/registration")
     async registration(@Body() userDto: CreateUserDto): Promise<IResponseUser> {
@@ -62,7 +46,7 @@ export class AuthController {
     @UsePipes(ValidationPipe)
     @Post("/refresh")
     @UseGuards(JwtAuthRefreshGuard)
-    async refresh(@Headers('Authorization') authToken: string) {
+    async refresh(@Headers('Authorization') authToken: string): Promise<IResponseAuth> {
         return this.authService.refresh(authToken);
     }
 
