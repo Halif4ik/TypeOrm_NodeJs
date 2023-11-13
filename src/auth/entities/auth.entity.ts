@@ -33,7 +33,7 @@ export class Auth {
     @DeleteDateColumn()
     deleteAt: Date ;
 
-    @OneToOne(() => User, user => user.id)
+    @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
     @JoinColumn({name: "userId"})
     user: User;
 }

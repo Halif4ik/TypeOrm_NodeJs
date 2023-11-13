@@ -14,7 +14,7 @@ import * as process from "process";
 
 @Injectable()
 export class AuthService {
-    private readonly logger: Logger = new Logger(UserService.name);
+    private readonly logger: Logger = new Logger(AuthService.name);
 
     constructor(private userService: UserService, private jwtService: JwtService,
                 @InjectRepository(Auth) private authRepository: Repository<Auth>) {
@@ -68,22 +68,8 @@ export class AuthService {
 
     }
 
-    async deleteAuth(userFromBd: User): Promise<IResponseAuth> {
-        console.log('!deleteAuth-',userFromBd);
-        const temp = await this.authRepository.remove(userFromBd.auth);
-        this.logger.log(`Deleted auth for user- ${userFromBd.email}`);
-        return {
-            "status_code": 200,
-            "detail": {
-                "user": temp,
-            },
-            "result": "working"
-        };
-
-    }
-
     private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
-        console.log('***userFromBd-',userFromBd);
+        console.log('//userFromBd-',userFromBd);
         let authData: Auth | undefined = userFromBd.auth;
         const action_token: string = this.jwtService.sign({
             email: userFromBd.email,
@@ -117,7 +103,6 @@ export class AuthService {
                 action_token,
                 user: userFromBd
             });
-            console.log('ELSE authDataNewUser-',authDataNewUser);
             /*and add relation in user table*/
             userFromBd.auth = authDataNewUser;
             await this.userService.addRelationAuth(authDataNewUser,userFromBd);

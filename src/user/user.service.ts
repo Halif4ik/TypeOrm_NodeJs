@@ -16,7 +16,7 @@ export class UserService {
     private readonly logger: Logger = new Logger(UserService.name);
 
     constructor(@InjectRepository(User) private usersRepository: Repository<User>,
-                private jwtService: JwtService, private authService: AuthService) {
+                private jwtService: JwtService, /*private authService: AuthService*/) {
     }
 
     async findAll(needPage: number, revert: string): Promise<User[]> {
@@ -78,14 +78,8 @@ export class UserService {
 
         const userFromBd: User = await this.getUserByEmail(userData.email);
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-        console.log('**userFromBd-', userFromBd);
-        // Check if the user has an associated auth record todo temporary manaally delete auth
-        if (userFromBd.auth)
-            // Use remove method on the Auth entity to delete the associated auth record
-            await this.authService.deleteAuth(userFromBd);
 
         const removedUserFromBd: User = await this.usersRepository.remove(userFromBd);
-        console.log('removedUserFromBd-', userFromBd);
         const result: IResponseUser = {
             "status_code": 200,
             "detail": {
