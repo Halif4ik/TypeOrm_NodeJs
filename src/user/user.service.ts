@@ -88,7 +88,7 @@ export class UserService {
 
         const removedUserFromBd: User = await this.usersRepository.remove(userFromBd);
         const result: IResponseUser = {
-            "status_code": 200,
+            "status_code": HttpStatus.OK,
             "detail": {
                 "user": removedUserFromBd
             },
@@ -115,7 +115,7 @@ export class UserService {
         const updatedUser: User = await this.usersRepository.save(userFromBd);
 
         const result: IResponseUser = {
-            "status_code": 200,
+            "status_code": HttpStatus.OK,
             "detail": {
                 "user": updatedUser
             },

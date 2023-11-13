@@ -18,6 +18,7 @@ import {AuthGuard} from "@nestjs/passport";
 import {UpdateUserDto} from "../user/dto/update-user.dto";
 import {IResponseUser} from "../user/entities/responce.interface";
 import {IResponseCompany} from "./entities/responce-company.interface";
+import {DeleteCompanyDto} from "./dto/delete-company.dto";
 
 @Controller('company')
 export class CompanyController {
@@ -34,20 +35,15 @@ export class CompanyController {
   @UsePipes(ValidationPipe)
   @Patch("/update")
   @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-  async updateUserInfo(@Headers('Authorization') authTokenCurrentUser: string, @Body() updateCompanyData: UpdateCompanyDto) {
+  async updateCompanyInfo(@Headers('Authorization') authTokenCurrentUser: string, @Body() updateCompanyData: UpdateCompanyDto):Promise<IResponseCompany> {
     return this.companyService.update(authTokenCurrentUser, updateCompanyData);
   }
+  @UsePipes(ValidationPipe)
+  @Delete()
+  @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+  async deleteCompany(@Headers('Authorization') authTokenCurrentUser: string,
+                       @Body() deleteCompanyData: DeleteCompanyDto) {
+    return this.companyService.delete(authTokenCurrentUser, deleteCompanyData);
+  }
 
-  @Get()
-  findAll() {
-    return this.companyService.findAll();
-  }
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.companyService.findOne(+id);
-  }
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.companyService.remove(+id);
-  }
 }
