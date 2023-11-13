@@ -37,7 +37,6 @@ export class AuthController {
         return this.authService.getUserInfo(authToken);
     }
 
-
     @UsePipes(ValidationPipe)
     @Post("/registration")
     async registration(@Body() userDto: CreateUserDto): Promise<IResponseUser> {

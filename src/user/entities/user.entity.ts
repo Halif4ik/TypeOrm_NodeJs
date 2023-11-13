@@ -1,5 +1,6 @@
-import {Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany, JoinColumn} from 'typeorm';
+import {Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany, ManyToOne} from 'typeorm';
 import {Auth} from "../../auth/entities/auth.entity";
+import {Company} from "../../company/entities/company.entity";
 
 @Entity()
 export class User {
@@ -18,6 +19,15 @@ export class User {
     @Column({default: true})
     isActive: boolean;
 
+
     @OneToOne(() => Auth, auth => auth.user)
     auth: Auth;
+
+    @OneToMany(() => Company, company => company.owner, {onDelete: 'CASCADE'})
+    company: Company[];
+
+    @ManyToOne(() => Company, company => company.members)
+    companyMember: Company;
+
+
 }
