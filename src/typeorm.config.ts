@@ -16,7 +16,8 @@ const AppDataSource = new DataSource({
         __dirname + '/**/*.entity{.js,.ts}',
     ],
     migrations: ["src/migrations/*.ts"],
-    logging: "all",
+    logging: true,
+    logger: "advanced-console",
 })
 
 AppDataSource.initialize()

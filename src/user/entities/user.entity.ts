@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany} from 'typeorm';
+import {Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany, JoinColumn} from 'typeorm';
 import {Auth} from "../../auth/entities/auth.entity";
 
 @Entity()
@@ -18,7 +18,8 @@ export class User {
     @Column({ default: true })
     isActive: boolean;
 
-    @OneToOne(() => Auth, auth => auth.user)
+    @OneToOne(() => Auth, auth => auth.user,{  onDelete: 'CASCADE'})
+    @JoinColumn({name: "authId"})
     auth: Auth;
 
 }

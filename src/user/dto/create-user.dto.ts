@@ -15,6 +15,6 @@ export class CreateUserDto {
     @IsBoolean({message: 'isActive should be boolean true/false'})
     @Length(2, 255,{ message:'isActive true/false'})
     @IsOptional()
-    readonly isActive?:string;
+    readonly isActive?:boolean;
 
 }
