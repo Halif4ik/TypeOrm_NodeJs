@@ -22,7 +22,6 @@ import {DeleteCompanyDto} from "./dto/delete-company.dto";
 import {PaginationsDto} from "../user/dto/pagination-user.dto";
 import {User} from "../user/entities/user.entity";
 import {Company} from "./entities/company.entity";
-import {ParsePageAndRevertPipe} from "../pipe/validation.pipe";
 
 @Controller('company')
 export class CompanyController {
@@ -54,13 +53,11 @@ export class CompanyController {
 
 
     @Get()
-    @UsePipes(new ValidationPipe(), new ParsePageAndRevertPipe())
-    async findAll(@Query('page,revert') query): Promise<Company[]> {
-        const {page, revert} = query;
+    @UsePipes(ValidationPipe)
+    async findAll(@Query('page', ParseIntPipe) page: number): Promise<Company[]> {
         console.log('page-', page);
-        console.log('revert-', revert);
-        console.log('typeof-', typeof revert);
-        return this.companyService.findAll(page, revert);
+        console.log('typeof page-', typeof page);
+        return this.companyService.findAll(page);
     }
 
 }

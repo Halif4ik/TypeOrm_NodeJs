@@ -18,7 +18,7 @@ export class CompanyService {
     constructor(private jwtService: JwtService, private userService: UserService,
                 @InjectRepository(Company) private companyRepository: Repository<Company>) {
     }
-
+/*todo один запрос where*/
     async create(token: string, companyData: CreateCompanyDto): Promise<IResponseCompany> {
         const fetureOwnerFromBd: User = await this.tookUserFromBd(token);
         const findedCompany: Company = fetureOwnerFromBd.company.find((company: Company): boolean => company.name === companyData.name);
@@ -35,7 +35,7 @@ export class CompanyService {
         return result;
     }
 
-
+    /*todo companyRepository.update */
     async update(token: string, updateCompanyData: UpdateCompanyDto): Promise<IResponseCompany> {
         const ownerFromBd: User = await this.tookUserFromBd(token);
 
@@ -83,7 +83,7 @@ export class CompanyService {
         ;
     }
 
-    async findAll(needPage: number, revert: boolean): Promise<Company[]> {
+    async findAll(needPage: number, revert: boolean =true): Promise<Company[]> {
         if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
         /* if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = '1'*/
         const order = revert === true ? 'ASC' : 'DESC';
