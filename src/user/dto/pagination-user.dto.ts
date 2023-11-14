@@ -1,12 +1,12 @@
-import { IsNumber, IsOptional, IsString} from "class-validator";
+import {IsBoolean, IsNumber, IsOptional, IsString} from "class-validator";
 
 export class PaginationsDto {
-    @IsString({message: 'Page should be Number'})
+    @IsNumber({}, {message: 'Page should be Number'})
     @IsOptional()
-    readonly page: string;
+    readonly page?: number;
 
-    @IsString()
+    @IsBoolean()
     @IsOptional({message: 'revert should be boolean'})
-    readonly revert: string;
+    readonly revert?: boolean;
 
 }

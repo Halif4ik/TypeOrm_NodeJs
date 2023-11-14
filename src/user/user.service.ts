@@ -18,10 +18,10 @@ export class UserService {
                 private jwtService: JwtService, /*private authService: AuthService*/) {
     }
 
-    async findAll(needPage: string, revert: string): Promise<User[]> {
-        /*if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;*/
-        if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = '1'
-        const order = revert === 'true' ? 'ASC' : 'DESC';
+    async findAll(needPage: number, revert: boolean): Promise<User[]> {
+        if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
+        /*if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = '1'*/
+        const order = revert === true ? 'ASC' : 'DESC';
 
         return this.usersRepository.find({
             take: +process.env.PAGE_PAGINATION,

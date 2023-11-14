@@ -9,7 +9,7 @@ import {
     UsePipes,
     ValidationPipe,
     UseGuards,
-    Headers, Query
+    Headers, Query, ParseIntPipe, ParseBoolPipe
 } from '@nestjs/common';
 import {CompanyService} from './company.service';
 import {CreateCompanyDto} from './dto/create-company.dto';
@@ -22,6 +22,7 @@ import {DeleteCompanyDto} from "./dto/delete-company.dto";
 import {PaginationsDto} from "../user/dto/pagination-user.dto";
 import {User} from "../user/entities/user.entity";
 import {Company} from "./entities/company.entity";
+import {ParsePageAndRevertPipe} from "../pipe/validation.pipe";
 
 @Controller('company')
 export class CompanyController {
@@ -51,10 +52,14 @@ export class CompanyController {
         return this.companyService.delete(authTokenCurrentUser, deleteCompanyData);
     }
 
-    @UsePipes(ValidationPipe)
+
     @Get()
-    async findAll(@Query() query: PaginationsDto): Promise<Company[]> {
+    @UsePipes(new ValidationPipe(), new ParsePageAndRevertPipe())
+    async findAll(@Query('page,revert') query): Promise<Company[]> {
         const {page, revert} = query;
+        console.log('page-', page);
+        console.log('revert-', revert);
+        console.log('typeof-', typeof revert);
         return this.companyService.findAll(page, revert);
     }
 

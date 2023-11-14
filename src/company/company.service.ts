@@ -83,11 +83,10 @@ export class CompanyService {
         ;
     }
 
-    async findAll(needPage: string, revert: string): Promise<Company[]> {
-
-        /*if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;*/
-        if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = '1'
-        const order = revert === 'true' ? 'ASC' : 'DESC';
+    async findAll(needPage: number, revert: boolean): Promise<Company[]> {
+        if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
+        /* if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = '1'*/
+        const order = revert === true ? 'ASC' : 'DESC';
         return this.companyRepository.find({
             take: +process.env.PAGE_PAGINATION,
             skip: (+needPage - 1) * (+process.env.PAGE_PAGINATION),
