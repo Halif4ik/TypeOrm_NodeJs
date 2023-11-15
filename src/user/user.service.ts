@@ -5,10 +5,10 @@ import {Repository} from "typeorm";
 import {IResponseUser} from "./entities/responce.interface";
 import * as bcrypt from "bcryptjs";
 import {UpdateUserDto} from "./dto/update-user.dto";
-import * as process from "process";
 import {CreateUserDto} from "./dto/create-user.dto";
 import {JwtService} from "@nestjs/jwt";
 import {Auth} from "../auth/entities/auth.entity";
+import * as process from "process";
 
 @Injectable()
 export class UserService {

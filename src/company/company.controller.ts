@@ -15,14 +15,11 @@ import {CompanyService} from './company.service';
 import {CreateCompanyDto} from './dto/create-company.dto';
 import {UpdateCompanyDto} from './dto/update-company.dto';
 import {AuthGuard} from "@nestjs/passport";
-import {UpdateUserDto} from "../user/dto/update-user.dto";
-import {IResponseUser} from "../user/entities/responce.interface";
 import {IResponseCompany} from "./entities/responce-company.interface";
 import {DeleteCompanyDto} from "./dto/delete-company.dto";
 import {PaginationsDto} from "../user/dto/pagination-user.dto";
-import {User} from "../user/entities/user.entity";
 import {Company} from "./entities/company.entity";
-import {ParsePageAndRevertPipe} from "../pipe/validation.pipe";
+
 
 @Controller('company')
 export class CompanyController {
@@ -52,15 +49,14 @@ export class CompanyController {
         return this.companyService.delete(authTokenCurrentUser, deleteCompanyData);
     }
 
-
     @Get()
-    @UsePipes(new ValidationPipe(), new ParsePageAndRevertPipe())
-    async findAll(@Query('page,revert') query): Promise<Company[]> {
-        const {page, revert} = query;
-        console.log('page-', page);
-        console.log('revert-', revert);
-        console.log('typeof-', typeof revert);
+    async findAll(@Query(new ValidationPipe()) paginationsDto: PaginationsDto): Promise<Company[]> {
+        const {page, revert} = paginationsDto;
+        console.log('*page-', page);
+        console.log('*revert-', revert);
+        console.log('*typeof-', typeof revert);
         return this.companyService.findAll(page, revert);
     }
+
 
 }
