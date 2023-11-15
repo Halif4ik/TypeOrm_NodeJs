@@ -33,19 +33,21 @@ export class CompanyController {
     @UsePipes(ValidationPipe)
     @Post()
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async createCompany(@Headers('Authorization') authTokenCurrentUser: string, @Body() companyData: CreateCompanyDto): Promise<IResponseCompany> {
+    async createCompany(@Headers('Authorization') authTokenCurrentUser: string,
+                        @Body() companyData: CreateCompanyDto): Promise<IResponseCompany> {
         return this.companyService.create(authTokenCurrentUser, companyData);
     }
 
-    @UsePipes(ValidationPipe)
+    @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
     @Patch("/update")
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async updateCompanyInfo(@Headers('Authorization') authTokenCurrentUser: string, @Body() updateCompanyData: UpdateCompanyDto): Promise<IResponseCompany> {
+    async updateCompanyInfo(@Headers('Authorization') authTokenCurrentUser: string,
+                            @Body() updateCompanyData: UpdateCompanyDto): Promise<IResponseCompany> {
         return this.companyService.update(authTokenCurrentUser, updateCompanyData);
     }
 
-    @UsePipes(ValidationPipe)
     @Delete()
+    @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     async deleteCompany(@Headers('Authorization') authTokenCurrentUser: string,
                         @Body() deleteCompanyData: DeleteCompanyDto): Promise<IResponseCompany> {
@@ -54,12 +56,9 @@ export class CompanyController {
 
 
     @Get()
-    @UsePipes(new ValidationPipe(), new ParsePageAndRevertPipe())
-    async findAll(@Query('page,revert') query): Promise<Company[]> {
-        const {page, revert} = query;
-        console.log('page-', page);
-        console.log('revert-', revert);
-        console.log('typeof-', typeof revert);
+    @UsePipes(new ParsePageAndRevertPipe())
+    async findAll(@Query() paginationsDto: PaginationsDto): Promise<Company[]> {
+        const { page, revert } = paginationsDto;
         return this.companyService.findAll(page, revert);
     }
 

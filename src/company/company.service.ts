@@ -21,8 +21,6 @@ export class CompanyService {
 
     async create(token: string, companyData: CreateCompanyDto): Promise<IResponseCompany> {
         const fetureOwnerFromBd: User = await this.tookUserFromBd(token);
-        const findedCompany: Company = fetureOwnerFromBd.company.find((company: Company): boolean => company.name === companyData.name);
-        if (findedCompany) throw new HttpException("Company with this name present in current user", HttpStatus.CONFLICT);
         const newCompany: Company = this.companyRepository.create({...companyData, owner: fetureOwnerFromBd});
         const result: IResponseCompany = {
             "status_code": HttpStatus.OK,
@@ -35,57 +33,56 @@ export class CompanyService {
         return result;
     }
 
-
     async update(token: string, updateCompanyData: UpdateCompanyDto): Promise<IResponseCompany> {
         const ownerFromBd: User = await this.tookUserFromBd(token);
-
-        const findedCompany: Company = ownerFromBd.company.find((company: Company): boolean => company.name === updateCompanyData.oldName);
+        let findedCompany: Company = ownerFromBd.company.find((company: Company): boolean => company.id === updateCompanyData.id);
         if (!findedCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
-        if (updateCompanyData.newName) findedCompany.name = updateCompanyData.newName;
-        if (updateCompanyData.description) findedCompany.description = updateCompanyData.description;
-        let deleteOwnerFromResult: Company = await this.companyRepository.save(findedCompany);
-        deleteOwnerFromResult = {...deleteOwnerFromResult, owner: null}
+        await this.companyRepository.update({id: updateCompanyData.id}, updateCompanyData);
+
+        findedCompany = {...findedCompany, owner: null, ...updateCompanyData}
         const result: IResponseCompany = {
             "status_code": HttpStatus.OK,
             "detail": {
-                "user": deleteOwnerFromResult,
+                "user": findedCompany,
             },
             "result": "working"
         }
-
-        this.logger.log(`Changed name/description for-'${updateCompanyData.oldName}' company`);
+        this.logger.log(`Changed name/description for new-'${updateCompanyData.name}' company`);
         return result;
 
     }
 
     async delete(authTokenCurrentUser: string, deleteCompanyData: DeleteCompanyDto): Promise<IResponseCompany> {
-        const ownerFromBd: User = await this.tookUserFromBd(authTokenCurrentUser);
-        const findedCompany: Company = ownerFromBd.company.find((company: Company): boolean => company.name === deleteCompanyData.name);
-        if (!findedCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
+        const userFromToken = this.jwtService.decode(authTokenCurrentUser.slice(7));
+        if (!userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete company"});
+        const ownerFromBd:User = await this.userService.getUserByEmailWithCompanyId(userFromToken['email'],deleteCompanyData.id);
+        if (!ownerFromBd) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
 
-        const removedCompany: Company = await this.companyRepository.remove(findedCompany);
+        const findedCompany: Company = ownerFromBd.company[0];
+
+         await this.companyRepository.softDelete(findedCompany.id);
+
         const result: IResponseCompany = {
             "status_code": HttpStatus.OK,
             "detail": {
-                "user": removedCompany,
+                "user": findedCompany,
             },
             "result": "working"
         }
 
-        this.logger.log(`Deleted company -'${findedCompany.name}'=)`);
+        this.logger.log(`Soft-deleted company -'${findedCompany.name}'=)`);
         return result;
     }
 
-    private async tookUserFromBd(token): Promise<User> {
+    private async tookUserFromBd(token: string): Promise<User> {
         const userFromToken = this.jwtService.decode(token.slice(7));
         if (!userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
         return this.userService.getUserByEmailWithCompany(userFromToken['email']);
-        ;
+
     }
 
     async findAll(needPage: number, revert: boolean): Promise<Company[]> {
-        if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
-        /* if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = '1'*/
+        if (needPage < 0) needPage = 1;
         const order = revert === true ? 'ASC' : 'DESC';
         return this.companyRepository.find({
             take: +process.env.PAGE_PAGINATION,

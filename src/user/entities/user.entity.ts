@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany, ManyToOne} from 'typeorm';
+import {Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany, ManyToOne, DeleteDateColumn} from 'typeorm';
 import {Auth} from "../../auth/entities/auth.entity";
 import {Company} from "../../company/entities/company.entity";
 
@@ -18,6 +18,9 @@ export class User {
 
     @Column({default: true})
     isActive: boolean;
+
+    @DeleteDateColumn()
+    deleteAt: Date;
 
     @OneToOne(() => Auth, auth => auth.user)
     auth: Auth;

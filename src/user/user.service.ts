@@ -68,6 +68,15 @@ export class UserService {
             relations: ['company']
         });
     }
+    async getUserByEmailWithCompanyId(email: string, companyId: number): Promise<User | null> {
+        return this.usersRepository
+            .createQueryBuilder('user')
+            .leftJoinAndSelect('user.company', 'company') // 'company' is the property name in the User entity
+            .where('user.email = :email', { email })
+            .andWhere('company.id = :companyId', { companyId })
+            .getOne();
+    }
+
 
     async findOne(id: number): Promise<User> {
         const user: User = await this.usersRepository.findOneBy({id},);
