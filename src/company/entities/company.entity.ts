@@ -1,5 +1,6 @@
 import {Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {User} from "../../user/entities/user.entity";
+import {Invite} from "../../invite/entities/invite.entity";
 
 @Entity()
 export class Company {
@@ -11,6 +12,7 @@ export class Company {
 
     @Column({type: "varchar", width: 255})
     description: string;
+
     @DeleteDateColumn()
     deleteAt: Date;
 
@@ -23,4 +25,8 @@ export class Company {
 
     @OneToMany(() => User, user => user.company)
     members: User[];
+
+    @OneToMany(() => Invite, invite => invite.ownerCompany)
+    invites: Invite[];
+
 }
