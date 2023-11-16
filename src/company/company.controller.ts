@@ -23,6 +23,7 @@ import {PaginationsDto} from "../user/dto/pagination-user.dto";
 import {User} from "../user/entities/user.entity";
 import {Company} from "./entities/company.entity";
 import {ParsePageAndRevertPipe} from "../pipe/validation.pipe";
+import {UserDec} from "../auth/pass-user";
 
 @Controller('company')
 export class CompanyController {
@@ -33,25 +34,25 @@ export class CompanyController {
     @UsePipes(ValidationPipe)
     @Post()
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async createCompany(@Headers('Authorization') authTokenCurrentUser: string,
+    async createCompany(@UserDec() user: User,
                         @Body() companyData: CreateCompanyDto): Promise<IResponseCompany> {
-        return this.companyService.create(authTokenCurrentUser, companyData);
+        return this.companyService.create(user, companyData);
     }
 
     @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
     @Patch("/update")
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async updateCompanyInfo(@Headers('Authorization') authTokenCurrentUser: string,
+    async updateCompanyInfo(@UserDec() userFromGuard: User,
                             @Body() updateCompanyData: UpdateCompanyDto): Promise<IResponseCompany> {
-        return this.companyService.update(authTokenCurrentUser, updateCompanyData);
+        return this.companyService.update(userFromGuard, updateCompanyData);
     }
 
     @Delete()
     @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async deleteCompany(@Headers('Authorization') authTokenCurrentUser: string,
+    async deleteCompany(@UserDec() userFromGuard: User,
                         @Body() deleteCompanyData: DeleteCompanyDto): Promise<IResponseCompany> {
-        return this.companyService.delete(authTokenCurrentUser, deleteCompanyData);
+        return this.companyService.delete(userFromGuard, deleteCompanyData);
     }
 
 

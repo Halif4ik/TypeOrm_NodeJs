@@ -5,8 +5,6 @@ import {TypeOrmModule} from "@nestjs/typeorm";
 import {Company} from "./entities/company.entity";
 import {JwtModule} from "@nestjs/jwt";
 import {PassportModule} from "@nestjs/passport";
-import {Auth0Strategy} from "../auth/auth0.strategy";
-import {JwtStrategyAuth} from "../auth/jwt.strategy";
 import {UserModule} from "../user/user.module";
 
 @Module({

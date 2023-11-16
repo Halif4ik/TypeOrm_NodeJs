@@ -1,14 +1,15 @@
 import {CanActivate, ExecutionContext, Injectable, UnauthorizedException} from "@nestjs/common";
-import {Observable} from "rxjs";
 import {JwtService} from "@nestjs/jwt";
+import {User} from "../user/entities/user.entity";
+import {UserService} from "../user/user.service";
 
 @Injectable()
 export class JwtAuthRefreshGuard implements CanActivate {
-    constructor(private jwtService: JwtService) {
+    constructor(private jwtService: JwtService, private readonly userService: UserService) {
     }
 
     /*decode with Key word for refreshToken  ONLY*/
-    canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    async canActivate(context: ExecutionContext) {
         const req = context.switchToHttp().getRequest();
         try {
             const authHeder = req.headers.authorization;
@@ -19,8 +20,9 @@ export class JwtAuthRefreshGuard implements CanActivate {
             }
             if (bearer !== "Bearer" || !token) throw new UnauthorizedException({message: "User doesnt authorized"});
             let userFromJwt = this.jwtService.verify(token, {secret: process.env.SECRET_REFRESH});
-
-            req.user = userFromJwt;
+            /*becouse in jwt always present id*/
+            const userFromBd: User | null = userFromJwt['email'] ? await this.userService.getUserByIdWithCompany(userFromJwt['id']) : null;
+            req.user = userFromBd;
             return req.user;
         } catch (e) {
             console.log("!!e-", e);
