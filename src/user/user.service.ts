@@ -15,7 +15,7 @@ export class UserService {
     private readonly logger: Logger = new Logger(UserService.name);
 
     constructor(@InjectRepository(User) private usersRepository: Repository<User>,
-                private jwtService: JwtService, /*private authService: AuthService*/) {
+                private jwtService: JwtService) {
     }
 
     async findAll(needPage: number, revert: boolean): Promise<User[]> {
@@ -68,15 +68,20 @@ export class UserService {
             relations: ['company']
         });
     }
-    async getUserByEmailWithCompanyId(email: string, companyId: number): Promise<User | null> {
+    async getUserByIdWithCompany(id: number): Promise<User | null> {
+        return this.usersRepository.findOne({
+            where: {id},
+            relations: ['company', 'auth']
+        });
+    }
+   /* async getUserByEmailWithCompanyId(email: string, companyId: number): Promise<User | null> {
         return this.usersRepository
             .createQueryBuilder('user')
             .leftJoinAndSelect('user.company', 'company') // 'company' is the property name in the User entity
             .where('user.email = :email', { email })
             .andWhere('company.id = :companyId', { companyId })
             .getOne();
-    }
-
+    }*/
 
     async findOne(id: number): Promise<User> {
         const user: User = await this.usersRepository.findOneBy({id},);

@@ -41,22 +41,17 @@ export class AuthService {
         return newUser;
     }
 
-    async getUserInfo(token: string): Promise<IResponseUser> {
-        const userFromToken = this.jwtService.decode(token.slice(7));
-        const userFromBd: User = await this.userService.getUserByEmail(userFromToken['email']);
+    async getUserInfo(userFromGuard : User): Promise<IResponseUser> {
         return {
             "status_code": HttpStatus.OK,
             "detail": {
-                "user": userFromBd,
+                "user": userFromGuard,
             },
             "result": "working"
         };
     }
 
-    async refresh(authToken: string): Promise<IResponseAuth> {
-        const user = this.jwtService.decode(authToken.slice(7));
-        const userFromBd: User = await this.userService.findOne(user['id']);
-
+    async refresh(userFromBd : User): Promise<IResponseAuth> {
         this.logger.log(`Refresh token for user- ${userFromBd.email}`);
         return {
             "status_code": 200,

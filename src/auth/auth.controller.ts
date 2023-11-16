@@ -3,9 +3,6 @@ import {
     Get,
     Post,
     Body,
-    Patch,
-    Delete,
-    Headers,
     UseGuards,
     UsePipes,
     ValidationPipe
@@ -17,7 +14,8 @@ import {LoginUserDto} from "./dto/login-auth.dto";
 import {JwtAuthRefreshGuard} from "./jwt-Refresh.guard";
 import {AuthGuard} from "@nestjs/passport";
 import {IResponseAuth} from "./entities/responce-auth.interface";
-import {UpdateUserDto} from "../user/dto/update-user.dto";
+import {UserDec} from "./pass-user";
+import {User} from "../user/entities/user.entity";
 
 @Controller('auth')
 export class AuthController {
@@ -32,9 +30,10 @@ export class AuthController {
 
     @UsePipes(ValidationPipe)
     @Get("/me")
+    /*@CurrentUser() user: JwtPayload*/
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async userInfo(@Headers('Authorization') authToken: string): Promise<IResponseUser> {
-        return this.authService.getUserInfo(authToken);
+    async userInfo(@UserDec() userFromGuard: User): Promise<IResponseUser> {
+        return this.authService.getUserInfo(userFromGuard);
     }
 
     @UsePipes(ValidationPipe)
@@ -46,8 +45,8 @@ export class AuthController {
     @UsePipes(ValidationPipe)
     @Post("/refresh")
     @UseGuards(JwtAuthRefreshGuard)
-    async refresh(@Headers('Authorization') authToken: string): Promise<IResponseAuth> {
-        return this.authService.refresh(authToken);
+    async refresh(@UserDec() userFromGuard: User): Promise<IResponseAuth> {
+        return this.authService.refresh(userFromGuard);
     }
 
 }
