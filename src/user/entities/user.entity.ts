@@ -26,11 +26,11 @@ export class User {
     @OneToOne(() => Auth, auth => auth.user)
     auth: Auth;
 
-    @OneToOne(() => Invite, invite => invite.ownerUser)
-    invite: Invite;
+   /* @OneToOne(() => Invite, invite => invite.ownerUser)
+    invite: Invite;*/
 
-    @OneToOne(() => Invite, invite => invite.targetUser)
-    targetForInvite: Invite;
+    /*@OneToOne(() => Invite, invite => invite.targetUser)
+    targetForInvite: Invite;*/
 
     @OneToMany(() => Company, company => company.owner)
     company: Company[];

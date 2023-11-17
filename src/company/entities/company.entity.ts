@@ -26,7 +26,7 @@ export class Company {
     @OneToMany(() => User, user => user.company)
     members: User[];
 
-    @OneToMany(() => Invite, invite => invite.ownerCompany)
-    invites: Invite[];
+   /* @OneToMany(() => Invite, invite => invite.ownerCompany)
+    invites: Invite[];*/
 
 }

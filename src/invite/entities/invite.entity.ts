@@ -23,18 +23,18 @@ export class Invite {
     @DeleteDateColumn()
     deleteAt: Date;
 
-    @ManyToOne(() => Company, company => company.invites, {
+   /* @ManyToOne(() => Company, company => company.invites, {
         onDelete: 'CASCADE'
     })
     @JoinColumn()
-    ownerCompany: Company;
+    ownerCompany: Company;*/
 
-    @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
+    /*@OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
     @JoinColumn()
-    ownerUser: User;
+    ownerUser: User;*/
 
-    @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
+   /* @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
     @JoinColumn({name: "targetUser"})
-    targetUser: User;
+    targetUser: User;*/
 
 }
