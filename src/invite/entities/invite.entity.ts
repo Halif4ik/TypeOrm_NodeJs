@@ -1,15 +1,17 @@
 import {
+    Entity,
     Column,
-    CreateDateColumn,
-    DeleteDateColumn,
-    JoinColumn,
-    ManyToOne,
+    PrimaryGeneratedColumn,
     OneToOne,
-    PrimaryGeneratedColumn
-} from "typeorm";
-import {User} from "../../user/entities/user.entity";
+    OneToMany,
+    ManyToOne,
+    DeleteDateColumn,
+    JoinColumn, CreateDateColumn
+} from 'typeorm';
 import {Company} from "../../company/entities/company.entity";
+import {User} from "../../user/entities/user.entity";
 
+@Entity()
 export class Invite {
     @PrimaryGeneratedColumn()
     id: number;
@@ -23,18 +25,18 @@ export class Invite {
     @DeleteDateColumn()
     deleteAt: Date;
 
-   /* @ManyToOne(() => Company, company => company.invites, {
+    @ManyToOne(() => Company, company => company.invites, {
         onDelete: 'CASCADE'
     })
     @JoinColumn()
-    ownerCompany: Company;*/
+    ownerCompany: Company;
 
-    /*@OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
+    @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
     @JoinColumn()
-    ownerUser: User;*/
+    ownerUser: User;
 
-   /* @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
+    @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
     @JoinColumn({name: "targetUser"})
-    targetUser: User;*/
+    targetUser: User;
 
 }

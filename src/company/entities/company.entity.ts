@@ -1,4 +1,5 @@
-import {Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, DeleteDateColumn, Entity, JoinColumn,
+    ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {User} from "../../user/entities/user.entity";
 import {Invite} from "../../invite/entities/invite.entity";
 
@@ -26,7 +27,7 @@ export class Company {
     @OneToMany(() => User, user => user.company)
     members: User[];
 
-   /* @OneToMany(() => Invite, invite => invite.ownerCompany)
-    invites: Invite[];*/
+    @OneToMany(() => Invite, invite => invite.ownerCompany)
+    invites: Invite[];
 
 }
