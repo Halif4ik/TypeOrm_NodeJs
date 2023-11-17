@@ -2,13 +2,13 @@ import {HttpException, HttpStatus, Injectable, Logger, UnauthorizedException} fr
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "./entities/user.entity";
 import {Repository} from "typeorm";
-import {IResponseUser} from "./entities/responce.interface";
 import * as bcrypt from "bcryptjs";
 import {UpdateUserDto} from "./dto/update-user.dto";
 import * as process from "process";
 import {CreateUserDto} from "./dto/create-user.dto";
 import {JwtService} from "@nestjs/jwt";
 import {Auth} from "../auth/entities/auth.entity";
+import {IResponseCompanyOrUser} from "../company/entities/responce-company.interface";
 
 @Injectable()
 export class UserService {
@@ -35,7 +35,7 @@ export class UserService {
         });
     }
 
-    async createUser(createUserDto: CreateUserDto): Promise<IResponseUser> {
+    async createUser(createUserDto: CreateUserDto): Promise<IResponseCompanyOrUser> {
         const userFromBd: User = await this.usersRepository.findOneBy({email: createUserDto.email});
         if (userFromBd) throw new HttpException('User exist in bd', HttpStatus.CONFLICT);
         const hashPassword: string = await bcrypt.hash(createUserDto.password, 5);
@@ -44,12 +44,12 @@ export class UserService {
         // Save the new user to the database
         const createdUser: User = await this.usersRepository.save(newUser);
 
-        const result: IResponseUser = {
+        const result: IResponseCompanyOrUser = {
             "status_code": HttpStatus.OK,
             "detail": {
                 "user": createdUser
             },
-            "result": "working"
+            "result": "createUser"
         }
         this.logger.log(`Created new user- ${createdUser.email}`);
         return result
@@ -93,7 +93,7 @@ export class UserService {
         }
     }
 
-    async deleteUser(token: string, userData: UpdateUserDto): Promise<IResponseUser> {
+    async deleteUser(token: string, userData: UpdateUserDto): Promise<IResponseCompanyOrUser> {
         const userFromToken = this.jwtService.decode(token.slice(7));
         if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
 
@@ -101,12 +101,12 @@ export class UserService {
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
         const removedUserFromBd: User = await this.usersRepository.remove(userFromBd);
-        const result: IResponseUser = {
+        const result: IResponseCompanyOrUser = {
             "status_code": HttpStatus.OK,
             "detail": {
                 "user": removedUserFromBd
             },
-            "result": "working"
+            "result": "deleteUser"
         };
         this.logger.log(`Removed  user- ${removedUserFromBd.email}`);
         return result;
@@ -114,7 +114,7 @@ export class UserService {
     }
 
 
-    async updateUserInfo(token: string, updateUserDto: UpdateUserDto): Promise<IResponseUser> {
+    async updateUserInfo(token: string, updateUserDto: UpdateUserDto): Promise<IResponseCompanyOrUser> {
         const userFromToken = this.jwtService.decode(token.slice(7));
         if (updateUserDto.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
 
@@ -128,12 +128,12 @@ export class UserService {
 
         const updatedUser: User = await this.usersRepository.save(userFromBd);
 
-        const result: IResponseUser = {
+        const result: IResponseCompanyOrUser = {
             "status_code": HttpStatus.OK,
             "detail": {
                 "user": updatedUser
             },
-            "result": "working"
+            "result": "updateUserInfo"
         };
         this.logger.log(`updated new - ${updatedUser.email}`);
         return result;

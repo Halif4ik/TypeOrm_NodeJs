@@ -9,13 +9,13 @@ import {
 } from '@nestjs/common';
 import {AuthService} from './auth.service';
 import {CreateUserDto} from "../user/dto/create-user.dto";
-import {IResponseUser} from "../user/entities/responce.interface";
 import {LoginUserDto} from "./dto/login-auth.dto";
 import {JwtAuthRefreshGuard} from "./jwt-Refresh.guard";
 import {AuthGuard} from "@nestjs/passport";
 import {IResponseAuth} from "./entities/responce-auth.interface";
 import {UserDec} from "./pass-user";
 import {User} from "../user/entities/user.entity";
+import {IResponseCompanyOrUser} from "../company/entities/responce-company.interface";
 
 @Controller('auth')
 export class AuthController {
@@ -32,13 +32,13 @@ export class AuthController {
     @Get("/me")
     /*@CurrentUser() user: JwtPayload*/
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async userInfo(@UserDec() userFromGuard: User): Promise<IResponseUser> {
+    async userInfo(@UserDec() userFromGuard: User): Promise<IResponseCompanyOrUser> {
         return this.authService.getUserInfo(userFromGuard);
     }
 
     @UsePipes(ValidationPipe)
     @Post("/registration")
-    async registration(@Body() userDto: CreateUserDto): Promise<IResponseUser> {
+    async registration(@Body() userDto: CreateUserDto): Promise<IResponseCompanyOrUser> {
         return this.authService.registration(userDto);
     }
 
