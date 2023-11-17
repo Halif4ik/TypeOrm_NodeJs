@@ -5,7 +5,7 @@ import {UserService} from "../user/user.service";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
 import {Company} from "./entities/company.entity";
-import {IResponseCompany} from "./entities/responce-company.interface";
+import {IResponseCompanyOrUser} from "./entities/responce-company.interface";
 import {User} from "../user/entities/user.entity";
 import {DeleteCompanyDto} from "./dto/delete-company.dto";
 import * as process from "process";
@@ -17,19 +17,19 @@ export class CompanyService {
     constructor(@InjectRepository(Company) private companyRepository: Repository<Company>) {
     }
 
-    async create(user: User, companyData: CreateCompanyDto): Promise<IResponseCompany> {
+    async create(user: User, companyData: CreateCompanyDto): Promise<IResponseCompanyOrUser> {
         const newCompany: Company = this.companyRepository.create({...companyData, owner: user});
         this.logger.log(`Created new company- ${newCompany.name}`);
         return {
             "status_code": HttpStatus.OK,
             "detail": {
-                "user": await this.companyRepository.save(newCompany),
+                "company": await this.companyRepository.save(newCompany),
             },
-            "result": "working"
+            "result": "create"
         };
     }
 
-    async update(userFromGuard: User, updateCompanyData: UpdateCompanyDto): Promise<IResponseCompany> {
+    async update(userFromGuard: User, updateCompanyData: UpdateCompanyDto): Promise<IResponseCompanyOrUser> {
         let findedCompany: Company = userFromGuard.company.find((company: Company): boolean => company.id === updateCompanyData.id);
         if (!findedCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
         await this.companyRepository.update({id: updateCompanyData.id}, updateCompanyData);
@@ -39,25 +39,22 @@ export class CompanyService {
         return {
             "status_code": HttpStatus.OK,
             "detail": {
-                "user": findedCompany,
+                "company": findedCompany,
             },
-            "result": "working"
+            "result": "update"
         };
 
     }
 
-    async delete(userFromGuard: User, deleteCompanyData: DeleteCompanyDto): Promise<IResponseCompany> {
-        let findedCompany: Company = userFromGuard.company.find((company: Company): boolean => company.id === deleteCompanyData.id);
+    async delete(userFromGuard: User, deleteCompanyData: DeleteCompanyDto): Promise<IResponseCompanyOrUser> {
+        let findedCompany: Company = userFromGuard.company.find((company: Company) => company.id === deleteCompanyData.id);
         if (!findedCompany) throw new HttpException("Incorrect company id for this user for delete", HttpStatus.NOT_FOUND);
         await this.companyRepository.softDelete(findedCompany.id);
 
         this.logger.log(`Soft-deleted company -'${findedCompany.name}'=)`);
         return {
             "status_code": HttpStatus.OK,
-            "detail": {
-                "user": findedCompany,
-            },
-            "result": "working"
+            "result": "deleted"
         };
     }
 

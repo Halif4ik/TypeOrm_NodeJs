@@ -1,9 +1,11 @@
 import {GeneralResponse} from "../../GeneralResponse/interface/generalResponse.interface";
 import {Company} from "./company.entity";
-export interface IResponseCompany extends GeneralResponse {
+import {User} from "../../user/entities/user.entity";
+export interface IResponseCompanyOrUser extends GeneralResponse {
     status_code: number;
-    detail: {
-        "user": Company
+    detail?: {
+        "user"?: User
+        "company"?: Company
     };
     result: string;
 }

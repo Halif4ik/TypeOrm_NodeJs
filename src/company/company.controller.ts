@@ -15,9 +15,7 @@ import {CompanyService} from './company.service';
 import {CreateCompanyDto} from './dto/create-company.dto';
 import {UpdateCompanyDto} from './dto/update-company.dto';
 import {AuthGuard} from "@nestjs/passport";
-import {UpdateUserDto} from "../user/dto/update-user.dto";
-import {IResponseUser} from "../user/entities/responce.interface";
-import {IResponseCompany} from "./entities/responce-company.interface";
+import {IResponseCompanyOrUser} from "./entities/responce-company.interface";
 import {DeleteCompanyDto} from "./dto/delete-company.dto";
 import {PaginationsDto} from "../user/dto/pagination-user.dto";
 import {User} from "../user/entities/user.entity";
@@ -35,7 +33,7 @@ export class CompanyController {
     @Post()
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     async createCompany(@UserDec() user: User,
-                        @Body() companyData: CreateCompanyDto): Promise<IResponseCompany> {
+                        @Body() companyData: CreateCompanyDto): Promise<IResponseCompanyOrUser> {
         return this.companyService.create(user, companyData);
     }
 
@@ -43,7 +41,7 @@ export class CompanyController {
     @Patch("/update")
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     async updateCompanyInfo(@UserDec() userFromGuard: User,
-                            @Body() updateCompanyData: UpdateCompanyDto): Promise<IResponseCompany> {
+                            @Body() updateCompanyData: UpdateCompanyDto): Promise<IResponseCompanyOrUser> {
         return this.companyService.update(userFromGuard, updateCompanyData);
     }
 
@@ -51,7 +49,7 @@ export class CompanyController {
     @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     async deleteCompany(@UserDec() userFromGuard: User,
-                        @Body() deleteCompanyData: DeleteCompanyDto): Promise<IResponseCompany> {
+                        @Body() deleteCompanyData: DeleteCompanyDto): Promise<IResponseCompanyOrUser> {
         return this.companyService.delete(userFromGuard, deleteCompanyData);
     }
 

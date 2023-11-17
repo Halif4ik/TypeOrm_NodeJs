@@ -9,8 +9,8 @@ import {Auth} from "./entities/auth.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {LoginUserDto} from "./dto/login-auth.dto";
 import {IResponseAuth} from "./entities/responce-auth.interface";
-import {IResponseUser} from "../user/entities/responce.interface";
 import * as process from "process";
+import {IResponseCompanyOrUser} from "../company/entities/responce-company.interface";
 
 @Injectable()
 export class AuthService {
@@ -35,13 +35,13 @@ export class AuthService {
 
     }
 
-    async registration(userDto: CreateUserDto): Promise<IResponseUser> {
-        const newUser: IResponseUser = await this.userService.createUser(userDto);
+    async registration(userDto: CreateUserDto): Promise<IResponseCompanyOrUser> {
+        const newUser: IResponseCompanyOrUser = await this.userService.createUser(userDto);
         this.logger.log(`Registered user- ${newUser.detail.user.email}`);
         return newUser;
     }
 
-    async getUserInfo(userFromGuard : User): Promise<IResponseUser> {
+    async getUserInfo(userFromGuard : User): Promise<IResponseCompanyOrUser> {
         return {
             "status_code": HttpStatus.OK,
             "detail": {

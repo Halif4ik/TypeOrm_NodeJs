@@ -10,11 +10,11 @@ import {
 import {UserService} from './user.service';
 import {CreateUserDto} from "./dto/create-user.dto";
 import {User} from "./entities/user.entity";
-import {IResponseUser} from "./entities/responce.interface";
 import {UpdateUserDto} from "./dto/update-user.dto";
 import {PaginationsDto} from "./dto/pagination-user.dto";
 import {RemoveUserDto} from "./dto/remove-user.dto";
 import {AuthGuard} from "@nestjs/passport";
+import {IResponseCompanyOrUser} from "../company/entities/responce-company.interface";
 
 @Controller('user')
 export class UserController {
@@ -30,7 +30,7 @@ export class UserController {
     //create user
     @UsePipes(ValidationPipe)
     @Post()
-    async create(@Body() createUserDto: CreateUserDto): Promise<IResponseUser> {
+    async create(@Body() createUserDto: CreateUserDto): Promise<IResponseCompanyOrUser> {
         return this.userService.createUser(createUserDto);
     }
 
@@ -43,14 +43,14 @@ export class UserController {
     @UsePipes(ValidationPipe)
     @Patch("/update")
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async updateUserInfo(@Headers('Authorization') authTokenCurrentUser: string, @Body() userData: UpdateUserDto):Promise<IResponseUser> {
+    async updateUserInfo(@Headers('Authorization') authTokenCurrentUser: string, @Body() userData: UpdateUserDto):Promise<IResponseCompanyOrUser> {
         return this.userService.updateUserInfo(authTokenCurrentUser,userData);
     }
 
     @UsePipes(ValidationPipe)
     @Delete()
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async deleteUser(@Headers('Authorization') authTokenCurrentUser: string, @Body() userData: UpdateUserDto): Promise<IResponseUser> {
+    async deleteUser(@Headers('Authorization') authTokenCurrentUser: string, @Body() userData: UpdateUserDto): Promise<IResponseCompanyOrUser> {
       return this.userService.deleteUser(authTokenCurrentUser, userData);
     }
 
