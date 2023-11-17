@@ -1,7 +1,6 @@
 import {DataSource} from "typeorm"
 import {config} from 'dotenv'
 import {ConfigService} from "@nestjs/config";
-
 config()
 const configService = new ConfigService();
 
@@ -11,7 +10,7 @@ const AppDataSource = new DataSource({
     port: +process.env.POSTGRES_DOCKER_PORT,
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_ROOT_PASSWORD,
-    database: process.env.POSTGRES_DATABASE,
+    database: configService.get<string>('POSTGRES_DATABASE'),
     entities: [
         __dirname + '/**/*.entity{.js,.ts}',
     ],
@@ -27,5 +26,3 @@ AppDataSource.initialize()
         console.error("Error during Data Source initialization", err)
     });
 export default AppDataSource;
-/*host: configService.get<string>('POSTGRES_HOST'),
-    database:  configService.get<string>('POSTGRES_DATABASE'),*/
