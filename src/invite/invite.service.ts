@@ -26,18 +26,18 @@ export class InviteService {
         if (!findedTargetUser) throw new HttpException("Did not find target user for invite", HttpStatus.NOT_FOUND);
         console.log('findedTargetUser-', findedTargetUser);
 
-        const newInvite:Invite = this.inviteRepository.create({
+        const newInvite: Invite = this.inviteRepository.create({
             accept: createInviteDto.accept,
             ownerCompany: findedCompany,
             ownerUser: userFromGuard,
             targetUser: findedTargetUser,
         });
         this.logger.log(`Created new Invite for user- ${findedTargetUser.email} from company- ${findedCompany.name}`);
-        let inviteResponsce:Invite = await this.inviteRepository.save(newInvite);
+        let inviteResponsce: Invite = await this.inviteRepository.save(newInvite);
         console.log('inviteResponsce-', inviteResponsce);
         inviteResponsce = {
             ...inviteResponsce, ownerCompany: {...inviteResponsce.ownerCompany, owner: null},
-            ownerUser: {...inviteResponsce.ownerUser, company: null}
+            ownerUser: {...inviteResponsce.ownerUser, company: null, targetUser: {...targetUser, auth: null}}
         }
         return {
             "status_code": HttpStatus.OK,

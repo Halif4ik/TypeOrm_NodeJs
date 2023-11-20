@@ -31,7 +31,7 @@ export class Invite {
     @JoinColumn()
     ownerCompany: Company;
 
-    @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
+    @ManyToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
     @JoinColumn()
     ownerUser: User;
 

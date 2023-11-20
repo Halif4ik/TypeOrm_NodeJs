@@ -26,8 +26,8 @@ export class User {
     @OneToOne(() => Auth, auth => auth.user)
     auth: Auth;
 
-    @OneToOne(() => Invite, invite => invite.ownerUser)
-    invite: Invite;
+    @OneToMany(() => Invite, invite => invite.ownerUser)
+    invite: Invite[];
 
     @OneToOne(() => Invite, invite => invite.targetUser)
     targetForInvite: Invite;
