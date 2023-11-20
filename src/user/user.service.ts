@@ -8,7 +8,8 @@ import * as process from "process";
 import {CreateUserDto} from "./dto/create-user.dto";
 import {JwtService} from "@nestjs/jwt";
 import {Auth} from "../auth/entities/auth.entity";
-import {IResponseCompanyOrUser} from "../company/entities/responce-company.interface";
+import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
+import { IUserInfo } from 'src/GeneralResponse/interface/customResponces';
 
 @Injectable()
 export class UserService {
@@ -18,9 +19,8 @@ export class UserService {
                 private jwtService: JwtService) {
     }
 
-    async findAll(needPage: number, revert: boolean): Promise<User[]> {
+    async findAll(needPage: number, revert: boolean): Promise<User[] | null> {
         if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
-        /*if (!needPage || isNaN(parseInt(needPage)) || needPage === '0') needPage = '1'*/
         const order = revert === true ? 'ASC' : 'DESC';
 
         return this.usersRepository.find({
@@ -35,7 +35,7 @@ export class UserService {
         });
     }
 
-    async createUser(createUserDto: CreateUserDto): Promise<IResponseCompanyOrUser> {
+    async createUser(createUserDto: CreateUserDto): Promise<GeneralResponse<IUserInfo>> {
         const userFromBd: User = await this.usersRepository.findOneBy({email: createUserDto.email});
         if (userFromBd) throw new HttpException('User exist in bd', HttpStatus.CONFLICT);
         const hashPassword: string = await bcrypt.hash(createUserDto.password, 5);
@@ -44,7 +44,7 @@ export class UserService {
         // Save the new user to the database
         const createdUser: User = await this.usersRepository.save(newUser);
 
-        const result: IResponseCompanyOrUser = {
+        const result: GeneralResponse<IUserInfo> = {
             "status_code": HttpStatus.OK,
             "detail": {
                 "user": createdUser
@@ -68,22 +68,24 @@ export class UserService {
             relations: ['company']
         });
     }
+
     async getUserByIdWithCompany(id: number): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {id},
             relations: ['company', 'auth']
         });
     }
-   /* async getUserByEmailWithCompanyId(email: string, companyId: number): Promise<User | null> {
-        return this.usersRepository
-            .createQueryBuilder('user')
-            .leftJoinAndSelect('user.company', 'company') // 'company' is the property name in the User entity
-            .where('user.email = :email', { email })
-            .andWhere('company.id = :companyId', { companyId })
-            .getOne();
-    }*/
 
-    async findOne(id: number): Promise<User> {
+    /* async getUserByEmailWithCompanyId(email: string, companyId: number): Promise<User | null> {
+         return this.usersRepository
+             .createQueryBuilder('user')
+             .leftJoinAndSelect('user.company', 'company') // 'company' is the property name in the User entity
+             .where('user.email = :email', { email })
+             .andWhere('company.id = :companyId', { companyId })
+             .getOne();
+     }*/
+
+    async findOne(id: number): Promise<User | null> {
         const user: User = await this.usersRepository.findOneBy({id},);
         if (!user) {
             throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
@@ -93,7 +95,7 @@ export class UserService {
         }
     }
 
-    async deleteUser(token: string, userData: UpdateUserDto): Promise<IResponseCompanyOrUser> {
+    async deleteUser(token: string, userData: UpdateUserDto): Promise<GeneralResponse<IUserInfo>> {
         const userFromToken = this.jwtService.decode(token.slice(7));
         if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
 
@@ -101,7 +103,7 @@ export class UserService {
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
         const removedUserFromBd: User = await this.usersRepository.remove(userFromBd);
-        const result: IResponseCompanyOrUser = {
+        const result: GeneralResponse<IUserInfo> = {
             "status_code": HttpStatus.OK,
             "detail": {
                 "user": removedUserFromBd
@@ -113,8 +115,7 @@ export class UserService {
 
     }
 
-
-    async updateUserInfo(token: string, updateUserDto: UpdateUserDto): Promise<IResponseCompanyOrUser> {
+    async updateUserInfo(token: string, updateUserDto: UpdateUserDto): Promise<GeneralResponse<IUserInfo>> {
         const userFromToken = this.jwtService.decode(token.slice(7));
         if (updateUserDto.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
 
@@ -128,7 +129,7 @@ export class UserService {
 
         const updatedUser: User = await this.usersRepository.save(userFromBd);
 
-        const result: IResponseCompanyOrUser = {
+        const result: GeneralResponse<IUserInfo> = {
             "status_code": HttpStatus.OK,
             "detail": {
                 "user": updatedUser
@@ -138,7 +139,6 @@ export class UserService {
         this.logger.log(`updated new - ${updatedUser.email}`);
         return result;
     }
-
 
     async addRelationAuth(authDataNewUser: Auth, userFromBd: User): Promise<User> {
         userFromBd.auth = authDataNewUser;

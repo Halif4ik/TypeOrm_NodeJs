@@ -5,7 +5,8 @@ import {passportJwtSecret} from "jwks-rsa";
 import {User} from "../user/entities/user.entity";
 import {UserService} from "../user/user.service";
 import * as process from "process";
-import {IResponseCompanyOrUser} from "../company/entities/responce-company.interface";
+import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
+import {IUserInfo} from "../GeneralResponse/interface/customResponces";
 
 @Injectable()
 export class Auth0Strategy extends PassportStrategy(Strategy, "auth0") {
@@ -32,7 +33,7 @@ export class Auth0Strategy extends PassportStrategy(Strategy, "auth0") {
         const userFromBd: User | null = email ? await this.userService.getUserByEmailWithCompany(email) : null;
         /*create user in bd*/
         if (!userFromBd) {
-            const createdUser: IResponseCompanyOrUser = await this.userService.createUser({
+            const createdUser: GeneralResponse<IUserInfo> = await this.userService.createUser({
                 email: email,
                 password: firstName ? email + firstName : email + 'random',
                 firstName: firstName ? firstName : Date.now().toString(),
