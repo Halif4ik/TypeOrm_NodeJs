@@ -1,5 +1,5 @@
-export interface GeneralResponse {
+export interface GeneralResponse<T> {
     status_code: number;
-    detail?: string | object;
+    detail: T;
     result: string;
 }

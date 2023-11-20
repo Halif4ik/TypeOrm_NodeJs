@@ -8,5 +8,4 @@ export class LoginUserDto {
     @Length(4, 20,{ message:'Password Min lenth 4 max length 20'})
     readonly password:string;
 
-
 }

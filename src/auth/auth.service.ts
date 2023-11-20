@@ -8,9 +8,10 @@ import {Repository} from "typeorm";
 import {Auth} from "./entities/auth.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {LoginUserDto} from "./dto/login-auth.dto";
-import {IResponseAuth} from "./entities/responce-auth.interface";
 import * as process from "process";
-import {IResponseCompanyOrUser} from "../company/entities/responce-company.interface";
+import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
+import {IRespAuth, IUserInfo} from "../GeneralResponse/interface/customResponces";
+
 
 @Injectable()
 export class AuthService {
@@ -20,7 +21,7 @@ export class AuthService {
                 @InjectRepository(Auth) private authRepository: Repository<Auth>) {
     }
 
-    async login(loginDto: LoginUserDto): Promise<IResponseAuth> {
+    async login(loginDto: LoginUserDto): Promise<GeneralResponse<IRespAuth>> {
         // should rewrite all tokens return one token
         const userFromBd: User = await this.userService.getUserByEmail(loginDto.email);
         await this.checkUserCredentials(userFromBd, loginDto);
@@ -35,13 +36,13 @@ export class AuthService {
 
     }
 
-    async registration(userDto: CreateUserDto): Promise<IResponseCompanyOrUser> {
-        const newUser: IResponseCompanyOrUser = await this.userService.createUser(userDto);
+    async registration(userDto: CreateUserDto): Promise<GeneralResponse<IUserInfo>> {
+        const newUser: GeneralResponse<IUserInfo> = await this.userService.createUser(userDto);
         this.logger.log(`Registered user- ${newUser.detail.user.email}`);
         return newUser;
     }
 
-    async getUserInfo(userFromGuard : User): Promise<IResponseCompanyOrUser> {
+    async getUserInfo(userFromGuard: User): Promise<GeneralResponse<IUserInfo>> {
         return {
             "status_code": HttpStatus.OK,
             "detail": {
@@ -51,7 +52,7 @@ export class AuthService {
         };
     }
 
-    async refresh(userFromBd : User): Promise<IResponseAuth> {
+    async refresh(userFromBd: User): Promise<GeneralResponse<IRespAuth>> {
         this.logger.log(`Refresh token for user- ${userFromBd.email}`);
         return {
             "status_code": 200,
@@ -99,7 +100,7 @@ export class AuthService {
             });
             /*and add relation in user table*/
             userFromBd.auth = authDataNewUser;
-            await this.userService.addRelationAuth(authDataNewUser,userFromBd);
+            await this.userService.addRelationAuth(authDataNewUser, userFromBd);
 
             authUserDataSave = await this.authRepository.save(authDataNewUser);
             this.logger.log(`Created tokens for userId- ${userFromBd.id}`);
