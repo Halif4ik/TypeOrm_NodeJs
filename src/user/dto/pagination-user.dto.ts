@@ -1,4 +1,4 @@
-import {IsBoolean, IsNumber, IsOptional, IsString} from "class-validator";
+import {IsBoolean, IsNumber, IsOptional} from "class-validator";
 
 export class PaginationsDto {
     @IsNumber({}, {message: 'Page should be Number'})

@@ -1,15 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseGuards} from '@nestjs/common';
 import { InviteService } from './invite.service';
 import { CreateInviteDto } from './dto/create-invite.dto';
 import { UpdateInviteDto } from './dto/update-invite.dto';
+import {AuthGuard} from "@nestjs/passport";
+import {UserDec} from "../auth/pass-user";
+import {User} from "../user/entities/user.entity";
 
 @Controller('invite')
 export class InviteController {
   constructor(private readonly inviteService: InviteService) {}
 
-  @Post()
-  createInvite(@Body() createInviteDto: CreateInviteDto) {
-    return this.inviteService.create(createInviteDto);
+  @Post('/create')
+  @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  createInvite(@UserDec() userFromGuard: User,@Body() createInviteDto: CreateInviteDto) {
+    return this.inviteService.create(userFromGuard,createInviteDto);
   }
 
   @Get()

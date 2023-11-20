@@ -25,7 +25,7 @@ export class Auth0Strategy extends PassportStrategy(Strategy, "auth0") {
         });
     }
 
-    public async validate(payload: unknown): Promise<User> {
+    public async validate(payload: unknown): Promise<User | null> {
         const email = payload['email']
         const firstName = payload['name']
         if (!email) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
