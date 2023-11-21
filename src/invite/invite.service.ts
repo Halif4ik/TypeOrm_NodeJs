@@ -5,7 +5,7 @@ import {User} from "../user/entities/user.entity";
 import {UserService} from "../user/user.service";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Company} from "../company/entities/company.entity";
-import {Repository} from "typeorm";
+import {Repository, UpdateResult} from "typeorm";
 import {Invite} from "./entities/invite.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {IDeleted, IInvite} from "../GeneralResponse/interface/customResponces";
@@ -18,12 +18,12 @@ export class InviteService {
                 private userService: UserService,) {
     }
 
-    async create(userFromGuard: User, createInviteDto: CreateOrDelInviteDto): Promise<GeneralResponse<IInvite>> {
-        let foundCompany: Company = userFromGuard.company.find((company: Company): boolean => company.id === createInviteDto.companyId);
-        if (!foundCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
+    async create(userFromGuard: User, crOrDelInviteDto: CreateOrDelInviteDto): Promise<GeneralResponse<IInvite>> {
+        let foundCompany: Company = userFromGuard.company.find((company: Company): boolean => company.id === crOrDelInviteDto.companyId);
+        if (!foundCompany) throw new HttpException("Incorrect company ID for this user", HttpStatus.NOT_FOUND);
 
         //cheking user for invite from this company
-        let foundTargetUser: User = await this.userService.getUserByEmailWCompTargInvit(createInviteDto.membersEmail);
+        const foundTargetUser: User = await this.userService.getUserByEmailWCompTargInvit(crOrDelInviteDto.membersEmail);
         const isPresentInvitesForTargetUser: Invite[] = await this.inviteRepository.find({
             where: {
                 targetUser: {id: foundTargetUser.id}
@@ -36,9 +36,8 @@ export class InviteService {
             if (isTargetUserHasThisInvite) throw new HttpException("Target used already has been received invite", HttpStatus.BAD_REQUEST);
         }
 
-
         const newInvite: Invite = this.inviteRepository.create({
-            accept: createInviteDto.accept,
+            accept: crOrDelInviteDto.accept,
             ownerCompany: foundCompany,
             ownerUser: userFromGuard,
             targetUser: foundTargetUser,
@@ -67,8 +66,26 @@ export class InviteService {
         } as GeneralResponse<IInvite>;
     }
 
-    async deleteInvite(userFromGuard: User, createInviteDto: CreateOrDelInviteDto): Promise<GeneralResponse<IDeleted>> {
+    async deleteInvite(userFromGuard: User, crOrDelInviteDto: CreateOrDelInviteDto): Promise<GeneralResponse<IDeleted>> {
+        const foundCompanyFromDtoInCurrUser: Company = userFromGuard.company.find((company: Company): boolean => company.id === crOrDelInviteDto.companyId);
+        if (!foundCompanyFromDtoInCurrUser) throw new HttpException("Incorrect company ID for this user", HttpStatus.NOT_FOUND);
 
+        const foundTargetUser: User = await this.userService.getUserByEmailWCompTargInvit(crOrDelInviteDto.membersEmail);
+        const isAnyInvitesInTargetUser: Invite[] = await this.inviteRepository.find({
+            where: {
+                targetUser: {id: foundTargetUser.id}
+            },
+            relations: ["ownerCompany", "targetUser"]
+        });
+
+        if (!isAnyInvitesInTargetUser) throw new HttpException("Target don't has ANY invites", HttpStatus.BAD_REQUEST);
+
+        const targetUserHasThisInvite: Invite = isAnyInvitesInTargetUser.find((oneInvite: Invite): boolean =>
+            oneInvite.ownerCompany.id === foundCompanyFromDtoInCurrUser.id);
+        if (!targetUserHasThisInvite) throw new HttpException("Target don't has invite", HttpStatus.BAD_REQUEST);
+        await this.inviteRepository.softDelete(targetUserHasThisInvite.id);
+
+        this.logger.log(`Soft-deleted invite for target user -'${crOrDelInviteDto.membersEmail}' in company -'${foundCompanyFromDtoInCurrUser.name}'`);
         return {
             "status_code": HttpStatus.OK,
             "detail": {
