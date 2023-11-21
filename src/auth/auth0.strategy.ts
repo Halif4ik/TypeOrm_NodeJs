@@ -5,7 +5,8 @@ import {passportJwtSecret} from "jwks-rsa";
 import {User} from "../user/entities/user.entity";
 import {UserService} from "../user/user.service";
 import * as process from "process";
-import {IResponseUser} from "../user/entities/responce.interface";
+import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
+import {IUserInfo} from "../GeneralResponse/interface/customResponces";
 
 @Injectable()
 export class Auth0Strategy extends PassportStrategy(Strategy, "auth0") {
@@ -27,17 +28,17 @@ export class Auth0Strategy extends PassportStrategy(Strategy, "auth0") {
     public async validate(payload: unknown): Promise<User> {
         const email = payload['email']
         const firstName = payload['name']
-        if (!email) throw new UnauthorizedException();
+        if (!email) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
 
-        const userFromBd: User | null = email ? await this.userService.getUserByEmail(email) : null;
+        const userFromBd: User | null = email ? await this.userService.getUserByEmailWithCompany(email) : null;
         /*create user in bd*/
         if (!userFromBd) {
-            const createdUser:IResponseUser = await this.userService.createUser({
+            const createdUser: GeneralResponse<IUserInfo> = await this.userService.createUser({
                 email: email,
-                password: email + firstName,
-                firstName
+                password: firstName ? email + firstName : email + 'random',
+                firstName: firstName ? firstName : Date.now().toString(),
             });
-            const newUser:User = createdUser.detail.user;
+            const newUser: User = createdUser.detail.user;
             return newUser;
         }
         /*or return user from bd*/

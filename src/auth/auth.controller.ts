@@ -3,21 +3,19 @@ import {
     Get,
     Post,
     Body,
-    Patch,
-    Delete,
-    Headers,
     UseGuards,
     UsePipes,
     ValidationPipe
 } from '@nestjs/common';
 import {AuthService} from './auth.service';
 import {CreateUserDto} from "../user/dto/create-user.dto";
-import {IResponseUser} from "../user/entities/responce.interface";
 import {LoginUserDto} from "./dto/login-auth.dto";
 import {JwtAuthRefreshGuard} from "./jwt-Refresh.guard";
 import {AuthGuard} from "@nestjs/passport";
-import {IResponseAuth} from "./entities/responce-auth.interface";
-import {UpdateUserDto} from "../user/dto/update-user.dto";
+import {UserDec} from "./pass-user";
+import {User} from "../user/entities/user.entity";
+import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
+import {IRespAuth, IUserInfo} from "../GeneralResponse/interface/customResponces";
 
 @Controller('auth')
 export class AuthController {
@@ -26,29 +24,29 @@ export class AuthController {
 
     @UsePipes(ValidationPipe)
     @Post('/login')
-    async login(@Body() loginDto: LoginUserDto): Promise<IResponseAuth> {
+    async login(@Body() loginDto: LoginUserDto):Promise<GeneralResponse<IRespAuth>> {
         return this.authService.login(loginDto);
     }
 
     @UsePipes(ValidationPipe)
     @Get("/me")
+    /*@CurrentUser() user: JwtPayload*/
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    async userInfo(@Headers('Authorization') authToken: string): Promise<IResponseUser> {
-        return this.authService.getUserInfo(authToken);
+    async userInfo(@UserDec() userFromGuard: User): Promise<GeneralResponse<IUserInfo>> {
+        return this.authService.getUserInfo(userFromGuard);
     }
-
 
     @UsePipes(ValidationPipe)
     @Post("/registration")
-    async registration(@Body() userDto: CreateUserDto): Promise<IResponseUser> {
+    async registration(@Body() userDto: CreateUserDto): Promise<GeneralResponse<IUserInfo>> {
         return this.authService.registration(userDto);
     }
 
     @UsePipes(ValidationPipe)
     @Post("/refresh")
     @UseGuards(JwtAuthRefreshGuard)
-    async refresh(@Headers('Authorization') authToken: string) {
-        return this.authService.refresh(authToken);
+    async refresh(@UserDec() userFromGuard: User): Promise<GeneralResponse<IRespAuth>> {
+        return this.authService.refresh(userFromGuard);
     }
 
 }

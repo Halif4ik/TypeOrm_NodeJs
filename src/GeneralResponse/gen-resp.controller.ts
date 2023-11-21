@@ -9,7 +9,7 @@ export class GenRespController {
     }
 
     @Get()
-    async findAll(): Promise<GeneralResponse> {
+    async findAll(): Promise<GeneralResponse<string>> {
         return this.testikService.findAll();
     }
 
