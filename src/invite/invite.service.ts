@@ -1,5 +1,5 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import {CreateInviteDto} from './dto/create-invite.dto';
+import {CreateOrDelInviteDto} from './dto/create-or-del-invite.dto';
 import {UpdateInviteDto} from './dto/update-invite.dto';
 import {User} from "../user/entities/user.entity";
 import {UserService} from "../user/user.service";
@@ -7,7 +7,8 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {Company} from "../company/entities/company.entity";
 import {Repository} from "typeorm";
 import {Invite} from "./entities/invite.entity";
-import {IResponseCompanyOrUser} from "../company/entities/responce-company.interface";
+import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
+import {IDeleted, IInvite} from "../GeneralResponse/interface/customResponces";
 
 @Injectable()
 export class InviteService {
@@ -17,27 +18,45 @@ export class InviteService {
                 private userService: UserService,) {
     }
 
-    async create(userFromGuard: User, createInviteDto: CreateInviteDto): Promise<IResponseCompanyOrUser> {
-        let findedCompany: Company = userFromGuard.company.find((company: Company): boolean => company.id === createInviteDto.companyId);
-        if (!findedCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
+    async create(userFromGuard: User, createInviteDto: CreateOrDelInviteDto): Promise<GeneralResponse<IInvite>> {
+        let foundCompany: Company = userFromGuard.company.find((company: Company): boolean => company.id === createInviteDto.companyId);
+        if (!foundCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
 
-        //cheking user for invite
-        let findedTargetUser: User = await this.userService.getUserByEmail(createInviteDto.membersEmail);
-        if (!findedTargetUser) throw new HttpException("Did not find target user for invite", HttpStatus.NOT_FOUND);
-        console.log('findedTargetUser-', findedTargetUser);
+        //cheking user for invite from this company
+        let foundTargetUser: User = await this.userService.getUserByEmailWCompTargInvit(createInviteDto.membersEmail);
+        const isPresentInvitesForTargetUser: Invite[] = await this.inviteRepository.find({
+            where: {
+                targetUser: {id: foundTargetUser.id}
+            },
+            relations: ["ownerCompany", "targetUser"]
+        });
+        if (isPresentInvitesForTargetUser) {
+            const isTargetUserHasThisInvite: boolean = isPresentInvitesForTargetUser.some((oneInvite: Invite): boolean =>
+                oneInvite.ownerCompany.id === foundCompany.id);
+            if (isTargetUserHasThisInvite) throw new HttpException("Target used already has been received invite", HttpStatus.BAD_REQUEST);
+        }
+
 
         const newInvite: Invite = this.inviteRepository.create({
             accept: createInviteDto.accept,
-            ownerCompany: findedCompany,
+            ownerCompany: foundCompany,
             ownerUser: userFromGuard,
-            targetUser: findedTargetUser,
+            targetUser: foundTargetUser,
         });
-        this.logger.log(`Created new Invite for user- ${findedTargetUser.email} from company- ${findedCompany.name}`);
+
         let inviteResponsce: Invite = await this.inviteRepository.save(newInvite);
-        console.log('inviteResponsce-', inviteResponsce);
+        this.logger.log(`Created new Invite for user- ${foundTargetUser.email} from company- ${foundCompany.name}`);
         inviteResponsce = {
             ...inviteResponsce, ownerCompany: {...inviteResponsce.ownerCompany, owner: null},
-            ownerUser: {...inviteResponsce.ownerUser, company: null, targetUser: {...targetUser, auth: null}}
+            ownerUser: {...inviteResponsce.ownerUser, company: null, password: null, isActive: null, deleteAt: null},
+            targetUser: {
+                ...inviteResponsce.targetUser,
+                firstName: null,
+                password: null,
+                isActive: null,
+                deleteAt: null,
+                auth: null
+            }
         }
         return {
             "status_code": HttpStatus.OK,
@@ -45,22 +64,18 @@ export class InviteService {
                 "invite": inviteResponsce,
             },
             "result": "created"
+        } as GeneralResponse<IInvite>;
+    }
+
+    async deleteInvite(userFromGuard: User, createInviteDto: CreateOrDelInviteDto): Promise<GeneralResponse<IDeleted>> {
+
+        return {
+            "status_code": HttpStatus.OK,
+            "detail": {
+                "invite": null,
+            },
+            "result": "deleted"
         };
-    }
 
-    findAll() {
-        return `This action returns all invite`;
-    }
-
-    findOne(id: number) {
-        return `This action returns a #${id} invite`;
-    }
-
-    update(id: number, updateInviteDto: UpdateInviteDto) {
-        return `This action updates a #${id} invite`;
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} invite`;
     }
 }

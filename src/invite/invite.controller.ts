@@ -1,10 +1,12 @@
 import {Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseGuards} from '@nestjs/common';
 import { InviteService } from './invite.service';
-import { CreateInviteDto } from './dto/create-invite.dto';
+import { CreateOrDelInviteDto } from './dto/create-or-del-invite.dto';
 import { UpdateInviteDto } from './dto/update-invite.dto';
 import {AuthGuard} from "@nestjs/passport";
 import {UserDec} from "../auth/pass-user";
 import {User} from "../user/entities/user.entity";
+import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
+import {IInvite} from "../GeneralResponse/interface/customResponces";
 
 @Controller('invite')
 export class InviteController {
@@ -13,27 +15,15 @@ export class InviteController {
   @Post('/create')
   @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  createInvite(@UserDec() userFromGuard: User,@Body() createInviteDto: CreateInviteDto) {
+  createInvite(@UserDec() userFromGuard: User,@Body() createInviteDto: CreateOrDelInviteDto): Promise<GeneralResponse<IInvite>> {
     return this.inviteService.create(userFromGuard,createInviteDto);
   }
 
-  @Get()
-  findAll() {
-    return this.inviteService.findAll();
+  @Delete('/deleteInvite')
+  @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  deleteInvite(@UserDec() userFromGuard: User,@Body() createInviteDto: CreateOrDelInviteDto) {
+    return this.inviteService.deleteInvite(userFromGuard,createInviteDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.inviteService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInviteDto: UpdateInviteDto) {
-    return this.inviteService.update(+id, updateInviteDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.inviteService.remove(+id);
-  }
 }

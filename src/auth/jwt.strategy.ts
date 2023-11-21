@@ -16,6 +16,6 @@ export class JwtStrategyAuth extends PassportStrategy(Strategy, "jwt-auth") {
 
     async validate(payload: unknown): Promise<User | null> {
         const email: string | undefined = payload['email'];
-        return this.userService.getUserByEmailWithCompany(email);
+        return this.userService.getUserByEmailWCompTargInvit(email);
     }
 }

@@ -62,10 +62,10 @@ export class UserService {
         });
     }
 
-    async getUserByEmailWithCompany(email: string): Promise<User | null> {
+    async getUserByEmailWCompTargInvit(email: string): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {email},
-            relations: ['company']
+            relations: ['company', 'targetForInvite']
         });
     }
 
