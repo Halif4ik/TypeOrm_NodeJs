@@ -82,4 +82,7 @@ export class CompanyService {
 
     }
 
+     async getCompanyById(companyId: number):Promise<Company | undefined> {
+        return  this.companyRepository.findOne({where: {id: companyId}});
+    }
 }

@@ -15,6 +15,7 @@ import {User} from "../user/entities/user.entity";
     imports: [  UserModule,
          TypeOrmModule.forFeature([Company,Invite,User]),
         JwtModule, PassportModule],
+    exports: [CompanyService]
 })
 export class CompanyModule {
 }

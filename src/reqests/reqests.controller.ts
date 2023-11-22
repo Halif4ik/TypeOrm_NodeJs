@@ -1,34 +1,47 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ReqestsService } from './reqests.service';
-import { CreateReqestDto } from './dto/create-reqest.dto';
-import { UpdateReqestDto } from './dto/update-reqest.dto';
+import {Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UsePipes, ValidationPipe} from '@nestjs/common';
+import {RequestsService} from './requests.service';
+import {CreateRequestDto} from './dto/create-request.dto';
+import {AuthGuard} from "@nestjs/passport";
+import {UserDec} from "../auth/pass-user";
+import {User} from "../user/entities/user.entity";
+import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
+import {IDeleted, IRequests} from "../GeneralResponse/interface/customResponces";
+import {CancelRequestDto} from "./dto/cancel-request.dto";
 
-@Controller('reqests')
+
+@Controller('requests')
 export class ReqestsController {
-  constructor(private readonly reqestsService: ReqestsService) {}
+    constructor(private readonly requestsService: RequestsService) {
+    }
 
-  @Post()
-  create(@Body() createReqestDto: CreateReqestDto) {
-    return this.reqestsService.create(createReqestDto);
-  }
+    // 5. User create one join requests
+    //Endpoint: POST /create
+    // Permissions: Authenticated user
+    @Post('/create')
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    createInvite(@UserDec() userFromGuard: User, @Body() createRequestDto: CreateRequestDto): Promise<GeneralResponse<IRequests>> {
+        return this.requestsService.create(userFromGuard, createRequestDto);
+    }
 
-  @Get()
-  findAll() {
-    return this.reqestsService.findAll();
-  }
+    // 6. User cancels a join request
+    // Endpoint: DELETE /requests/cancelRequest
+    // Permissions: Authenticated user
+    @Delete('/cancelRequest')
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    cancelJoinRequest(@UserDec() user: User, @Body() cancelRequestDto: CancelRequestDto): Promise<GeneralResponse<IDeleted>> {
+        return this.requestsService.cancelJoinRequest(user, cancelRequestDto);
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reqestsService.findOne(+id);
-  }
+    // 7. Owner accepts a join request
+    // Endpoint: POST /requests/accept
+    // Permissions: Only company owner
+    @Post('/accept')
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    acceptJoinRequest(@UserDec() owner: User, @Body() cancelRequestDto: CancelRequestDto): Promise<GeneralResponse<IRequests>> {
+        return this.requestsService.acceptJoinRequest(owner, cancelRequestDto);
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReqestDto: UpdateReqestDto) {
-    return this.reqestsService.update(+id, updateReqestDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reqestsService.remove(+id);
-  }
 }

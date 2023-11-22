@@ -2,6 +2,7 @@ import {Column, DeleteDateColumn, Entity, JoinColumn,
     ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {User} from "../../user/entities/user.entity";
 import {Invite} from "../../invite/entities/invite.entity";
+import {Request} from "../../reqests/entities/reqest.entity";
 
 @Entity()
 export class Company {
@@ -29,5 +30,8 @@ export class Company {
 
     @OneToMany(() => Invite, invite => invite.ownerCompany)
     invites: Invite[];
+
+    @OneToMany(() => Request, request => request.targetCompany)
+    requests: Request[];
 
 }

@@ -23,7 +23,7 @@ export class AuthService {
 
     async login(loginDto: LoginUserDto): Promise<GeneralResponse<IRespAuth>> {
         // should rewrite all tokens return one token
-        const userFromBd: User = await this.userService.getUserByEmail(loginDto.email);
+        const userFromBd: User = await this.userService.getUserByEmailWithAuth(loginDto.email);
         await this.checkUserCredentials(userFromBd, loginDto);
         /*contain auth table */
         return {

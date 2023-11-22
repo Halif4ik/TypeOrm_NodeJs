@@ -12,7 +12,7 @@ import {AcceptInviteDto} from "./dto/update-invite.dto";
 
 @Injectable()
 export class InviteService {
-    private readonly logger: Logger = new Logger(UserService.name);
+    private readonly logger: Logger = new Logger(InviteService.name);
 
     constructor(@InjectRepository(Invite) private inviteRepository: Repository<Invite>,
                 private userService: UserService,) {
@@ -98,26 +98,25 @@ export class InviteService {
 
     }
 
-    async updateInvite(userFromGuard: User, acceptInviteDto: AcceptInviteDto) {
+    async updateInvite(userFromGuardFetureMember: User, acceptInviteDto: AcceptInviteDto) {
         const foundInvite: Invite[] = await this.inviteRepository.find({
             where: {
                 id: acceptInviteDto.inviteId
             },
-            relations: ["targetUser"]
+            relations: ["targetUser", "ownerCompany"]
         });
-
+        this.userService.addRelationMemberToCompany(foundInvite[0].ownerCompany, userFromGuardFetureMember);
         if (foundInvite.length < 1) throw new HttpException("Target invites dosent exist", HttpStatus.BAD_REQUEST);
-        else if (foundInvite[0].targetUser.id !== userFromGuard.id)
+        else if (foundInvite[0].targetUser.id !== userFromGuardFetureMember.id)
             throw new HttpException("This invite not for you", HttpStatus.BAD_REQUEST);
-        console.log('acceptInviteDto.accept-', acceptInviteDto.accept);
-        console.log('typeof.accept-', typeof acceptInviteDto.accept);
 
         /*we have only one invite by id from Request*/
         let inviteResponsce: Invite = await this.inviteRepository.save({
             ...foundInvite[0],
             accept: acceptInviteDto.accept
         });
-        this.logger.log(`Invite for user- ${userFromGuard.email} by №- ${acceptInviteDto.inviteId} changed to - ${acceptInviteDto.accept}`);
+
+        this.logger.log(`Invite for user- ${userFromGuardFetureMember.email} by №- ${acceptInviteDto.inviteId} changed to - ${acceptInviteDto.accept}`);
         inviteResponsce = {
             ...inviteResponsce, targetUser: {...inviteResponsce.targetUser, password: null}
         }
