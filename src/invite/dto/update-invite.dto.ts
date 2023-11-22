@@ -11,7 +11,7 @@ export class AcceptInviteDto extends PartialType(CreateOrDelInviteDto) {
     @Min(1)
     readonly inviteId: number;
 
-    @Transform(({ value }) => value === true)
+    @Transform(({ value }) => value.toString() === 'true')
     @IsNotEmpty()
     @IsBoolean({message: 'id company for delete should be number'})
     readonly accept: boolean;

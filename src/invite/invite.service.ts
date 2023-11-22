@@ -4,7 +4,7 @@ import {User} from "../user/entities/user.entity";
 import {UserService} from "../user/user.service";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Company} from "../company/entities/company.entity";
-import {Repository, UpdateResult} from "typeorm";
+import {Repository} from "typeorm";
 import {Invite} from "./entities/invite.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {IDeleted, IInvite} from "../GeneralResponse/interface/customResponces";
@@ -40,7 +40,6 @@ export class InviteService {
         }
 
         const newInvite: Invite = this.inviteRepository.create({
-            accept: crOrDelInviteDto.accept,
             ownerCompany: foundCompany,
             ownerUser: userFromGuard,
             targetUser: foundTargetUser,

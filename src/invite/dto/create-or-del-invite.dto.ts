@@ -10,9 +10,5 @@ export class CreateOrDelInviteDto {
     @Min(1)
     readonly companyId: number;
 
-    @Transform(({ value }) => value === 'true')
-    @IsOptional()
-    @IsBoolean({message: 'id company for delete should be number'})
-    readonly accept: boolean;
 
 }

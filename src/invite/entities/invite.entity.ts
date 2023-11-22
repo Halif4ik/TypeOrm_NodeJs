@@ -16,7 +16,7 @@ export class Invite {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({type: "boolean",default: false})
+    @Column({type: "boolean", nullable: true})
     accept: boolean;
 
     @CreateDateColumn()
@@ -31,11 +31,11 @@ export class Invite {
     @JoinColumn()
     ownerCompany: Company;
 
-    @ManyToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
+    @ManyToOne(() => User, {cascade: true, onDelete: 'CASCADE'})
     @JoinColumn()
     ownerUser: User;
 
-    @ManyToOne(() => User, { cascade: true, onDelete: 'CASCADE' })
+    @ManyToOne(() => User, {cascade: true, onDelete: 'CASCADE'})
     @JoinColumn({name: "targetUser"})
     targetUser: User;
 
