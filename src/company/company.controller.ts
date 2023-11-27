@@ -22,6 +22,7 @@ import {UserDec} from "../auth/pass-user";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {ICompany, IDeleted} from "../GeneralResponse/interface/customResponces";
 import {DeleteUserDto} from "./dto/delete-user-company.dto";
+import {RemoveMembershipDto} from "./dto/remove-membership-company.dto";
 
 @Controller('company')
 export class CompanyController {
@@ -66,9 +67,18 @@ export class CompanyController {
     @Delete('/remove_members')/*todo*/
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    removeUserFromCompany(@UserDec() owner: User,@Body() deleteUserDto: DeleteUserDto) {
+    removeUserFromCompany(@UserDec() owner: User, @Body() deleteUserDto: DeleteUserDto):Promise<GeneralResponse<IDeleted>> {
         return this.companyService.removeUserFromCompany(owner, deleteUserDto);
     }
 
+    // 10. User leaves the company
+   // Endpoint: DELETE /company/membership_remove
+   // Permissions: Authenticated user
+    @Delete('/membership_remove')
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    leaveCompany(@UserDec() user: User, @Body() removeMembershipDto: RemoveMembershipDto):Promise<GeneralResponse<IDeleted>> {
+        return this.companyService.removeMembership(user, removeMembershipDto);
+    }
 
 }

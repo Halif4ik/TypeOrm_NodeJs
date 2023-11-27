@@ -1,5 +1,4 @@
-import {IsNotEmpty, IsNumber, IsOptional, IsString, Length, Min} from "class-validator";
-import {Optional} from "@nestjs/common";
+import {IsNotEmpty, IsNumber,    Min} from "class-validator";
 import {Transform} from "class-transformer";
 
 export class DeleteUserDto {

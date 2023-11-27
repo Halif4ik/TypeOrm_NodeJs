@@ -120,7 +120,6 @@ export class UserService {
         };
         this.logger.log(`Removed  user- ${removedUserFromBd.email}`);
         return result;
-
     }
 
     async updateUserInfo(token: string, updateUserDto: UpdateUserDto): Promise<GeneralResponse<IUserInfo>> {

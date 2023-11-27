@@ -13,6 +13,8 @@ import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.inte
 import {DeleteUserDto} from "./dto/delete-user-company.dto";
 import {Auth} from "../auth/entities/auth.entity";
 import {Request} from "../reqests/entities/reqest.entity";
+import {RemoveMembershipDto} from "./dto/remove-membership-company.dto";
+import {use} from "passport";
 
 @Injectable()
 export class CompanyService {
@@ -90,7 +92,7 @@ export class CompanyService {
         return this.companyRepository.findOne({where: {id: companyId}});
     }
 
-    async removeUserFromCompany(ownerFromGuard: User, deleteUserDto: DeleteUserDto,):Promise<GeneralResponse<IDeleted>> {
+    async removeUserFromCompany(ownerFromGuard: User, deleteUserDto: DeleteUserDto,): Promise<GeneralResponse<IDeleted>> {
         let findedCompany: Company = ownerFromGuard.company.find((company: Company): boolean => company.id === deleteUserDto.companyId);
         if (!findedCompany) throw new HttpException("Incorrect company name for this owner", HttpStatus.NOT_FOUND);
 
@@ -102,18 +104,13 @@ export class CompanyService {
         });
         if (!targetCompany) throw new HttpException('Error removeUserFromCompany', HttpStatus.NOT_FOUND,);
 
-        const willDeleteUser: User | undefined = targetCompany.members.find((user: User): boolean => user.id === deleteUserDto.userId);
-        if (!willDeleteUser) throw new HttpException("Incorrect user id for this company", HttpStatus.NOT_FOUND);
+
         // Find the user to be removed
-        const userToRemove: User | undefined = await this.userService.getUserByIdWithCompany(deleteUserDto.userId);
-        if (!userToRemove)
+        const willDeleteUserCompRelation: User | undefined = await this.userService.getUserByIdWithCompany(deleteUserDto.userId);
+        if (!willDeleteUserCompRelation)
             throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
-        // Remove the user from the company
-        targetCompany.members= targetCompany.members.filter((user: User): boolean => user.id !== deleteUserDto.userId);
-        await this.companyRepository.save(targetCompany);
-        this.logger.log(`Remone relation ${willDeleteUser.email} for Company - ${targetCompany.name}`);
-
+        await this.removeRelationUserCompany(willDeleteUserCompRelation, targetCompany, deleteUserDto.userId);
         return {
             status_code: HttpStatus.OK,
             detail: {
@@ -121,6 +118,15 @@ export class CompanyService {
             },
             result: 'removed',
         };
+    }
+
+// Remove the user from the company
+    async removeRelationUserCompany(userToRemove: User, targetCompany: Company, userId: number): Promise<void> {
+        const willDeleteUserNotRelation: User | undefined = targetCompany.members.find((user: User): boolean => user.id === userId);
+        if (!willDeleteUserNotRelation) throw new HttpException("Incorrect user id for this company", HttpStatus.NOT_FOUND);
+        targetCompany.members = targetCompany.members.filter((user: User): boolean => user.id !== userToRemove.id);
+         await this.companyRepository.save(targetCompany);
+        this.logger.log(`Remove relation ${userToRemove.email} for/from Company - ${targetCompany.name}`);
     }
 
     async addRelationToCompany<T>(newRelation: T, targetCompany: Company): Promise<Company> {
@@ -137,5 +143,24 @@ export class CompanyService {
         const temp: Company = await this.companyRepository.save(targetCompany2);
         this.logger.log(`Added relation ${logMessage} for Company - ${Company.name}`);
         return temp;
+    }
+
+    async removeMembership(user: User, removeMembershipDto: RemoveMembershipDto): Promise<GeneralResponse<IDeleted>> {
+        const targetCompany: Company | undefined = await this.companyRepository.findOne({
+            where: {
+                id: removeMembershipDto.companyId,
+            },
+            relations: ['members']
+        });
+        if (!targetCompany) throw new HttpException('This company absent', HttpStatus.NOT_FOUND,);
+
+        await this.removeRelationUserCompany(user, targetCompany,user.id);
+        return {
+            status_code: HttpStatus.OK,
+            detail: {
+                removedUser: null,
+            },
+            result: 'removed',
+        };
     }
 }

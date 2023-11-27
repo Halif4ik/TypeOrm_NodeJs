@@ -57,15 +57,4 @@ export class ReqestsController {
 
 
 
-
-    // 10. User leaves the company
-// Endpoint: DELETE /companies/:companyId/membership
-// Permissions: Authenticated user
-    @Delete('/companies/:companyId/membership')
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-    leaveCompany(@UserDec() user: User, @Param('companyId') companyId: number,) {
-        // Your implementation here
-    }
-
-
 }
