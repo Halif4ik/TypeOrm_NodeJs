@@ -11,17 +11,20 @@ export interface IRespAuth {
 export interface IUserInfo {
     "user": User
 }
+export interface IAllMembers {
+    "members":  User[]
+}
 
 export interface ICompany {
     "company": Company | Company[]
 }
 
 export interface IInvite {
-    "invite": Invite
+    "invite": Invite | Invite[]
 }
 
 export interface IRequests {
-    "request": Request
+    "request": Request | Request[]
 }
 
 export interface IDeleted {

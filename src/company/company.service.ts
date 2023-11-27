@@ -8,13 +8,10 @@ import {Company} from "./entities/company.entity";
 import {User} from "../user/entities/user.entity";
 import {DeleteCompanyDto} from "./dto/delete-company.dto";
 import * as process from "process";
-import {ICompany, IDeleted} from "../GeneralResponse/interface/customResponces";
+import {IAllMembers, ICompany, IDeleted, IUserInfo} from "../GeneralResponse/interface/customResponces";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {DeleteUserDto} from "./dto/delete-user-company.dto";
-import {Auth} from "../auth/entities/auth.entity";
-import {Request} from "../reqests/entities/reqest.entity";
 import {RemoveMembershipDto} from "./dto/remove-membership-company.dto";
-import {use} from "passport";
 
 @Injectable()
 export class CompanyService {
@@ -161,6 +158,24 @@ export class CompanyService {
                 removedUser: null,
             },
             result: 'removed',
+        };
+    }
+
+    async listAllMembersOfCompany( idCompanyDto: DeleteCompanyDto):Promise<GeneralResponse<IAllMembers>>{
+        const companyWithMembers:Company = await this.companyRepository.findOne({
+            where: {
+                id: idCompanyDto.id,
+            },
+            relations: ['members'],
+        });
+
+
+        return {
+            status_code: HttpStatus.OK,
+            detail: {
+                members: companyWithMembers.members,
+            },
+            result: 'retrieved',
         };
     }
 }

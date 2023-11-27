@@ -8,7 +8,7 @@ import {
     UsePipes,
     ValidationPipe,
     UseGuards,
-    Query, Param,
+    Query,
 } from '@nestjs/common';
 import {CompanyService} from './company.service';
 import {CreateCompanyDto} from './dto/create-company.dto';
@@ -20,7 +20,7 @@ import {User} from "../user/entities/user.entity";
 import {ParsePageAndRevertPipe} from "../pipe/validation.pipe";
 import {UserDec} from "../auth/pass-user";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {ICompany, IDeleted} from "../GeneralResponse/interface/customResponces";
+import {IAllMembers, ICompany, IDeleted, IRequests} from "../GeneralResponse/interface/customResponces";
 import {DeleteUserDto} from "./dto/delete-user-company.dto";
 import {RemoveMembershipDto} from "./dto/remove-membership-company.dto";
 
@@ -64,7 +64,7 @@ export class CompanyController {
     // 9. Owner removes a user from the company
     // Endpoint: DELETE /company/remove_members
     // Permissions: Only company owner
-    @Delete('/remove_members')/*todo*/
+    @Delete('/remove_members')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     removeUserFromCompany(@UserDec() owner: User, @Body() deleteUserDto: DeleteUserDto):Promise<GeneralResponse<IDeleted>> {
@@ -79,6 +79,16 @@ export class CompanyController {
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     leaveCompany(@UserDec() user: User, @Body() removeMembershipDto: RemoveMembershipDto):Promise<GeneralResponse<IDeleted>> {
         return this.companyService.removeMembership(user, removeMembershipDto);
+    }
+
+    // 15. List users in my company
+    // Endpoint: GET /company/all_members
+    // Permissions: Authenticated all users
+    @Get('/all_members')
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    listAllMembersOfCompany(@Query() idCompanyDto: DeleteCompanyDto):Promise<GeneralResponse<IAllMembers>>{
+        return this.companyService.listAllMembersOfCompany(idCompanyDto);
     }
 
 }

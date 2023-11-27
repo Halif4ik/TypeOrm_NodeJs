@@ -10,6 +10,7 @@ import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.inte
 import {IDeleted, IRequests} from "../GeneralResponse/interface/customResponces";
 import {CancelRequestDto} from "./dto/cancel-request.dto";
 import {UserService} from "../user/user.service";
+import {DeleteCompanyDto} from "../company/dto/delete-company.dto";
 
 @Injectable()
 export class RequestsService {
@@ -94,7 +95,7 @@ export class RequestsService {
             accept: true,
         });
         this.userService.addRelationToUser(request.targetCompany, request.requestUser);
-        this.companyService.addRelationToCompany(request.requestUser,request.targetCompany);
+        this.companyService.addRelationToCompany(request.requestUser, request.targetCompany);
 
         this.logger.log(`Owner- ${owner.email} accepted join request- ${request.id}`);
         return {
@@ -103,7 +104,7 @@ export class RequestsService {
                 request: {...requestChanged, targetCompany: null, requestUser: null},
             },
             result: 'accepted',
-        } as GeneralResponse<IRequests>;
+        };
     }
 
     async declineJoinRequest(owner: User, declineRequestDto: CancelRequestDto,): Promise<GeneralResponse<IRequests>> {
@@ -135,8 +136,43 @@ export class RequestsService {
                 request: {...requestChanged, targetCompany: null, requestUser: null},
             },
             result: 'declined',
-        } as GeneralResponse<IRequests>;
+        };
     }
 
+    async listUserRequests(user: User): Promise<GeneralResponse<IRequests>> {
+        const userRequests: Request[] = await this.requestRepository.find({
+            where: {
+                requestUser: {id: user.id},
+            },
+            relations: ['targetCompany'],
+        });
+        return {
+            status_code: HttpStatus.OK,
+            detail: {
+                request: userRequests,
+            },
+            result: 'retrieved',
+        };
+    }
 
+    async listRequestToMyCompany(ownerFromGuard: User, idCompanyDto : DeleteCompanyDto) {
+        const isOwner: boolean = ownerFromGuard.company.some((company: Company) => company.id === idCompanyDto.id);
+        if (!isOwner) throw new HttpException(`You are not owner of this company`, HttpStatus.BAD_REQUEST);
+
+        const requestsToMyCompany: Request[] = await this.requestRepository.find({
+            where: {
+                targetCompany: {id: idCompanyDto.id},
+            },
+            relations: ['requestUser'],
+        });
+
+        return {
+            status_code: HttpStatus.OK,
+            detail: {
+                request: requestsToMyCompany,
+            },
+            result: 'retrieved',
+        };
+
+    }
 }

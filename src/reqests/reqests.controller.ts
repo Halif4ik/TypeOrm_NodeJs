@@ -1,4 +1,14 @@
-import {Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UsePipes, ValidationPipe} from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Delete,
+    UseGuards,
+    UsePipes,
+    ValidationPipe,
+    Query
+} from '@nestjs/common';
 import {RequestsService} from './requests.service';
 import {CreateRequestDto} from './dto/create-request.dto';
 import {AuthGuard} from "@nestjs/passport";
@@ -7,6 +17,7 @@ import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {IDeleted, IRequests} from "../GeneralResponse/interface/customResponces";
 import {CancelRequestDto} from "./dto/cancel-request.dto";
+import {DeleteCompanyDto} from "../company/dto/delete-company.dto";
 
 
 @Controller('requests')
@@ -55,6 +66,23 @@ export class ReqestsController {
         return this.requestsService.declineJoinRequest(owner, cancelRequestDto);
     }
 
+    // 11. List user's requests in companies
+    // Endpoint: GET /requests/my
+    // Permissions: Authenticated user
+    @Get('/my')
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    listMyRequests(@UserDec() userFromGuard: User,):Promise<GeneralResponse<IRequests>>{
+        return this.requestsService.listUserRequests(userFromGuard);
+    }
+    // 14. List requests in my company
+    // Endpoint: GET /requests/toMyCompany
+    // Permissions: Authenticated user
+    @Get('/toMyCompany')
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    listRequestToMyCompany(@UserDec() userFromGuard: User, @Query() idCompanyDto: DeleteCompanyDto):Promise<GeneralResponse<IRequests>>{
+        return this.requestsService.listRequestToMyCompany(userFromGuard,idCompanyDto);
+    }
 
 
 }

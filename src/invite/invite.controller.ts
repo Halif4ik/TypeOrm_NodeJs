@@ -5,7 +5,7 @@ import {AuthGuard} from "@nestjs/passport";
 import {UserDec} from "../auth/pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {IDeleted, IInvite} from "../GeneralResponse/interface/customResponces";
+import {IDeleted, IInvite, IRequests} from "../GeneralResponse/interface/customResponces";
 import {AcceptInviteDto} from "./dto/update-invite.dto";
 
 @Controller('invite')
@@ -31,5 +31,14 @@ export class InviteController {
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   acceptInvite(@UserDec() userFromGuard: User,@Body() acceptInviteDto: AcceptInviteDto) {
     return this.inviteService.updateInvite(userFromGuard,acceptInviteDto);
+  }
+
+  // 11. List owner's invite to companies
+  // Endpoint: GET /invite/my
+  // Permissions: Authenticated owner
+  @Get('/my')
+  @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+  listMyRequests(@UserDec() userFromGuard: User,):Promise<GeneralResponse<IInvite>>{
+    return this.inviteService.listUserInvites(userFromGuard);
   }
 }

@@ -9,6 +9,7 @@ import {Invite} from "./entities/invite.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {IDeleted, IInvite} from "../GeneralResponse/interface/customResponces";
 import {AcceptInviteDto} from "./dto/update-invite.dto";
+import {Request} from "../reqests/entities/reqest.entity";
 
 @Injectable()
 export class InviteService {
@@ -98,7 +99,7 @@ export class InviteService {
 
     }
 
-    async updateInvite(userFromGuardFetureMember: User, acceptInviteDto: AcceptInviteDto) {
+    async updateInvite(userFromGuardFetureMember: User, acceptInviteDto: AcceptInviteDto):Promise<GeneralResponse<IInvite>> {
         const foundInvite: Invite[] = await this.inviteRepository.find({
             where: {
                 id: acceptInviteDto.inviteId
@@ -126,6 +127,22 @@ export class InviteService {
                 "invite": inviteResponsce,
             },
             "result": "created"
-        } as GeneralResponse<IInvite>;
+        } ;
+    }
+
+   async listUserInvites(userFromGuard: User): Promise<GeneralResponse<IInvite>> {
+        const ownerInvites: Invite[] = await this.inviteRepository.find({
+            where: {
+                ownerUser: {id: userFromGuard.id}
+            },
+            relations: ['ownerCompany'],
+        });
+        return {
+            status_code: HttpStatus.OK,
+            detail: {
+                "invite": ownerInvites,
+            },
+            result: 'retrieved',
+        };
     }
 }
