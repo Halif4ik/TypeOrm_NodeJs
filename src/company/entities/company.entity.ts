@@ -25,7 +25,7 @@ export class Company {
     @JoinColumn({name: "ownerId"})
     owner: User;
 
-    @OneToMany(() => User, user => user.company)
+    @OneToMany(() => User, user => user.companyMember)
     members: User[];
 
     @OneToMany(() => Invite, invite => invite.ownerCompany)

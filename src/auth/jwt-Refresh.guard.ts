@@ -21,7 +21,7 @@ export class JwtAuthRefreshGuard implements CanActivate {
             if (bearer !== "Bearer" || !token) throw new UnauthorizedException({message: "User doesnt authorized"});
             let userFromJwt = this.jwtService.verify(token, {secret: process.env.SECRET_REFRESH});
             /*becouse in jwt always present id*/
-            const userFromBd: User | null = userFromJwt['email'] ? await this.userService.getUserByIdWithCompany(userFromJwt['id']) : null;
+            const userFromBd: User | null = userFromJwt['email'] ? await this.userService.getUserByIdWithCompanyAuth(userFromJwt['id']) : null;
             req.user = userFromBd;
             return req.user;
         } catch (e) {

@@ -105,7 +105,7 @@ export class InviteService {
             },
             relations: ["targetUser", "ownerCompany"]
         });
-        this.userService.addRelationMemberToCompany(foundInvite[0].ownerCompany, userFromGuardFetureMember);
+        this.userService.addRelationToUser(foundInvite[0].ownerCompany, userFromGuardFetureMember);
         if (foundInvite.length < 1) throw new HttpException("Target invites dosent exist", HttpStatus.BAD_REQUEST);
         else if (foundInvite[0].targetUser.id !== userFromGuardFetureMember.id)
             throw new HttpException("This invite not for you", HttpStatus.BAD_REQUEST);

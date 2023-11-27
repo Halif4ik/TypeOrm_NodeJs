@@ -100,7 +100,7 @@ export class AuthService {
             });
             /*and add relation in user table*/
             userFromBd.auth = authDataNewUser;
-            await this.userService.addRelationAuth(authDataNewUser, userFromBd);
+            await this.userService.addRelationToUser(authDataNewUser, userFromBd);
 
             authUserDataSave = await this.authRepository.save(authDataNewUser);
             this.logger.log(`Created tokens for userId- ${userFromBd.id}`);

@@ -8,7 +8,7 @@ import {
     UsePipes,
     ValidationPipe,
     UseGuards,
-    Query,
+    Query, Param,
 } from '@nestjs/common';
 import {CompanyService} from './company.service';
 import {CreateCompanyDto} from './dto/create-company.dto';
@@ -21,6 +21,7 @@ import {ParsePageAndRevertPipe} from "../pipe/validation.pipe";
 import {UserDec} from "../auth/pass-user";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {ICompany, IDeleted} from "../GeneralResponse/interface/customResponces";
+import {DeleteUserDto} from "./dto/delete-user-company.dto";
 
 @Controller('company')
 export class CompanyController {
@@ -58,5 +59,16 @@ export class CompanyController {
         const {page, revert} = paginationsDto;
         return this.companyService.findAll(page, revert);
     }
+
+    // 9. Owner removes a user from the company
+    // Endpoint: DELETE /company/remove_members
+    // Permissions: Only company owner
+    @Delete('/remove_members')/*todo*/
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    removeUserFromCompany(@UserDec() owner: User,@Body() deleteUserDto: DeleteUserDto) {
+        return this.companyService.removeUserFromCompany(owner, deleteUserDto);
+    }
+
 
 }

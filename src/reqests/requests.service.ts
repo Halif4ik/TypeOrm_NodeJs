@@ -10,7 +10,6 @@ import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.inte
 import {IDeleted, IRequests} from "../GeneralResponse/interface/customResponces";
 import {CancelRequestDto} from "./dto/cancel-request.dto";
 import {UserService} from "../user/user.service";
-import {Invite} from "../invite/entities/invite.entity";
 
 @Injectable()
 export class RequestsService {
@@ -23,11 +22,23 @@ export class RequestsService {
     async create(userFromGuard: User, createRequestDto: CreateRequestDto): Promise<GeneralResponse<IRequests>> {
         const foundCompany: Company | undefined = await this.companyService.getCompanyById(createRequestDto.companyId);
         if (!foundCompany) throw new HttpException("Company didnt create", HttpStatus.NOT_FOUND);
+        if (foundCompany.owner.id === userFromGuard.id) throw new HttpException("You cant send request to your company", HttpStatus.BAD_REQUEST);
+
+        const requestFromBd: Request | undefined = await this.requestRepository.findOne({
+            where: {
+                requestUser: {id: userFromGuard.id},
+                targetCompany: {id: foundCompany.id},
+            },
+        });
+        if (requestFromBd) throw new HttpException("You already send request to this company", HttpStatus.BAD_REQUEST);
+
         const newRequest: Request = this.requestRepository.create({
             targetCompany: foundCompany,
             requestUser: userFromGuard,
         });
         await this.requestRepository.save(newRequest);
+
+        await this.userService.addRelationToUser(newRequest, userFromGuard);
         this.logger.log(`Created new Request from user- ${userFromGuard.email} to company- ${foundCompany.name}`);
         return {
             "status_code": HttpStatus.OK,
@@ -64,29 +75,26 @@ export class RequestsService {
         } as GeneralResponse<IDeleted>;
     }
 
-    async acceptJoinRequest(owner: User, cancelRequestDto: CancelRequestDto): Promise<GeneralResponse<IRequests>> {
+    async acceptJoinRequest(owner: User, acceptRequestDto: CancelRequestDto): Promise<GeneralResponse<IRequests>> {
         const request: Request | undefined = await this.requestRepository.findOne({
             where: {
-                id: cancelRequestDto.requestId,
+                id: acceptRequestDto.requestId,
                 targetCompany: {
                     owner: owner,
                 },
             },
             relations: ['targetCompany', 'requestUser'],
         });
-        console.log('request-', request);
 
-        if (!request) {
-            throw new HttpException(
-                'Join request not found for the owner',
-                HttpStatus.NOT_FOUND,
-            );
-        }
+        if (!request)
+            throw new HttpException('Join request not found for this owner', HttpStatus.NOT_FOUND);
+
         let requestChanged: Request = await this.requestRepository.save({
             ...request,
             accept: true,
         });
-        this.userService.addRelationMemberToCompany(request.targetCompany, request.requestUser);
+        this.userService.addRelationToUser(request.targetCompany, request.requestUser);
+        this.companyService.addRelationToCompany(request.requestUser,request.targetCompany);
 
         this.logger.log(`Owner- ${owner.email} accepted join request- ${request.id}`);
         return {
@@ -97,5 +105,38 @@ export class RequestsService {
             result: 'accepted',
         } as GeneralResponse<IRequests>;
     }
+
+    async declineJoinRequest(owner: User, declineRequestDto: CancelRequestDto,): Promise<GeneralResponse<IRequests>> {
+        const request: Request | undefined = await this.requestRepository.findOne({
+            where: {
+                id: declineRequestDto.requestId,
+                targetCompany: {
+                    owner: owner,
+                },
+            },
+        });
+        if (request && request.accept) throw new HttpException(`You can't decline accepted request`, HttpStatus.BAD_REQUEST);
+        else if (!request) {
+            throw new HttpException(
+                'Join request not found for this owner',
+                HttpStatus.NOT_FOUND,
+            );
+        }
+        let requestChanged: Request = await this.requestRepository.save({
+            ...request,
+            accept: false,
+        });
+
+        this.logger.log(`Owner- ${owner.email} declined join request- ${request.id}`);
+
+        return {
+            status_code: HttpStatus.OK,
+            detail: {
+                request: {...requestChanged, targetCompany: null, requestUser: null},
+            },
+            result: 'declined',
+        } as GeneralResponse<IRequests>;
+    }
+
 
 }

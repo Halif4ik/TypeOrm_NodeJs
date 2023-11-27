@@ -44,4 +44,28 @@ export class ReqestsController {
         return this.requestsService.acceptJoinRequest(owner, cancelRequestDto);
     }
 
+    // 8. Owner declines a join request
+    // Endpoint: POST /requests/decline
+    // Permissions: Only company owner
+    @Post('/decline')
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    declineJoinRequest(@UserDec() owner: User, @Body() cancelRequestDto: CancelRequestDto,
+    ): Promise<GeneralResponse<IRequests>> {
+        return this.requestsService.declineJoinRequest(owner, cancelRequestDto);
+    }
+
+
+
+
+    // 10. User leaves the company
+// Endpoint: DELETE /companies/:companyId/membership
+// Permissions: Authenticated user
+    @Delete('/companies/:companyId/membership')
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    leaveCompany(@UserDec() user: User, @Param('companyId') companyId: number,) {
+        // Your implementation here
+    }
+
+
 }

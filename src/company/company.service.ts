@@ -10,12 +10,16 @@ import {DeleteCompanyDto} from "./dto/delete-company.dto";
 import * as process from "process";
 import {ICompany, IDeleted} from "../GeneralResponse/interface/customResponces";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
+import {DeleteUserDto} from "./dto/delete-user-company.dto";
+import {Auth} from "../auth/entities/auth.entity";
+import {Request} from "../reqests/entities/reqest.entity";
 
 @Injectable()
 export class CompanyService {
     private readonly logger: Logger = new Logger(UserService.name);
 
-    constructor(@InjectRepository(Company) private companyRepository: Repository<Company>) {
+    constructor(@InjectRepository(Company) private companyRepository: Repository<Company>,
+                private userService: UserService) {
     }
 
     async create(user: User, companyData: CreateCompanyDto): Promise<GeneralResponse<ICompany>> {
@@ -82,7 +86,56 @@ export class CompanyService {
 
     }
 
-     async getCompanyById(companyId: number):Promise<Company | undefined> {
-        return  this.companyRepository.findOne({where: {id: companyId}});
+    async getCompanyById(companyId: number): Promise<Company | undefined> {
+        return this.companyRepository.findOne({where: {id: companyId}});
+    }
+
+    async removeUserFromCompany(ownerFromGuard: User, deleteUserDto: DeleteUserDto,):Promise<GeneralResponse<IDeleted>> {
+        let findedCompany: Company = ownerFromGuard.company.find((company: Company): boolean => company.id === deleteUserDto.companyId);
+        if (!findedCompany) throw new HttpException("Incorrect company name for this owner", HttpStatus.NOT_FOUND);
+
+        const targetCompany: Company | undefined = await this.companyRepository.findOne({
+            where: {
+                id: deleteUserDto.companyId
+            },
+            relations: ['members']
+        });
+        if (!targetCompany) throw new HttpException('Error removeUserFromCompany', HttpStatus.NOT_FOUND,);
+
+        const willDeleteUser: User | undefined = targetCompany.members.find((user: User): boolean => user.id === deleteUserDto.userId);
+        if (!willDeleteUser) throw new HttpException("Incorrect user id for this company", HttpStatus.NOT_FOUND);
+        // Find the user to be removed
+        const userToRemove: User | undefined = await this.userService.getUserByIdWithCompany(deleteUserDto.userId);
+        if (!userToRemove)
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+        // Remove the user from the company
+        targetCompany.members= targetCompany.members.filter((user: User): boolean => user.id !== deleteUserDto.userId);
+        await this.companyRepository.save(targetCompany);
+        this.logger.log(`Remone relation ${willDeleteUser.email} for Company - ${targetCompany.name}`);
+
+        return {
+            status_code: HttpStatus.OK,
+            detail: {
+                removedUser: null,
+            },
+            result: 'removed',
+        };
+    }
+
+    async addRelationToCompany<T>(newRelation: T, targetCompany: Company): Promise<Company> {
+        const targetCompany2: Company = await this.companyRepository.findOne({
+            where: {id: targetCompany.id},
+            relations: ['members']
+        });
+        let logMessage: string = '';
+        if (newRelation instanceof User) {
+            logMessage = 'User';
+            targetCompany2.members.push(newRelation);
+        }
+
+        const temp: Company = await this.companyRepository.save(targetCompany2);
+        this.logger.log(`Added relation ${logMessage} for Company - ${Company.name}`);
+        return temp;
     }
 }

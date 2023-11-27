@@ -30,4 +30,5 @@ export interface IDeleted {
     "auth"?: null
     "invite"?: null
     "request"?: null
+    "removedUser"?: null
 }
