@@ -2,7 +2,7 @@ import {Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationP
 import { InviteService } from './invite.service';
 import { CreateOrDelInviteDto } from './dto/create-or-del-invite.dto';
 import {AuthGuard} from "@nestjs/passport";
-import {UserDec} from "../auth/pass-user";
+import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {IDeleted, IInvite, IRequests} from "../GeneralResponse/interface/customResponces";

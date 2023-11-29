@@ -18,7 +18,7 @@ import {DeleteCompanyDto} from "./dto/delete-company.dto";
 import {PaginationsDto} from "../user/dto/pagination-user.dto";
 import {User} from "../user/entities/user.entity";
 import {ParsePageAndRevertPipe} from "../pipe/validation.pipe";
-import {UserDec} from "../auth/pass-user";
+import {UserDec} from "../auth/decor-pass-user";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {IAllMembers, ICompany, IDeleted, IRequests} from "../GeneralResponse/interface/customResponces";
 import {DeleteUserDto} from "./dto/delete-user-company.dto";

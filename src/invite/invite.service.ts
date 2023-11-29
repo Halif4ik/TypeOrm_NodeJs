@@ -24,8 +24,7 @@ export class InviteService {
         if (!foundCompany) throw new HttpException("Incorrect company ID for this user", HttpStatus.NOT_FOUND);
 
         //cheking user for invite from this company
-        const foundTargetUser: User = await this.userService.getUserByEmailWCompTargInvit(crOrDelInviteDto.membersEmail);
-
+        const foundTargetUser: User = await this.userService.getUserByIdWCompTargInvitRequsts(crOrDelInviteDto.userId);
         const isPresentInvitesForTargetUser: Invite[] = await this.inviteRepository.find({
             where: {
                 targetUser: {id: foundTargetUser.id},
@@ -66,14 +65,14 @@ export class InviteService {
                 "invite": inviteResponsce,
             },
             "result": "created"
-        } as GeneralResponse<IInvite>;
+        } ;
     }
 
     async deleteInvite(userFromGuard: User, crOrDelInviteDto: CreateOrDelInviteDto): Promise<GeneralResponse<IDeleted>> {
         const foundCompanyFromDtoInCurrUser: Company = userFromGuard.company.find((company: Company): boolean => company.id === crOrDelInviteDto.companyId);
         if (!foundCompanyFromDtoInCurrUser) throw new HttpException("Incorrect company ID for this user", HttpStatus.NOT_FOUND);
 
-        const foundTargetUser: User = await this.userService.getUserByEmailWCompTargInvit(crOrDelInviteDto.membersEmail);
+        const foundTargetUser: User = await this.userService.getUserByIdWCompTargInvitRequsts(crOrDelInviteDto.userId);
         const isAnyInvitesInTargetUser: Invite[] = await this.inviteRepository.find({
             where: {
                 targetUser: {id: foundTargetUser.id}
@@ -88,7 +87,7 @@ export class InviteService {
         if (!targetUserHasThisInvite) throw new HttpException("Target don't has invite", HttpStatus.BAD_REQUEST);
         await this.inviteRepository.softDelete(targetUserHasThisInvite.id);
 
-        this.logger.log(`Soft-deleted invite for target user -'${crOrDelInviteDto.membersEmail}' in company -'${foundCompanyFromDtoInCurrUser.name}'`);
+        this.logger.log(`Soft-deleted invite for target userId -'${crOrDelInviteDto.userId}' in company -'${foundCompanyFromDtoInCurrUser.name}'`);
         return {
             "status_code": HttpStatus.OK,
             "detail": {
@@ -99,18 +98,18 @@ export class InviteService {
 
     }
 
-    async updateInvite(userFromGuardFetureMember: User, acceptInviteDto: AcceptInviteDto):Promise<GeneralResponse<IInvite>> {
+    async updateInvite(userFromGuardFetureMember: User, acceptInviteDto: AcceptInviteDto): Promise<GeneralResponse<IInvite>> {
         const foundInvite: Invite[] = await this.inviteRepository.find({
             where: {
                 id: acceptInviteDto.inviteId
             },
             relations: ["targetUser", "ownerCompany"]
         });
-        this.userService.addRelationToUser(foundInvite[0].ownerCompany, userFromGuardFetureMember);
         if (foundInvite.length < 1) throw new HttpException("Target invites dosent exist", HttpStatus.BAD_REQUEST);
         else if (foundInvite[0].targetUser.id !== userFromGuardFetureMember.id)
             throw new HttpException("This invite not for you", HttpStatus.BAD_REQUEST);
 
+        this.userService.addRelationToUser(foundInvite[0].ownerCompany, userFromGuardFetureMember);
         /*we have only one invite by id from Request*/
         let inviteResponsce: Invite = await this.inviteRepository.save({
             ...foundInvite[0],
@@ -127,10 +126,10 @@ export class InviteService {
                 "invite": inviteResponsce,
             },
             "result": "created"
-        } ;
+        };
     }
 
-   async listUserInvites(userFromGuard: User): Promise<GeneralResponse<IInvite>> {
+    async listUserInvites(userFromGuard: User): Promise<GeneralResponse<IInvite>> {
         const ownerInvites: Invite[] = await this.inviteRepository.find({
             where: {
                 ownerUser: {id: userFromGuard.id}

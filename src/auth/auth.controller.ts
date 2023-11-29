@@ -12,7 +12,7 @@ import {CreateUserDto} from "../user/dto/create-user.dto";
 import {LoginUserDto} from "./dto/login-auth.dto";
 import {JwtAuthRefreshGuard} from "./jwt-Refresh.guard";
 import {AuthGuard} from "@nestjs/passport";
-import {UserDec} from "./pass-user";
+import {UserDec} from "./decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {IRespAuth, IUserInfo} from "../GeneralResponse/interface/customResponces";

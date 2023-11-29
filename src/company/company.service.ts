@@ -3,7 +3,7 @@ import {CreateCompanyDto} from './dto/create-company.dto';
 import {UpdateCompanyDto} from './dto/update-company.dto';
 import {UserService} from "../user/user.service";
 import {InjectRepository} from "@nestjs/typeorm";
-import {Repository} from "typeorm";
+import {Repository, SelectQueryBuilder} from "typeorm";
 import {Company} from "./entities/company.entity";
 import {User} from "../user/entities/user.entity";
 import {DeleteCompanyDto} from "./dto/delete-company.dto";
@@ -15,7 +15,7 @@ import {RemoveMembershipDto} from "./dto/remove-membership-company.dto";
 
 @Injectable()
 export class CompanyService {
-    private readonly logger: Logger = new Logger(UserService.name);
+    private readonly logger: Logger = new Logger(CompanyService.name);
 
     constructor(@InjectRepository(Company) private companyRepository: Repository<Company>,
                 private userService: UserService) {
@@ -90,24 +90,17 @@ export class CompanyService {
     }
 
     async removeUserFromCompany(ownerFromGuard: User, deleteUserDto: DeleteUserDto,): Promise<GeneralResponse<IDeleted>> {
-        let findedCompany: Company = ownerFromGuard.company.find((company: Company): boolean => company.id === deleteUserDto.companyId);
-        if (!findedCompany) throw new HttpException("Incorrect company name for this owner", HttpStatus.NOT_FOUND);
-
         const targetCompany: Company | undefined = await this.companyRepository.findOne({
             where: {
-                id: deleteUserDto.companyId
+                id: deleteUserDto.companyId,
+                owner: ownerFromGuard,
             },
             relations: ['members']
         });
-        if (!targetCompany) throw new HttpException('Error removeUserFromCompany', HttpStatus.NOT_FOUND,);
+        if (!targetCompany) throw new HttpException('Incorrect company name for this owner', HttpStatus.NOT_FOUND,);
 
 
-        // Find the user to be removed
-        const willDeleteUserCompRelation: User | undefined = await this.userService.getUserByIdWithCompany(deleteUserDto.userId);
-        if (!willDeleteUserCompRelation)
-            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-
-        await this.removeRelationUserCompany(willDeleteUserCompRelation, targetCompany, deleteUserDto.userId);
+        await this.removeRelationUserCompany(targetCompany, deleteUserDto.userId);
         return {
             status_code: HttpStatus.OK,
             detail: {
@@ -117,13 +110,20 @@ export class CompanyService {
         };
     }
 
-// Remove the user from the company
-    async removeRelationUserCompany(userToRemove: User, targetCompany: Company, userId: number): Promise<void> {
+    // Remove the user from the company
+    private async removeRelationUserCompany(targetCompany: Company, userId: number): Promise<void> {
         const willDeleteUserNotRelation: User | undefined = targetCompany.members.find((user: User): boolean => user.id === userId);
         if (!willDeleteUserNotRelation) throw new HttpException("Incorrect user id for this company", HttpStatus.NOT_FOUND);
-        targetCompany.members = targetCompany.members.filter((user: User): boolean => user.id !== userToRemove.id);
-         await this.companyRepository.save(targetCompany);
-        this.logger.log(`Remove relation ${userToRemove.email} for/from Company - ${targetCompany.name}`);
+
+        // Create a query builder
+        const queryBuilder: SelectQueryBuilder<Company> = this.companyRepository.createQueryBuilder();
+        // Update the members collection
+        await queryBuilder
+            .relation(Company, "members")
+            .of(targetCompany)
+            .remove(willDeleteUserNotRelation);
+
+        this.logger.log(`Remove relation ${willDeleteUserNotRelation.email} for/from Company - ${targetCompany.name}`);
     }
 
     async addRelationToCompany<T>(newRelation: T, targetCompany: Company): Promise<Company> {
@@ -151,7 +151,7 @@ export class CompanyService {
         });
         if (!targetCompany) throw new HttpException('This company absent', HttpStatus.NOT_FOUND,);
 
-        await this.removeRelationUserCompany(user, targetCompany,user.id);
+        await this.removeRelationUserCompany(targetCompany, user.id);
         return {
             status_code: HttpStatus.OK,
             detail: {
@@ -161,8 +161,8 @@ export class CompanyService {
         };
     }
 
-    async listAllMembersOfCompany( idCompanyDto: DeleteCompanyDto):Promise<GeneralResponse<IAllMembers>>{
-        const companyWithMembers:Company = await this.companyRepository.findOne({
+    async listAllMembersOfCompany(idCompanyDto: DeleteCompanyDto): Promise<GeneralResponse<IAllMembers>> {
+        const companyWithMembers: Company = await this.companyRepository.findOne({
             where: {
                 id: idCompanyDto.id,
             },

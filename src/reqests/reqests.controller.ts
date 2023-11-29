@@ -12,7 +12,7 @@ import {
 import {RequestsService} from './requests.service';
 import {CreateRequestDto} from './dto/create-request.dto';
 import {AuthGuard} from "@nestjs/passport";
-import {UserDec} from "../auth/pass-user";
+import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {IDeleted, IRequests} from "../GeneralResponse/interface/customResponces";
