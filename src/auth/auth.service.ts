@@ -23,7 +23,7 @@ export class AuthService {
 
     async login(loginDto: LoginUserDto): Promise<GeneralResponse<IRespAuth>> {
         // should rewrite all tokens return one token
-        const userFromBd: User = await this.userService.getUserByEmail(loginDto.email);
+        const userFromBd: User = await this.userService.getUserByEmailWithAuth(loginDto.email);
         await this.checkUserCredentials(userFromBd, loginDto);
         /*contain auth table */
         return {
@@ -100,7 +100,7 @@ export class AuthService {
             });
             /*and add relation in user table*/
             userFromBd.auth = authDataNewUser;
-            await this.userService.addRelationAuth(authDataNewUser, userFromBd);
+            await this.userService.addRelationToUser(authDataNewUser, userFromBd);
 
             authUserDataSave = await this.authRepository.save(authDataNewUser);
             this.logger.log(`Created tokens for userId- ${userFromBd.id}`);

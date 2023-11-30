@@ -1,5 +1,8 @@
-import {Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, DeleteDateColumn, Entity, JoinColumn,
+    ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {User} from "../../user/entities/user.entity";
+import {Invite} from "../../invite/entities/invite.entity";
+import {Request} from "../../reqests/entities/reqest.entity";
 
 @Entity()
 export class Company {
@@ -11,6 +14,7 @@ export class Company {
 
     @Column({type: "varchar", width: 255})
     description: string;
+
     @DeleteDateColumn()
     deleteAt: Date;
 
@@ -21,6 +25,13 @@ export class Company {
     @JoinColumn({name: "ownerId"})
     owner: User;
 
-    @OneToMany(() => User, user => user.company)
+    @OneToMany(() => User, user => user.companyMember)
     members: User[];
+
+    @OneToMany(() => Invite, invite => invite.ownerCompany)
+    invites: Invite[];
+
+    @OneToMany(() => Request, request => request.targetCompany)
+    requests: Request[];
+
 }

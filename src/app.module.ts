@@ -6,6 +6,8 @@ import {ConfigModule} from "@nestjs/config";
 import {UserModule} from './user/user.module';
 import {AuthModule} from './auth/auth.module';
 import { CompanyModule } from './company/company.module';
+import { InviteModule } from './invite/invite.module';
+import { RequestsModule } from './reqests/requestsModule';
 
 @Module({
     controllers: [GenRespController],
@@ -28,6 +30,8 @@ import { CompanyModule } from './company/company.module';
         UserModule,
         AuthModule,
         CompanyModule,
+        InviteModule,
+        RequestsModule,
     ],
 })
 export class AppModule {

@@ -1,6 +1,8 @@
 import {Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany, ManyToOne, DeleteDateColumn} from 'typeorm';
 import {Auth} from "../../auth/entities/auth.entity";
 import {Company} from "../../company/entities/company.entity";
+import {Invite} from "../../invite/entities/invite.entity";
+import {Request} from "../../reqests/entities/reqest.entity";
 
 @Entity()
 export class User {
@@ -25,11 +27,20 @@ export class User {
     @OneToOne(() => Auth, auth => auth.user)
     auth: Auth;
 
+    @OneToMany(() => Invite, invite => invite.ownerUser)
+    invite: Invite[];
+
+    @OneToMany(() => Invite, invite => invite.targetUser)
+    targetForInvite: Invite[];
+
     @OneToMany(() => Company, company => company.owner)
     company: Company[];
 
     @ManyToOne(() => Company, company => company.members,{onDelete: 'CASCADE'})
     companyMember: Company;
+
+    @OneToMany(() => Request, request => request.requestUser)
+    requests: Request[];
 
 
 }

@@ -1,4 +1,3 @@
-// ParsePageAndRevertPipe
 import {
     PipeTransform,
     Injectable,

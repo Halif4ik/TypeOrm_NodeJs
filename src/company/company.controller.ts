@@ -18,9 +18,11 @@ import {DeleteCompanyDto} from "./dto/delete-company.dto";
 import {PaginationsDto} from "../user/dto/pagination-user.dto";
 import {User} from "../user/entities/user.entity";
 import {ParsePageAndRevertPipe} from "../pipe/validation.pipe";
-import {UserDec} from "../auth/pass-user";
+import {UserDec} from "../auth/decor-pass-user";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {ICompany, IDeleted} from "../GeneralResponse/interface/customResponces";
+import {IAllMembers, ICompany, IDeleted, IRequests} from "../GeneralResponse/interface/customResponces";
+import {DeleteUserDto} from "./dto/delete-user-company.dto";
+import {RemoveMembershipDto} from "./dto/remove-membership-company.dto";
 
 @Controller('company')
 export class CompanyController {
@@ -57,6 +59,36 @@ export class CompanyController {
     async findAll(@Query() paginationsDto: PaginationsDto): Promise<GeneralResponse<ICompany>> {
         const {page, revert} = paginationsDto;
         return this.companyService.findAll(page, revert);
+    }
+
+    // 9. Owner removes a user from the company
+    // Endpoint: DELETE /company/remove_members
+    // Permissions: Only company owner
+    @Delete('/remove_members')
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    removeUserFromCompany(@UserDec() owner: User, @Body() deleteUserDto: DeleteUserDto):Promise<GeneralResponse<IDeleted>> {
+        return this.companyService.removeUserFromCompany(owner, deleteUserDto);
+    }
+
+    // 10. User leaves the company
+   // Endpoint: DELETE /company/membership_remove
+   // Permissions: Authenticated user
+    @Delete('/membership_remove')
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    leaveCompany(@UserDec() user: User, @Body() removeMembershipDto: RemoveMembershipDto):Promise<GeneralResponse<IDeleted>> {
+        return this.companyService.removeMembership(user, removeMembershipDto);
+    }
+
+    // 15. List users in my company
+    // Endpoint: GET /company/all_members
+    // Permissions: Authenticated all users
+    @Get('/all_members')
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    listAllMembersOfCompany(@Query() idCompanyDto: DeleteCompanyDto):Promise<GeneralResponse<IAllMembers>>{
+        return this.companyService.listAllMembersOfCompany(idCompanyDto);
     }
 
 }

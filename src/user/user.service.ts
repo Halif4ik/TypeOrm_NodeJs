@@ -10,6 +10,8 @@ import {JwtService} from "@nestjs/jwt";
 import {Auth} from "../auth/entities/auth.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import { IUserInfo } from 'src/GeneralResponse/interface/customResponces';
+import {Company} from "../company/entities/company.entity";
+import {Request} from "../reqests/entities/reqest.entity";
 
 @Injectable()
 export class UserService {
@@ -55,24 +57,36 @@ export class UserService {
         return result
     }
 
-    async getUserByEmail(email: string): Promise<User | null> {
+    async getUserByEmailWithAuth(email: string): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {email},
             relations: ['auth']
         });
     }
 
-    async getUserByEmailWithCompany(email: string): Promise<User | null> {
+    async getUserByEmailWCompTargInvit(email: string): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {email},
-            relations: ['company']
+            relations: ['company', 'targetForInvite','requests']
+        });
+    }
+    async getUserByIdWCompTargInvitRequsts(id: number): Promise<User | null> {
+        return this.usersRepository.findOne({
+            where: {id},
+            relations: ['company', 'targetForInvite','requests']
         });
     }
 
-    async getUserByIdWithCompany(id: number): Promise<User | null> {
+    async getUserByIdWithCompanyAuth(id: number): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {id},
             relations: ['company', 'auth']
+        });
+    }
+    async getUserByIdWithCompany(id: number): Promise<User | null> {
+        return this.usersRepository.findOne({
+            where: {id},
+            relations: ['company']
         });
     }
 
@@ -99,7 +113,7 @@ export class UserService {
         const userFromToken = this.jwtService.decode(token.slice(7));
         if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
 
-        const userFromBd: User = await this.getUserByEmail(userData.email);
+        const userFromBd: User = await this.getUserByEmailWithAuth(userData.email);
         if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
         const removedUserFromBd: User = await this.usersRepository.remove(userFromBd);
@@ -112,7 +126,6 @@ export class UserService {
         };
         this.logger.log(`Removed  user- ${removedUserFromBd.email}`);
         return result;
-
     }
 
     async updateUserInfo(token: string, updateUserDto: UpdateUserDto): Promise<GeneralResponse<IUserInfo>> {
@@ -140,10 +153,24 @@ export class UserService {
         return result;
     }
 
-    async addRelationAuth(authDataNewUser: Auth, userFromBd: User): Promise<User> {
-        userFromBd.auth = authDataNewUser;
-        const temp: User = await this.usersRepository.save(userFromBd);
-        this.logger.log(`add relation auth for user - ${userFromBd.email}`);
+    async addRelationToUser<T>(newRelation: T, targetUser: User): Promise<User> {
+        let logMessage: string = '';
+        if(newRelation instanceof Auth){
+            logMessage ='Auth';
+            targetUser.auth = newRelation;
+        }
+        if(newRelation instanceof Request){
+            logMessage ='Request';
+            targetUser.requests =  [...targetUser.requests, newRelation];
+        }
+        if(newRelation instanceof Company){
+            logMessage ='Company';
+            targetUser.companyMember = newRelation;
+        }
+
+        const temp: User = await this.usersRepository.save(targetUser);
+        this.logger.log(`Added relation ${logMessage} for user - ${targetUser.email}`);
         return temp;
     }
+
 }
