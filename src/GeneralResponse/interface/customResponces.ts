@@ -3,6 +3,7 @@ import {User} from "../../user/entities/user.entity";
 import {Company} from "../../company/entities/company.entity";
 import {Invite} from "../../invite/entities/invite.entity";
 import {Request} from "../../reqests/entities/reqest.entity";
+import {Role} from "../../roles/entities/role.entity";
 
 export interface IRespAuth {
     "auth": Auth
@@ -25,6 +26,9 @@ export interface IInvite {
 
 export interface IRequests {
     "request": Request | Request[]
+}
+export interface IRole {
+    "role": Role
 }
 
 export interface IDeleted {

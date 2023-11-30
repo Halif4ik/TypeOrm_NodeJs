@@ -6,14 +6,12 @@ import {Company} from "./entities/company.entity";
 import {JwtModule} from "@nestjs/jwt";
 import {PassportModule} from "@nestjs/passport";
 import {UserModule} from "../user/user.module";
-import {Invite} from "../invite/entities/invite.entity";
-import {User} from "../user/entities/user.entity";
 
 @Module({
     controllers: [CompanyController],
     providers: [CompanyService],
     imports: [  UserModule,
-         TypeOrmModule.forFeature([Company,Invite,User]),
+         TypeOrmModule.forFeature([Company]),
         JwtModule, PassportModule],
     exports: [CompanyService]
 })

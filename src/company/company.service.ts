@@ -1,14 +1,13 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {CreateCompanyDto} from './dto/create-company.dto';
 import {UpdateCompanyDto} from './dto/update-company.dto';
-import {UserService} from "../user/user.service";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository, SelectQueryBuilder} from "typeorm";
 import {Company} from "./entities/company.entity";
 import {User} from "../user/entities/user.entity";
 import {DeleteCompanyDto} from "./dto/delete-company.dto";
 import * as process from "process";
-import {IAllMembers, ICompany, IDeleted, IUserInfo} from "../GeneralResponse/interface/customResponces";
+import {IAllMembers, ICompany, IDeleted} from "../GeneralResponse/interface/customResponces";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {DeleteUserDto} from "./dto/delete-user-company.dto";
 import {RemoveMembershipDto} from "./dto/remove-membership-company.dto";
@@ -17,8 +16,7 @@ import {RemoveMembershipDto} from "./dto/remove-membership-company.dto";
 export class CompanyService {
     private readonly logger: Logger = new Logger(CompanyService.name);
 
-    constructor(@InjectRepository(Company) private companyRepository: Repository<Company>,
-                private userService: UserService) {
+    constructor(@InjectRepository(Company) private companyRepository: Repository<Company>) {
     }
 
     async create(user: User, companyData: CreateCompanyDto): Promise<GeneralResponse<ICompany>> {
@@ -87,6 +85,17 @@ export class CompanyService {
 
     async getCompanyById(companyId: number): Promise<Company | undefined> {
         return this.companyRepository.findOne({where: {id: companyId}});
+    }
+
+    async getCompanyByIdAnDOwner(companyId: number, targetUserId: number, owner: User): Promise<Company | undefined> {
+        return this.companyRepository.findOne({
+            where: {
+                id: companyId,
+                owner: owner,
+                members:{ id: targetUserId}
+            },
+            relations: ['members', 'roles'],
+        });
     }
 
     async removeUserFromCompany(ownerFromGuard: User, deleteUserDto: DeleteUserDto,): Promise<GeneralResponse<IDeleted>> {

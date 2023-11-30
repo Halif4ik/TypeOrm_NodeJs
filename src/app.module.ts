@@ -8,6 +8,7 @@ import {AuthModule} from './auth/auth.module';
 import { CompanyModule } from './company/company.module';
 import { InviteModule } from './invite/invite.module';
 import { RequestsModule } from './reqests/requestsModule';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
     controllers: [GenRespController],
@@ -32,6 +33,7 @@ import { RequestsModule } from './reqests/requestsModule';
         CompanyModule,
         InviteModule,
         RequestsModule,
+        RolesModule,
     ],
 })
 export class AppModule {
