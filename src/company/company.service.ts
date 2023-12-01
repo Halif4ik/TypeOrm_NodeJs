@@ -87,7 +87,7 @@ export class CompanyService {
         return this.companyRepository.findOne({where: {id: companyId}});
     }
 
-    async getCompanyByIdAnDOwner(companyId: number, targetUserId: number, owner: User): Promise<Company | undefined> {
+    async getCompanyByIdAndOwner(companyId: number, targetUserId: number, owner: User): Promise<Company | undefined> {
         return this.companyRepository.findOne({
             where: {
                 id: companyId,

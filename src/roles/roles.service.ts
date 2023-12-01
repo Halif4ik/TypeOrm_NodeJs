@@ -19,7 +19,7 @@ export class RolesService {
     }
 
     async assignAdmin(owner: User, assignRoleDto: AssignRoleDto): Promise<GeneralResponse<IRole>> {
-        const targetCompany: Company = await this.companyService.getCompanyByIdAnDOwner(assignRoleDto.companyId,
+        const targetCompany: Company = await this.companyService.getCompanyByIdAndOwner(assignRoleDto.companyId,
             assignRoleDto.userId, owner);
         if (!targetCompany) throw new HttpException("Our company does not have this user", HttpStatus.NOT_FOUND);
         const isTargetUserAdmin: Role = await this.rolesRepository.findOne({
@@ -30,7 +30,6 @@ export class RolesService {
         });
         if (isTargetUserAdmin)
             throw new HttpException("This user already has assign Admin", HttpStatus.BAD_REQUEST);
-
 
         const newRole: Role = this.rolesRepository.create({
             value: "Admin",
@@ -53,4 +52,38 @@ export class RolesService {
         };
     }
 
+    async removeAdmin(owner: User, assignRoleDto: AssignRoleDto) {
+        const targetCompany: Company = await this.companyService.getCompanyByIdAndOwner(assignRoleDto.companyId,
+            assignRoleDto.userId, owner);
+        if (!targetCompany)
+            throw new HttpException("Our company does not have this user", HttpStatus.NOT_FOUND);
+
+        const adminRole: Role = await this.rolesRepository.findOne({
+            where: {
+                company: { id: targetCompany.id },
+                user: { id: assignRoleDto.userId },
+                value: "Admin",
+            },
+        });
+
+        if (!adminRole)
+            throw new HttpException("This user does not have the Admin role", HttpStatus.BAD_REQUEST);
+
+        await this.rolesRepository.remove(adminRole);
+
+        this.logger.log(`Removed Admin role for user-${assignRoleDto.userId} in company-${targetCompany.name}`);
+
+        return {
+            "status_code": HttpStatus.OK,
+            "detail": {
+                "removedAdminRole": {
+                    ...adminRole,
+                    company: { ...adminRole.company, owner: null },
+                    user: { ...adminRole.user },
+                },
+            },
+            "result": "removed",
+        };
+
+    }
 }
