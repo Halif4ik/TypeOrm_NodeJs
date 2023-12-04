@@ -4,7 +4,7 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
 import {CompanyService} from "../company/company.service";
 import {UserService} from "../user/user.service";
-import {Role} from "./entities/role.entity";
+import {Role, UserRole} from "./entities/role.entity";
 import {User} from "../user/entities/user.entity";
 import {Company} from "../company/entities/company.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
@@ -32,7 +32,7 @@ export class RolesService {
             throw new HttpException("This user already has assign Admin", HttpStatus.BAD_REQUEST);
 
         const newRole: Role = this.rolesRepository.create({
-            value: "Admin",
+            value: UserRole.ADMIN,
             company: targetCompany,
             user: targetCompany.members[0],
         });
@@ -62,8 +62,9 @@ export class RolesService {
             where: {
                 company: {id: targetCompany.id},
                 user: {id: assignRoleDto.userId},
-                value: "Admin",
+                value: UserRole.ADMIN,
             },
+
         });
 
         if (!adminRole)
@@ -87,19 +88,20 @@ export class RolesService {
 
     }
 
-    async showAllAdmins(owner: User,companyId:number):Promise<GeneralResponse<IRole>> {
+    async showAllAdmins(owner: User, companyId: number): Promise<GeneralResponse<IRole>> {
         const targetCompany: Company = await this.companyService.getCompanyByIdOnlyOwner(companyId,
-             owner);
+            owner);
         if (!targetCompany)
             throw new HttpException("Our company does not have this user", HttpStatus.NOT_FOUND);
 
         const adminRoles: Role[] = await this.rolesRepository.find({
             where: {
                 company: {id: targetCompany.id},
-                value: "Admin",
-            }
+                value: UserRole.ADMIN,
+            },
+            relations: ["user"],
         });
-        console.log('adminRoles-',adminRoles);
+
         return {
             "status_code": HttpStatus.OK,
             "detail": {

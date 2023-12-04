@@ -92,12 +92,13 @@ export class CompanyService {
             where: {
                 id: companyId,
                 owner: owner,
-                members:{ id: targetUserId}
+                members: {id: targetUserId}
             },
             relations: ['members', 'roles'],
         });
     }
-    async getCompanyByIdOnlyOwner(companyId: number,  owner: User): Promise<Company | undefined> {
+
+    async getCompanyByIdOnlyOwner(companyId: number, owner: User): Promise<Company | undefined> {
         return this.companyRepository.findOne({
             where: {
                 id: companyId,

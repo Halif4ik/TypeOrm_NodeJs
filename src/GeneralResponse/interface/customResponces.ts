@@ -12,8 +12,9 @@ export interface IRespAuth {
 export interface IUserInfo {
     "user": User
 }
+
 export interface IAllMembers {
-    "members":  User[]
+    "members": User[]
 }
 
 export interface ICompany {
@@ -27,6 +28,7 @@ export interface IInvite {
 export interface IRequests {
     "request": Request | Request[]
 }
+
 export interface IRole {
     "role": Role | Role[]
 }
