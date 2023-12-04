@@ -52,7 +52,7 @@ export class RolesService {
         };
     }
 
-    async removeAdmin(owner: User, assignRoleDto: AssignRoleDto) {
+    async removeAdmin(owner: User, assignRoleDto: AssignRoleDto): Promise<GeneralResponse<IRole>> {
         const targetCompany: Company = await this.companyService.getCompanyByIdAndOwner(assignRoleDto.companyId,
             assignRoleDto.userId, owner);
         if (!targetCompany)
@@ -60,8 +60,8 @@ export class RolesService {
 
         const adminRole: Role = await this.rolesRepository.findOne({
             where: {
-                company: { id: targetCompany.id },
-                user: { id: assignRoleDto.userId },
+                company: {id: targetCompany.id},
+                user: {id: assignRoleDto.userId},
                 value: "Admin",
             },
         });
@@ -76,14 +76,36 @@ export class RolesService {
         return {
             "status_code": HttpStatus.OK,
             "detail": {
-                "removedAdminRole": {
+                "role": {
                     ...adminRole,
-                    company: { ...adminRole.company, owner: null },
-                    user: { ...adminRole.user },
+                    company: {...adminRole.company, owner: null},
+                    user: {...adminRole.user},
                 },
             },
             "result": "removed",
         };
 
+    }
+
+    async showAllAdmins(owner: User,companyId:number):Promise<GeneralResponse<IRole>> {
+        const targetCompany: Company = await this.companyService.getCompanyByIdOnlyOwner(companyId,
+             owner);
+        if (!targetCompany)
+            throw new HttpException("Our company does not have this user", HttpStatus.NOT_FOUND);
+
+        const adminRoles: Role[] = await this.rolesRepository.find({
+            where: {
+                company: {id: targetCompany.id},
+                value: "Admin",
+            }
+        });
+        console.log('adminRoles-',adminRoles);
+        return {
+            "status_code": HttpStatus.OK,
+            "detail": {
+                "role": adminRoles,
+            },
+            "result": "removed",
+        };
     }
 }

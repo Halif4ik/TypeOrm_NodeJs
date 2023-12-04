@@ -28,7 +28,7 @@ export interface IRequests {
     "request": Request | Request[]
 }
 export interface IRole {
-    "role": Role
+    "role": Role | Role[]
 }
 
 export interface IDeleted {

@@ -97,6 +97,15 @@ export class CompanyService {
             relations: ['members', 'roles'],
         });
     }
+    async getCompanyByIdOnlyOwner(companyId: number,  owner: User): Promise<Company | undefined> {
+        return this.companyRepository.findOne({
+            where: {
+                id: companyId,
+                owner: owner,
+            },
+            relations: ['members', 'roles'],
+        });
+    }
 
     async removeUserFromCompany(ownerFromGuard: User, deleteUserDto: DeleteUserDto,): Promise<GeneralResponse<IDeleted>> {
         const targetCompany: Company | undefined = await this.companyRepository.findOne({
