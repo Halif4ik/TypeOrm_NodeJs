@@ -63,6 +63,12 @@ export class UserService {
             relations: ['auth']
         });
     }
+    async getUserByEmailWithRole(email: string): Promise<User | null> {
+        return this.usersRepository.findOne({
+            where: {email},
+            relations: ['roles']
+        });
+    }
 
     async getUserByEmailWCompTargInvit(email: string): Promise<User | null> {
         return this.usersRepository.findOne({

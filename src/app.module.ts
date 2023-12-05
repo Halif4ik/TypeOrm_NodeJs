@@ -9,6 +9,7 @@ import { CompanyModule } from './company/company.module';
 import { InviteModule } from './invite/invite.module';
 import { RequestsModule } from './reqests/requestsModule';
 import { RolesModule } from './roles/roles.module';
+import { QuizzModule } from './quizz/quizz.module';
 
 @Module({
     controllers: [GenRespController],
@@ -34,6 +35,7 @@ import { RolesModule } from './roles/roles.module';
         InviteModule,
         RequestsModule,
         RolesModule,
+        QuizzModule,
     ],
 })
 export class AppModule {
