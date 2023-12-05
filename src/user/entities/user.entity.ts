@@ -3,6 +3,7 @@ import {Auth} from "../../auth/entities/auth.entity";
 import {Company} from "../../company/entities/company.entity";
 import {Invite} from "../../invite/entities/invite.entity";
 import {Request} from "../../reqests/entities/reqest.entity";
+import {Role} from "../../roles/entities/role.entity";
 
 @Entity()
 export class User {
@@ -36,11 +37,13 @@ export class User {
     @OneToMany(() => Company, company => company.owner)
     company: Company[];
 
-    @ManyToOne(() => Company, company => company.members,{onDelete: 'CASCADE'})
+    @ManyToOne(() => Company, company => company.members, {onDelete: 'CASCADE'})
     companyMember: Company;
 
     @OneToMany(() => Request, request => request.requestUser)
     requests: Request[];
 
+    @OneToMany(() => Role, role => role.user)
+    roles: Role[];
 
 }
