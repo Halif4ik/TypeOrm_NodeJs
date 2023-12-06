@@ -63,17 +63,11 @@ export class UserService {
             relations: ['auth']
         });
     }
-    async getUserByEmailWithRole(email: string): Promise<User | null> {
-        return this.usersRepository.findOne({
-            where: {email},
-            relations: ['roles']
-        });
-    }
 
-    async getUserByEmailWCompTargInvit(email: string): Promise<User | null> {
+    async getUserByEmailWCompTargInviteRole(email: string): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {email},
-            relations: ['company', 'targetForInvite','requests']
+            relations: ['company', 'targetForInvite','requests','roles']
         });
     }
     async getUserByIdWCompTargInvitRequsts(id: number): Promise<User | null> {
@@ -89,21 +83,6 @@ export class UserService {
             relations: ['company', 'auth']
         });
     }
-    async getUserByIdWithCompany(id: number): Promise<User | null> {
-        return this.usersRepository.findOne({
-            where: {id},
-            relations: ['company']
-        });
-    }
-
-    /* async getUserByEmailWithCompanyId(email: string, companyId: number): Promise<User | null> {
-         return this.usersRepository
-             .createQueryBuilder('user')
-             .leftJoinAndSelect('user.company', 'company') // 'company' is the property name in the User entity
-             .where('user.email = :email', { email })
-             .andWhere('company.id = :companyId', { companyId })
-             .getOne();
-     }*/
 
     async findOne(id: number): Promise<User | null> {
         const user: User = await this.usersRepository.findOneBy({id},);

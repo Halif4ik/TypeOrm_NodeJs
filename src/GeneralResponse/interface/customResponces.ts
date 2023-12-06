@@ -4,6 +4,7 @@ import {Company} from "../../company/entities/company.entity";
 import {Invite} from "../../invite/entities/invite.entity";
 import {Request} from "../../reqests/entities/reqest.entity";
 import {Role} from "../../roles/entities/role.entity";
+import {Quiz} from "../../quizz/entities/quizz.entity";
 
 export interface IRespAuth {
     "auth": Auth
@@ -31,6 +32,9 @@ export interface IRequests {
 
 export interface IRole {
     "role": Role | Role[]
+}
+export interface IQuiz {
+    "quiz": Quiz | Quiz[]
 }
 
 export interface IDeleted {

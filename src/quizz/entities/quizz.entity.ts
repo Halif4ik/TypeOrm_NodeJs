@@ -2,7 +2,7 @@ import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {Question} from "./question.entity";
 
 @Entity()
-export class Quizz {
+export class Quiz {
     @PrimaryGeneratedColumn()
     id: number;
 

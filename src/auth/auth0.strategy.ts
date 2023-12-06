@@ -30,7 +30,7 @@ export class Auth0Strategy extends PassportStrategy(Strategy, "auth0") {
         const firstName = payload['name']
         if (!email) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
 
-        const userFromBd: User | null = email ? await this.userService.getUserByEmailWCompTargInvit(email) : null;
+        const userFromBd: User | null = email ? await this.userService.getUserByEmailWCompTargInviteRole(email) : null;
         /*create user in bd*/
         if (!userFromBd) {
             const createdUser: GeneralResponse<IUserInfo> = await this.userService.createUser({

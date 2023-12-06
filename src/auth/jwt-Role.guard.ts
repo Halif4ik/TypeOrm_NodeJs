@@ -5,42 +5,36 @@ import {UserService} from "../user/user.service";
 import {Reflector} from "@nestjs/core";
 import {ROLE_KEY} from "./role-auth-decor";
 import {Role} from "../roles/entities/role.entity";
+import {Company} from "../company/entities/company.entity";
 
 @Injectable()
 export class JwtRoleGuard implements CanActivate {
-    constructor(private jwtService: JwtService, private readonly userService: UserService,
-                private reflector: Reflector) {
+    constructor(private reflector: Reflector) {
     }
-
     /*decode with Key word for refreshToken*/
-    async canActivate(context: ExecutionContext): Promise<true> {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
         const req = context.switchToHttp().getRequest();
         try {
-            const requiredRoles = this.reflector.getAllAndOverride(ROLE_KEY, [
+            const requiredRoles: string[] = this.reflector.getAllAndOverride<string[]>(ROLE_KEY, [
                 context.getHandler(),
                 context.getClass(),
             ]);
-            const authHeder = req.headers.authorization;
-            let bearer, token;
-            if (authHeder) {
-                bearer = authHeder.split(" ")[0];
-                token = authHeder.split(" ")[1];
-            }
-            if (bearer !== "Bearer" || !token)
-                throw new UnauthorizedException({message: "User doesnt authorized"});
 
-            const userFromJwt = this.jwtService.verify(token, {secret: process.env.SECRET_ACCESS});
+            /*we made verify in strategy*/
+            const userFromJwt: User | null = req.user;
+            if (!userFromJwt) throw new UnauthorizedException({message: "User doesnt authorized=)"});
 
             /*because in jwt/aith0 token always present email*/
-            const userFromBd: User | null = await this.userService.getUserByEmailWithRole(userFromJwt['email']);
-            const isAdminRoleInUser: boolean = userFromBd.roles.some((role: Role) => requiredRoles.includes(role.value));
+            const isAdminRoleInUser: boolean = userFromJwt.roles.some((role: Role) => requiredRoles.includes(role.value));
+            if (isAdminRoleInUser) return true;
 
-            if (!isAdminRoleInUser) throw new UnauthorizedException({message: "User doesnt have admin role"});
-            req.user = userFromBd;
-            return isAdminRoleInUser;
+            const foundCompany: boolean = userFromJwt.company.some((company: Company): boolean => company.owner.id === userFromJwt.id);
+            if (!foundCompany) throw new UnauthorizedException({message: "User doesnt owner or admin"});
+            return true;
         } catch (e) {
-            throw new UnauthorizedException({message: "User doesnt have admin role"});
+            throw e;
         }
+
     }
 
 }

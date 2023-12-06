@@ -6,7 +6,7 @@ export class Answers {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({type: "varchar", width: 255})
+    @Column({type: "varchar", length: 255})
     varAnswer: string;
 
 
