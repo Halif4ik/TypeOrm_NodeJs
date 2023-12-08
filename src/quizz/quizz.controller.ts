@@ -8,7 +8,10 @@ import {AuthGuard} from "@nestjs/passport";
 import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {IQuiz} from "../GeneralResponse/interface/customResponces";
+import {UpdateQuizDto} from "./dto/update-quizz.dto";
+import {Quiz} from "./entities/quizz.entity";
+import {TQuiz} from "../GeneralResponse/interface/customResponces";
+
 
 @Controller('quiz')
 export class QuizzController {
@@ -22,8 +25,17 @@ export class QuizzController {
     @Roles(UserRole.ADMIN)
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    createQuiz(@UserDec() userFromGuard: User, @Body() createQuizDto: CreateQuizDto): Promise<GeneralResponse<any>> {
+    createQuiz(@UserDec() userFromGuard: User, @Body() createQuizDto: CreateQuizDto): Promise<GeneralResponse<TQuiz>> {
         return this.quizzService.createQuiz(userFromGuard, createQuizDto);
+    }
+    //2.Admin and Owner can update quiz
+    //Endpoint: Patch /quiz/update
+    @Patch('/update')
+    @Roles(UserRole.ADMIN)
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleGuard)
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    updateQuiz(@UserDec() userFromGuard: User, @Body() updateQuizDto: UpdateQuizDto) {
+        return this.quizzService.updateQuiz(userFromGuard, updateQuizDto);
     }
 
 }

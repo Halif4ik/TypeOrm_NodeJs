@@ -5,12 +5,14 @@ import {Repository} from "typeorm";
 import {Quiz} from "./entities/quizz.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {IQuiz} from "../GeneralResponse/interface/customResponces";
+import {TQuiz, TQuizForResponse} from "../GeneralResponse/interface/customResponces";
 import {Answers} from "./entities/answers.entity";
 import {Question} from "./entities/question.entity";
 import {QuestionDto} from "./dto/question.dto";
 import {AnswerDto} from "./dto/answer.dto";
 import {Company} from "../company/entities/company.entity";
+import {UpdateQuizDto} from "./dto/update-quizz.dto";
+
 
 @Injectable()
 export class QuizService {
@@ -21,16 +23,16 @@ export class QuizService {
                 @InjectRepository(Question) private questionRepository: Repository<Question>) {
     }
 
-    async createQuiz(userFromGuard: User, createQuizDto: CreateQuizDto): Promise<GeneralResponse<any>> {
-        const currentCOmpany: Company = userFromGuard.company.find((company: any) =>
+    async createQuiz(userFromGuard: User, createQuizDto: CreateQuizDto): Promise<GeneralResponse<TQuiz>> {
+        const currentCompany: Company = userFromGuard.company.find((company: any) =>
             company.id === createQuizDto.companyId);
-        if (!currentCOmpany)
+        if (!currentCompany)
             throw new HttpException("Incorrect company ID for this user", HttpStatus.NOT_FOUND);
 
         const newQuiz: Quiz = this.quizRepository.create({
             description: createQuizDto.description,
             frequencyInDay: createQuizDto.frequencyInDay,
-            company: currentCOmpany,
+            company: currentCompany,
         });
         const savedQuiz: Quiz = await this.quizRepository.save(newQuiz);
 
@@ -57,10 +59,32 @@ export class QuizService {
         }
 
         this.logger.log(`User ${userFromGuard.email} created quiz ${createQuizDto}`);
+        const quizResponseCuted:TQuizForResponse = {
+            description: savedQuiz.description,
+            frequencyInDay: savedQuiz.frequencyInDay,
+            id: savedQuiz.id,
+        }
+
         return {
             "status_code": HttpStatus.OK,
             "detail": {
-                "quiz": 'newQuiz',
+                "quiz": quizResponseCuted,
+            },
+            "result": "created"
+        };
+    }
+
+    async updateQuiz(userFromGuard: User, updateQuizDto: UpdateQuizDto) {
+
+        const quizResponseCuted = {
+            description: "savedQuiz.description",
+            frequencyInDay: "savedQuiz.frequencyInDay",
+            id: "savedQuiz.id",
+        }
+        return {
+            "status_code": HttpStatus.OK,
+            "detail": {
+                "quiz": quizResponseCuted,
             },
             "result": "created"
         };

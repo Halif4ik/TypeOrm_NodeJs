@@ -8,7 +8,7 @@ import {Role, UserRole} from "./entities/role.entity";
 import {User} from "../user/entities/user.entity";
 import {Company} from "../company/entities/company.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {IRole} from "../GeneralResponse/interface/customResponces";
+import {TCompanyForResponse, TRole, TRoleForResponse} from "../GeneralResponse/interface/customResponces";
 
 @Injectable()
 export class RolesService {
@@ -18,7 +18,7 @@ export class RolesService {
                 private companyService: CompanyService, private userService: UserService) {
     }
 
-    async assignAdmin(owner: User, assignRoleDto: AssignRoleDto): Promise<GeneralResponse<IRole>> {
+    async assignAdmin(owner: User, assignRoleDto: AssignRoleDto): Promise<GeneralResponse<TRole>> {
         const targetCompany: Company = await this.companyService.getCompanyByIdAndOwner(assignRoleDto.companyId,
             assignRoleDto.userId, owner);
         if (!targetCompany) throw new HttpException("Our company does not have this user", HttpStatus.NOT_FOUND);
@@ -37,6 +37,7 @@ export class RolesService {
             user: targetCompany.members[0],
         });
         await this.rolesRepository.save(newRole);
+
         this.logger.log(`Created new role- ${newRole.value} for user- ${targetCompany.members[0].email} in company- ${targetCompany.name}`);
 
         return {
@@ -44,15 +45,24 @@ export class RolesService {
             "detail": {
                 "role": {
                     ...newRole,
-                    company: {...newRole.company, owner: null},
-                    user: {...newRole.user}
+                    company: {
+                        id: newRole.company.id,
+                        name: newRole.company.name,
+                        description: newRole.company.description,
+                    },
+                    user: {
+                        id: newRole.user.id,
+                        firstName: newRole.user.firstName,
+                        email: newRole.user.email,
+                        isActive: null,
+                    }
                 },
             },
             "result": "created"
         };
     }
 
-    async removeAdmin(owner: User, assignRoleDto: AssignRoleDto): Promise<GeneralResponse<IRole>> {
+    async removeAdmin(owner: User, assignRoleDto: AssignRoleDto): Promise<GeneralResponse<TRole>> {
         const targetCompany: Company = await this.companyService.getCompanyByIdAndOwner(assignRoleDto.companyId,
             assignRoleDto.userId, owner);
         if (!targetCompany)
@@ -79,7 +89,11 @@ export class RolesService {
             "detail": {
                 "role": {
                     ...adminRole,
-                    company: {...adminRole.company, owner: null},
+                    company: {
+                        id: adminRole.company.id,
+                        name: adminRole.company.name,
+                        description: adminRole.company.description,
+                    },
                     user: {...adminRole.user},
                 },
             },
@@ -88,7 +102,7 @@ export class RolesService {
 
     }
 
-    async showAllAdmins(owner: User, companyId: number): Promise<GeneralResponse<IRole>> {
+    async showAllAdmins(owner: User, companyId: number): Promise<GeneralResponse<TRole>> {
         const targetCompany: Company = await this.companyService.getCompanyByIdOnlyOwner(companyId,
             owner);
         if (!targetCompany)
@@ -96,18 +110,33 @@ export class RolesService {
 
         const adminRoles: Role[] = await this.rolesRepository.find({
             where: {
-                company: {id: targetCompany.id},
+                company: {id: companyId},
                 value: UserRole.ADMIN,
             },
             relations: ["user"],
+        });
+        if (!adminRoles.length)
+            throw new HttpException("This company does not have Admins", HttpStatus.NOT_FOUND);
+
+        const cuttedAdminRoles: TRoleForResponse[] = adminRoles.map((role: Role) => {
+            return {
+                id: role.id,
+                value: role.value,
+                user: {
+                    id: role.user.id,
+                    firstName: role.user.firstName,
+                    email: role.user.email,
+                    isActive: null,
+                }
+            } ;
         });
 
         return {
             "status_code": HttpStatus.OK,
             "detail": {
-                "role": adminRoles,
+                "role": cuttedAdminRoles,
             },
-            "result": "removed",
+            "result": "showed",
         };
     }
 }

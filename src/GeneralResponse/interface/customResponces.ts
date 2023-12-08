@@ -34,27 +34,29 @@ export type TInviteForResponse = Omit<Invite, 'deleteAt' | 'ownerUser' | 'target
 export type TUserForResponse =
     Omit<User, 'password' | 'deleteAt' | 'auth' | 'company' | 'invite' | 'targetForInvite' |
         'companyMember' | 'requests' | 'roles'>
+chnged
+export type TCompanyForResponse = Omit<Company, 'deleteAt' | 'owner' | 'members' | 'invites' |
+    'quiz' | 'roles' | 'requests'>
 
-interface InviteForResponse extends Omit<Invite, 'deleteAt' | 'ownerUser' | 'targetUser'> {
-    ownerCompany: Company;
-    ownerUser: User;
-    targetUser: User;
-    accept: boolean;
-    deleteAt: Date;
-    id: number;
-    createAt: Date;
-}
 export interface IRequests {
     "request": Request | Request[]
 }
 
-export interface IRole {
-    "role": Role | Role[]
+export type TRole = {
+    "role": TRoleForResponse | TRoleForResponse[]
+}
+export type TRoleForResponse =
+    Omit<Role, 'company' | 'user'| 'deleteAt'> & {
+    user: TUserForResponse;
+    company?: TCompanyForResponse;
 }
 
-export interface IQuiz {
-    "quiz": Quiz | Quiz[]
+export type TQuiz = {
+    "quiz": TQuizForResponse | TQuizForResponse[]
 }
+export type TQuizForResponse =
+    Omit<Quiz, 'company' | 'questions'>
+
 
 export interface IDeleted {
     "company"?: null

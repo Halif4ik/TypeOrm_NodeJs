@@ -17,7 +17,7 @@ import {AuthGuard} from "@nestjs/passport";
 import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {IRole} from "../GeneralResponse/interface/customResponces";
+import {TRole} from "../GeneralResponse/interface/customResponces";
 import {DeleteCompanyDto} from "../company/dto/delete-company.dto";
 
 @Controller('roles')
@@ -32,7 +32,7 @@ export class RolesController {
     @Post('/assign_admin')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    assignAdmin(@UserDec() owner: User, @Body() assignRoleDto: AssignRoleDto): Promise<GeneralResponse<IRole>> {
+    assignAdmin(@UserDec() owner: User, @Body() assignRoleDto: AssignRoleDto): Promise<GeneralResponse<TRole>> {
         return this.rolesService.assignAdmin(owner, assignRoleDto);
     }
 
@@ -42,7 +42,7 @@ export class RolesController {
     @Delete('/remove_admin')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    removeAdmin(@UserDec() owner: User, @Body() assignRoleDto: AssignRoleDto): Promise<GeneralResponse<IRole>> {
+    removeAdmin(@UserDec() owner: User, @Body() assignRoleDto: AssignRoleDto): Promise<GeneralResponse<TRole>> {
         return this.rolesService.removeAdmin(owner, assignRoleDto);
     }
 
@@ -52,7 +52,7 @@ export class RolesController {
     @Get('/admins')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    showAllAdmins(@UserDec() owner: User, @Query() companyId: DeleteCompanyDto): Promise<GeneralResponse<IRole>> {
+    showAllAdmins(@UserDec() owner: User, @Query() companyId: DeleteCompanyDto): Promise<GeneralResponse<TRole>> {
         return this.rolesService.showAllAdmins(owner, companyId.id);
     }
 
