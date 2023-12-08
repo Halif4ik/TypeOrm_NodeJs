@@ -34,7 +34,7 @@ export type TInviteForResponse = Omit<Invite, 'deleteAt' | 'ownerUser' | 'target
 export type TUserForResponse =
     Omit<User, 'password' | 'deleteAt' | 'auth' | 'company' | 'invite' | 'targetForInvite' |
         'companyMember' | 'requests' | 'roles'>
-chnged
+
 export type TCompanyForResponse = Omit<Company, 'deleteAt' | 'owner' | 'members' | 'invites' |
     'quiz' | 'roles' | 'requests'>
 
