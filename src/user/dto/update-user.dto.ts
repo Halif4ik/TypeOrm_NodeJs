@@ -1,8 +1,6 @@
 import {PartialType} from '@nestjs/mapped-types';
 import {CreateUserDto} from './create-user.dto';
-import {IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, Length, Min} from "class-validator";
-import {Transform} from "class-transformer";
-import {Company} from "../../company/entities/company.entity";
+import {IsEmail,   IsOptional, IsString, Length} from "class-validator";
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
     @IsString({message: 'FirstName should be string'})

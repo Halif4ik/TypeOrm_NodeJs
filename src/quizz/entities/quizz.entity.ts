@@ -1,5 +1,6 @@
-import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {Question} from "./question.entity";
+import {Company} from "../../company/entities/company.entity";
 
 @Entity()
 export class Quiz {
@@ -15,4 +16,10 @@ export class Quiz {
     @OneToMany(() => Question, question => question.quiz)
     questions: Question[];
 
+    @ManyToOne(() => Company, company => company.quiz, {
+        onDelete: 'CASCADE',
+        eager: true
+    })
+    @JoinColumn()
+    company: Company;
 }

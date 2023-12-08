@@ -6,16 +6,23 @@ export class CreateQuizDto {
     @IsString({message: 'description should be string'})
     @IsNotEmpty()
     @Length(4, 500,{ message:'description Min length 4 max length 500'})
-    description: string;
+    readonly description: string;
 
     @Transform(({value}) => isNaN(parseInt(value)) ? 0 : parseInt(value),)
     @IsNotEmpty()
     @IsNumber({}, {message: 'frequency Days  should be number'})
     @Min(1)
-    frequencyInDay: number;
+    readonly frequencyInDay: number;
 
     @IsNotEmpty()
     @ValidateNested({ each: true })
     @Type(() => QuestionDto)
-    questions: QuestionDto[];
+    readonly questions: QuestionDto[];
+
+
+    @Transform(({value}) => isNaN(parseInt(value)) ? 0 : parseInt(value),)
+    @IsNotEmpty()
+    @IsNumber({}, {message: 'companyId for Assign CreateQuizDto should be number'})
+    @Min(1)
+    readonly companyId: number;
 }

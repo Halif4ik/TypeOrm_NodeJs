@@ -1,4 +1,4 @@
-import {HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {CreateQuizDto} from './dto/create-quiz.dto';
 import {User} from "../user/entities/user.entity";
 import {Repository} from "typeorm";
@@ -10,6 +10,7 @@ import {Answers} from "./entities/answers.entity";
 import {Question} from "./entities/question.entity";
 import {QuestionDto} from "./dto/question.dto";
 import {AnswerDto} from "./dto/answer.dto";
+import {Company} from "../company/entities/company.entity";
 
 @Injectable()
 export class QuizService {
@@ -21,27 +22,39 @@ export class QuizService {
     }
 
     async createQuiz(userFromGuard: User, createQuizDto: CreateQuizDto): Promise<GeneralResponse<any>> {
+        const currentCOmpany: Company = userFromGuard.company.find((company: any) =>
+            company.id === createQuizDto.companyId);
+        if (!currentCOmpany)
+            throw new HttpException("Incorrect company ID for this user", HttpStatus.NOT_FOUND);
+
+        const newQuiz: Quiz = this.quizRepository.create({
+            description: createQuizDto.description,
+            frequencyInDay: createQuizDto.frequencyInDay,
+            company: currentCOmpany,
+        });
+        const savedQuiz: Quiz = await this.quizRepository.save(newQuiz);
+
         for (const question of createQuizDto.questions) {
             const newQuestion: Question = this.questionRepository.create({
                 questionText: question.questionText,
                 rightAnswer: question.rightAnswer,
-                varsAnswers: []
+                varsAnswers: [],
+                quiz: savedQuiz,
             });
-            const result = await this.questionRepository.save(newQuestion);
-            console.log('result-', result);
-        }
-/*todo*/
-        createQuizDto.questions.forEach(async (question: QuestionDto) => {
-            for (const oneVariantAnswer of question.varsAnswers) {
+            const savedNewQuestion: Question = await this.questionRepository.save(newQuestion);
+
+            const arrPromisesAnswers: Promise<Answers>[] = question.varsAnswers.map((oneVariantAnswer: AnswerDto) => {
                 const newVar: Answers = this.answersRepository.create({
                     varAnswer: oneVariantAnswer.varAnswer,
-                    question: question,
+                    question: savedNewQuestion,
                 });
-                console.log('newVar+', newVar);
-                await this.answersRepository.save(newVar);
-            }
-        });
-
+                return this.answersRepository.save(newVar);
+            });
+            const savedAnswers: Answers[] = await Promise.all(arrPromisesAnswers);
+            /*adding relation in Question arr all answers*/
+            savedNewQuestion.varsAnswers = savedAnswers;
+            await this.questionRepository.save(savedNewQuestion);
+        }
 
         this.logger.log(`User ${userFromGuard.email} created quiz ${createQuizDto}`);
         return {
@@ -51,6 +64,5 @@ export class QuizService {
             },
             "result": "created"
         };
-        ;
     }
 }

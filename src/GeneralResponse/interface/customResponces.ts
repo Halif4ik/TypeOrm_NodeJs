@@ -22,10 +22,28 @@ export interface ICompany {
     "company": Company | Company[]
 }
 
-export interface IInvite {
-    "invite": Invite | Invite[]
+export type TInvite = {
+    "invite": TInviteForResponse | TInviteForResponse[]
 }
 
+export type TInviteForResponse = Omit<Invite, 'deleteAt' | 'ownerUser' | 'targetUser'> & {
+    ownerUser: TUserForResponse;
+    targetUser: TUserForResponse;
+}
+
+export type TUserForResponse =
+    Omit<User, 'password' | 'deleteAt' | 'auth' | 'company' | 'invite' | 'targetForInvite' |
+        'companyMember' | 'requests' | 'roles'>
+
+interface InviteForResponse extends Omit<Invite, 'deleteAt' | 'ownerUser' | 'targetUser'> {
+    ownerCompany: Company;
+    ownerUser: User;
+    targetUser: User;
+    accept: boolean;
+    deleteAt: Date;
+    id: number;
+    createAt: Date;
+}
 export interface IRequests {
     "request": Request | Request[]
 }
@@ -33,6 +51,7 @@ export interface IRequests {
 export interface IRole {
     "role": Role | Role[]
 }
+
 export interface IQuiz {
     "quiz": Quiz | Quiz[]
 }
