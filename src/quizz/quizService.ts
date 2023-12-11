@@ -24,10 +24,17 @@ export class QuizService {
     }
 
     async createQuiz(userFromGuard: User, createQuizDto: CreateQuizDto): Promise<GeneralResponse<TQuiz>> {
-        const currentCompany: Company = userFromGuard.company.find((company: any) =>
+        const currentCompany: Company = userFromGuard.company.find((company: Company) =>
             company.id === createQuizDto.companyId);
         if (!currentCompany)
             throw new HttpException("Incorrect company ID for this user", HttpStatus.NOT_FOUND);
+
+        if(createQuizDto.questions.length < 2)
+            throw new HttpException("You must add at least 2 questions", HttpStatus.BAD_REQUEST);
+        createQuizDto.questions.some((question: QuestionDto) => {
+            if(question.varsAnswers.length < 2)
+                throw new HttpException("You must add at least 2 variants of answers", HttpStatus.BAD_REQUEST);
+        });
 
         const newQuiz: Quiz = this.quizRepository.create({
             description: createQuizDto.description,
@@ -48,7 +55,7 @@ export class QuizService {
             const arrPromisesAnswers: Promise<Answers>[] = question.varsAnswers.map((oneVariantAnswer: AnswerDto) => {
                 const newVar: Answers = this.answersRepository.create({
                     varAnswer: oneVariantAnswer.varAnswer,
-                    question: savedNewQuestion,
+                    question: savedNewQuestion,/*todo*/
                 });
                 return this.answersRepository.save(newVar);
             });
@@ -59,7 +66,7 @@ export class QuizService {
         }
 
         this.logger.log(`User ${userFromGuard.email} created quiz ${createQuizDto}`);
-        const quizResponseCuted:TQuizForResponse = {
+        const quizResponseCuted: TQuizForResponse = {
             description: savedQuiz.description,
             frequencyInDay: savedQuiz.frequencyInDay,
             id: savedQuiz.id,
@@ -75,12 +82,59 @@ export class QuizService {
     }
 
     async updateQuiz(userFromGuard: User, updateQuizDto: UpdateQuizDto) {
+        /*find needs quiz*/
+        const quizToUpdate: Quiz | undefined = await this.quizRepository.findOne({
+            where: {
+                id: updateQuizDto.quizId,
+                company: {id: updateQuizDto.companyId},
+            },
+            relations: ['questions', 'questions.varsAnswers', 'company'],
+        });
+        if (!quizToUpdate) throw new HttpException("Quiz not found", HttpStatus.NOT_FOUND);
+        if (quizToUpdate.company.owner.id !== userFromGuard.id)
+            throw new HttpException("You are not owner", HttpStatus.FORBIDDEN);
 
-        const quizResponseCuted = {
-            description: "savedQuiz.description",
-            frequencyInDay: "savedQuiz.frequencyInDay",
-            id: "savedQuiz.id",
+        if(updateQuizDto.questions.length < 2)
+            throw new HttpException("You must add at least 2 questions", HttpStatus.BAD_REQUEST);
+        updateQuizDto.questions.some((question: QuestionDto) => {
+            if(question.varsAnswers.length < 2)
+                throw new HttpException("You must add at least 2 variants of answers", HttpStatus.BAD_REQUEST);
+        });
+
+        /*delete all questions and answers*/
+        console.log('.quizId-', updateQuizDto.quizId);
+        updateQuizDto.questions.map(async (question: QuestionDto) => {
+
+        });
+        for (const question of updateQuizDto.questions) {
+            const newQuestion: Question = this.questionRepository.create({
+                questionText: question.questionText,
+                rightAnswer: question.rightAnswer,
+                varsAnswers: [],
+            });
+            const savedNewQuestion: Question = await this.questionRepository.save(newQuestion);
+
+            const arrPromisesAnswers: Promise<Answers>[] = question.varsAnswers.map((oneVariantAnswer: AnswerDto) => {
+                const newVar: Answers = this.answersRepository.create({
+                    varAnswer: oneVariantAnswer.varAnswer,
+                });
+                return this.answersRepository.save(newVar);
+            });
+            const savedAnswers: Answers[] = await Promise.all(arrPromisesAnswers);
+            /*adding relation in Question arr all answers*/
+            savedNewQuestion.varsAnswers = savedAnswers;
+            await this.questionRepository.save(savedNewQuestion);
+            /*save relation question to quiz*/
+
         }
+
+        this.logger.log(`User ${userFromGuard.email} created quiz ${quizToUpdate}`);
+        const quizResponseCuted: TQuizForResponse = {
+            description: quizToUpdate.description,
+            frequencyInDay: quizToUpdate.frequencyInDay,
+            id: quizToUpdate.id,
+        }
+
         return {
             "status_code": HttpStatus.OK,
             "detail": {
@@ -88,5 +142,6 @@ export class QuizService {
             },
             "result": "created"
         };
+
     }
 }

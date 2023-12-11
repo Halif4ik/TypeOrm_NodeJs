@@ -22,8 +22,7 @@ export class AdditionalUpdateQuizCompanyId {
 }
 
 /*all other  Fields not required */
-export class UpdateQuizDto extends IntersectionType(
-    AdditionalUpdateQuizId,
+export class UpdateQuizDto extends IntersectionType(AdditionalUpdateQuizId,
     class UpdateCatDto extends OmitType(class UpdateQuizDtoAllParts extends PartialType(CreateQuizDto) {
     }, ['companyId'] as const) {
     },
