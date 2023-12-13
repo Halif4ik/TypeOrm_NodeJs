@@ -1,4 +1,4 @@
-import {Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {Quiz} from "./quizz.entity";
 import {Answers} from "./answers.entity";
 
@@ -13,6 +13,8 @@ export class Question {
     @Column({type: "varchar", length: 255})
     rightAnswer: string;
 
+    @DeleteDateColumn()
+    deleteAt: Date;
 
     @OneToMany(() => Answers, answers => answers.question)
     varsAnswers: Answers[];

@@ -70,6 +70,12 @@ export class UserService {
             relations: ['company', 'targetForInvite','requests','roles']
         });
     }
+    async getUserByIdCompTargInviteRole(id: number): Promise<User | null> {
+        return this.usersRepository.findOne({
+            where: {id},
+            relations: ['company', 'targetForInvite','requests','roles','roles.company']
+        });
+    }
     async getUserByIdWCompTargInvitRequsts(id: number): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {id},

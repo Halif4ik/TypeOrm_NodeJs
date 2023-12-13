@@ -55,7 +55,7 @@ export type TQuiz = {
     "quiz": TQuizForResponse | TQuizForResponse[]
 }
 export type TQuizForResponse =
-    Omit<Quiz, 'company' | 'questions'>
+    Omit<Quiz, 'company' | 'questions' | 'deleteAt'>
 
 
 export interface IDeleted {

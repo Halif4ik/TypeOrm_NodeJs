@@ -11,6 +11,7 @@ import {Company} from "../company/entities/company.entity";
 export class JwtRoleGuard implements CanActivate {
     constructor(private reflector: Reflector) {
     }
+
     /*decode with Key word for refreshToken*/
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const req = context.switchToHttp().getRequest();
@@ -20,16 +21,20 @@ export class JwtRoleGuard implements CanActivate {
                 context.getClass(),
             ]);
 
-            /*we made verify in strategy*/
+            /*we made verify in strategy */
             const userFromJwt: User | null = req.user;
             if (!userFromJwt) throw new UnauthorizedException({message: "User doesnt authorized=)"});
 
-            /*because in jwt/aith0 token always present email*/
-            const isAdminRoleInUser: boolean = userFromJwt.roles.some((role: Role) => requiredRoles.includes(role.value));
-            if (isAdminRoleInUser) return true;
+            /*temporary in Role value present only Admin  */
+            const listCompanysWhereAdmin: Role[] = userFromJwt.roles.filter((role: Role) => role.value);
+            if (listCompanysWhereAdmin) return true;
 
-            const foundCompany: boolean = userFromJwt.company.some((company: Company): boolean => company.owner.id === userFromJwt.id);
-            if (!foundCompany) throw new UnauthorizedException({message: "User doesnt owner or admin"});
+            //check if user owner on SOME company
+            const foundCompany: boolean = userFromJwt.company.some((company: Company): boolean =>
+                company.owner.id === userFromJwt.id);
+
+            if (!foundCompany)
+                throw new UnauthorizedException({message: "User doesnt has any owner or admin role"});
             return true;
         } catch (e) {
             throw e;

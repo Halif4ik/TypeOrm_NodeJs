@@ -12,6 +12,7 @@ import {QuestionDto} from "./dto/question.dto";
 import {AnswerDto} from "./dto/answer.dto";
 import {Company} from "../company/entities/company.entity";
 import {UpdateQuizDto} from "./dto/update-quizz.dto";
+import {DeleteCompanyDto} from "../company/dto/delete-company.dto";
 
 
 @Injectable()
@@ -29,10 +30,10 @@ export class QuizService {
         if (!currentCompany)
             throw new HttpException("Incorrect company ID for this user", HttpStatus.NOT_FOUND);
 
-        if(createQuizDto.questions.length < 2)
+        if (createQuizDto.questions.length < 2)
             throw new HttpException("You must add at least 2 questions", HttpStatus.BAD_REQUEST);
         createQuizDto.questions.some((question: QuestionDto) => {
-            if(question.varsAnswers.length < 2)
+            if (question.varsAnswers.length < 2)
                 throw new HttpException("You must add at least 2 variants of answers", HttpStatus.BAD_REQUEST);
         });
 
@@ -81,7 +82,7 @@ export class QuizService {
         };
     }
 
-    async updateQuiz(userFromGuard: User, updateQuizDto: UpdateQuizDto) {
+    async updateQuiz(userFromGuard: User, updateQuizDto: UpdateQuizDto): Promise<GeneralResponse<TQuiz>> {
         /*find needs quiz*/
         const quizToUpdate: Quiz | undefined = await this.quizRepository.findOne({
             where: {
@@ -90,23 +91,22 @@ export class QuizService {
             },
             relations: ['questions', 'questions.varsAnswers', 'company'],
         });
+        console.log('this.quizRepository-', this.quizRepository);
+        console.log('quizToUpdate-', quizToUpdate);
         if (!quizToUpdate) throw new HttpException("Quiz not found", HttpStatus.NOT_FOUND);
-        if (quizToUpdate.company.owner.id !== userFromGuard.id)
-            throw new HttpException("You are not owner", HttpStatus.FORBIDDEN);
-
-        if(updateQuizDto.questions.length < 2)
+        if (updateQuizDto.questions.length < 2)
             throw new HttpException("You must add at least 2 questions", HttpStatus.BAD_REQUEST);
         updateQuizDto.questions.some((question: QuestionDto) => {
-            if(question.varsAnswers.length < 2)
+            if (question.varsAnswers.length < 2)
                 throw new HttpException("You must add at least 2 variants of answers", HttpStatus.BAD_REQUEST);
         });
 
-        /*delete all questions and answers*/
-        console.log('.quizId-', updateQuizDto.quizId);
-        updateQuizDto.questions.map(async (question: QuestionDto) => {
-
+        /*del old questions + answers */
+        quizToUpdate.questions.forEach((question: Question) => {
+            this.questionRepository.delete(question.id);
         });
-        for (const question of updateQuizDto.questions) {
+
+        const newQuestions = updateQuizDto.questions.map(async (question: QuestionDto) => {
             const newQuestion: Question = this.questionRepository.create({
                 questionText: question.questionText,
                 rightAnswer: question.rightAnswer,
@@ -114,19 +114,26 @@ export class QuizService {
             });
             const savedNewQuestion: Question = await this.questionRepository.save(newQuestion);
 
+            /*before this applied all questionRepository changes this part code wait -await Promise.all(newQuestions) */
             const arrPromisesAnswers: Promise<Answers>[] = question.varsAnswers.map((oneVariantAnswer: AnswerDto) => {
                 const newVar: Answers = this.answersRepository.create({
                     varAnswer: oneVariantAnswer.varAnswer,
                 });
                 return this.answersRepository.save(newVar);
             });
+
             const savedAnswers: Answers[] = await Promise.all(arrPromisesAnswers);
-            /*adding relation in Question arr all answers*/
+            /*adding relation - in Question arr all answers*/
             savedNewQuestion.varsAnswers = savedAnswers;
             await this.questionRepository.save(savedNewQuestion);
-            /*save relation question to quiz*/
+            return savedNewQuestion;
+        });
 
-        }
+
+        /*wait all relation question for quiz*/
+        quizToUpdate.questions = await Promise.all(newQuestions);
+        /*save relation question to quiz*/
+        await this.quizRepository.save(quizToUpdate);
 
         this.logger.log(`User ${userFromGuard.email} created quiz ${quizToUpdate}`);
         const quizResponseCuted: TQuizForResponse = {
@@ -140,8 +147,50 @@ export class QuizService {
             "detail": {
                 "quiz": quizResponseCuted,
             },
-            "result": "created"
+            "result": "updated"
         };
 
+    }
+
+    async deleteQuiz(userFromGuard: User, quizDeleteDTO: DeleteCompanyDto) {
+        console.log('userFromGuard-', userFromGuard);
+        console.log('id-', quizDeleteDTO.id);
+        const quizToDelete: Quiz | undefined = await this.quizRepository.findOne({
+            where: {id: quizDeleteDTO.id},
+            relations: ['company'],
+        });
+
+        console.log('findAll', await this.quizRepository.find());
+
+        console.log('quizToDelete-', quizToDelete);
+        if (!quizToDelete) throw new HttpException("Quiz not found", HttpStatus.BAD_REQUEST);
+
+
+        /*await this.quizRepository.softDelete(quizToDelete.id);*/
+        this.logger.log(`User ${userFromGuard.email} deleted quiz ${quizToDelete}`);
+        return {
+            "status_code": HttpStatus.OK,
+            "detail": {
+                "quiz": {
+                    id: quizToDelete.id,
+                },
+            },
+            "result": "deleted"
+        };
+    }
+
+    async findAll() {
+        console.log('findAll', await this.quizRepository.findOne(
+            {
+                where: {id: 17},
+                relations: ['company'],
+            }
+        ));
+        return this.quizRepository.findOne(
+            {
+                where: {id: 17},
+                relations: ['company'],
+            }
+        );
     }
 }
