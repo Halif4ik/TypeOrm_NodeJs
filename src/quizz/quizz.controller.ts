@@ -60,7 +60,7 @@ export class QuizzController {
     @Delete('/delete')
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     @Roles(UserRole.ADMIN)
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleGuard)
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
     deleteQuiz(@UserDec() userFromGuard: User, @Query() quizDeleteDTO: DeleteCompanyDto) {
         return this.quizzService.deleteQuiz(userFromGuard, quizDeleteDTO);
     }

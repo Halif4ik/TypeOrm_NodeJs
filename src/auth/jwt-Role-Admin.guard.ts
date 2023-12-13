@@ -31,41 +31,29 @@ export class JwtRoleAdminGuard implements CanActivate {
             if (isNaN(parseInt(req.query.id)))
                 throw new UnauthorizedException({message: "Quiz ID is not a number"});
 
+            const quizId: number = parseInt(req.query.id);
+            const targetQuiz: Quiz | null = await this.quizService.findQuizById(quizId);
+            if (!targetQuiz) throw new UnauthorizedException({message: "Quiz not found"});
+
             /*temporary in Role value present only Admin TODO */
             const listCompanysWhereAdmin: Role[] = userFromJwt.roles.filter((role: Role) => role.value);
-
-            console.log('LIST-', listCompanysWhereAdmin);
-            /* console.log('req.user-', req.user);*/
             if (listCompanysWhereAdmin) {
-                // Check if user is the owner of the company related to the quiz
-                const quizId: number = parseInt(req.query.id);
-        /*        const companyWichHasQuiz: Quiz = await this.quizRepository.findOne({
-                    where: {id: quizId},
-                    relations: ["company"]
-                });*/
-                const temp = await this.quizService.findAll();
-                console.log('temp-', temp);
-                /*console.log('companyWichHasQuiz-', companyWichHasQuiz);*/
-                const isQuizOwner: boolean =
-                    listCompanysWhereAdmin.some((role: Role) => role.company.id === quizId);
-                console.log('isQuizOwner-', isQuizOwner);
-                if (!isQuizOwner)
-                    throw new UnauthorizedException({message: "User is not the owner of the company related to the quiz"});
-
-                return true;
+                // Check if user is the Admin of the company related to the quiz
+                const isQuizAdmin: boolean =
+                    listCompanysWhereAdmin.some((role: Role) => role.company.id === targetQuiz.company.id);
+                if (isQuizAdmin) return true;
             }
 
-            // Check if user is the owner of the current company
-            const isCompanyOwner: boolean = userFromJwt.company.some((company: Company) => company.owner.id === userFromJwt.id);
+            // Check maybe user is the owner of the current company
+            const isCompanyOwner: boolean = userFromJwt.company.some((company: Company) =>
+                company.id === targetQuiz.company.id);
+            if (!isCompanyOwner)
+                throw new UnauthorizedException({message: "User is not the OWNER and isn't Admin in the company related to the quiz"});
 
-            if (!isCompanyOwner) {
-                throw new UnauthorizedException({message: "User is not the owner or doesn't have the required role"});
-            }
             return true;
         } catch (e) {
             throw e;
         }
 
     }
-
 }
