@@ -22,9 +22,10 @@ import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {UpdateQuizDto} from "./dto/update-quizz.dto";
 import {Quiz} from "./entities/quizz.entity";
-import {TQuiz} from "../GeneralResponse/interface/customResponces";
+import {IDeleted, TQuiz, TQuizForResponse} from "../GeneralResponse/interface/customResponces";
 import {DeleteCompanyDto} from "../company/dto/delete-company.dto";
 import {JwtRoleAdminGuard} from "../auth/jwt-Role-Admin.guard";
+import {PaginationsQuizDto} from "./dto/pagination-quiz.dto";
 
 
 @Controller('quiz')
@@ -37,7 +38,7 @@ export class QuizzController {
     //Permissions: Only Admin and Owner
     @Post('/create')
     @Roles(UserRole.ADMIN)
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleGuard)
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     createQuiz(@UserDec() userFromGuard: User, @Body() createQuizDto: CreateQuizDto): Promise<GeneralResponse<TQuiz>> {
         return this.quizzService.createQuiz(userFromGuard, createQuizDto);
@@ -45,33 +46,33 @@ export class QuizzController {
 
     //2.Admin and Owner can update quiz
     //Endpoint: Patch /quiz/update
-    //Permissions: Only Admin and Owner TODO
+    //Permissions: Only Admin and Owner
     @Patch('/update')
     @Roles(UserRole.ADMIN)
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleGuard)
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    updateQuiz(@UserDec() userFromGuard: User, @Body() updateQuizDto: UpdateQuizDto):Promise<GeneralResponse<TQuiz>> {
+    updateQuiz(@UserDec() userFromGuard: User, @Body() updateQuizDto: UpdateQuizDto): Promise<GeneralResponse<TQuiz>> {
         return this.quizzService.updateQuiz(userFromGuard, updateQuizDto);
     }
 
     //3.Admin and Owner can delete quiz
     //Endpoint: Delete /quiz/delete?id=16
-    //Permissions: Only Admin and Owner TODO
+    //Permissions: Only Admin and Owner
     @Delete('/delete')
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     @Roles(UserRole.ADMIN)
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
-    deleteQuiz(@UserDec() userFromGuard: User, @Query() quizDeleteDTO: DeleteCompanyDto) {
+    deleteQuiz(@UserDec() userFromGuard: User, @Query() quizDeleteDTO: DeleteCompanyDto):Promise<GeneralResponse<IDeleted>> {
         return this.quizzService.deleteQuiz(userFromGuard, quizDeleteDTO);
     }
-    //4.Admin and Owner can get all quiz
+
+    //4.Admin and Owner can get all quiz for company
     //Endpoint: Get /quiz/all
-    //Permissions: Only Admin and Owner TODO JwtRoleAdminGuard
+    //Permissions: Only Admin and Owner
     @Get('/all')
     @Roles(UserRole.ADMIN)
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleGuard)
-    getAllQuiz(@UserDec() userFromGuard: User, @Query('page') page: number, @Query('revert') revert: boolean) {
-        console.log('/all',userFromGuard);
-        return this.quizzService.findAll();
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
+    getAllQuiz(@Query()paginationsQuizDto: PaginationsQuizDto): Promise<GeneralResponse<TQuiz>> {
+        return this.quizzService.findAll(paginationsQuizDto);
     }
 }

@@ -65,4 +65,5 @@ export interface IDeleted {
     "invite"?: null
     "request"?: null
     "removedUser"?: null
+    "quiz"?: number
 }

@@ -5,7 +5,7 @@ import {Repository} from "typeorm";
 import {Quiz} from "./entities/quizz.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {TQuiz, TQuizForResponse} from "../GeneralResponse/interface/customResponces";
+import {IDeleted, TQuiz, TQuizForResponse} from "../GeneralResponse/interface/customResponces";
 import {Answers} from "./entities/answers.entity";
 import {Question} from "./entities/question.entity";
 import {QuestionDto} from "./dto/question.dto";
@@ -13,6 +13,8 @@ import {AnswerDto} from "./dto/answer.dto";
 import {Company} from "../company/entities/company.entity";
 import {UpdateQuizDto} from "./dto/update-quizz.dto";
 import {DeleteCompanyDto} from "../company/dto/delete-company.dto";
+import * as process from "process";
+import {PaginationsQuizDto} from "./dto/pagination-quiz.dto";
 
 
 @Injectable()
@@ -153,7 +155,7 @@ export class QuizService {
 
     }
 
-    async deleteQuiz(userFromGuard: User, quizDeleteDTO: DeleteCompanyDto) {
+    async deleteQuiz(userFromGuard: User, quizDeleteDTO: DeleteCompanyDto): Promise<GeneralResponse<IDeleted>> {
         const quizToDelete: Quiz | undefined = await this.quizRepository.findOne({
             where: {id: quizDeleteDTO.id},
             relations: ['company'],
@@ -166,16 +168,39 @@ export class QuizService {
         return {
             "status_code": HttpStatus.OK,
             "detail": {
-                "quiz": {
-                    id: quizToDelete.id,
-                },
+                "quiz": quizToDelete.id,
             },
             "result": "deleted"
         };
     }
 
-    async findAll() {
-        return this.quizRepository.find();
+    async findAll(paginationsQuizDto: PaginationsQuizDto): Promise<GeneralResponse<TQuiz>> {
+        const {page, revert, companyId} = paginationsQuizDto;
+        const order = revert === true ? 'ASC' : 'DESC';
+        const allQuiz: Quiz[] = await this.quizRepository.find({
+            where: {company: {id: companyId}},
+            take: +process.env.PAGE_PAGINATION,
+            skip: (page - 1) * (+process.env.PAGE_PAGINATION),
+            order: {
+                id: order,
+            },
+            relations: ['questions']
+        });
+
+        const quizResponseCutedArr:TQuizForResponse[] = allQuiz.map((quiz: Quiz) => {
+            return {
+                id: quiz.id,
+                description: quiz.description,
+                frequencyInDay: quiz.frequencyInDay,
+            };
+        });
+        return {
+            "status_code": HttpStatus.OK,
+            "detail": {
+                "quiz": quizResponseCutedArr,
+            },
+            "result": "created"
+        };
     }
 
     async findQuizById(quizId: number): Promise<Quiz | null> {

@@ -28,28 +28,33 @@ export class JwtRoleAdminGuard implements CanActivate {
             /*we made verify in strategy */
             const userFromJwt: User | null = req.user;
             if (!userFromJwt) throw new UnauthorizedException({message: "User doesnt authorized=)"});
-            if (isNaN(parseInt(req.query.id)))
-                throw new UnauthorizedException({message: "Quiz ID is not a number"});
 
-            const quizId: number = parseInt(req.query.id);
-            const targetQuiz: Quiz | null = await this.quizService.findQuizById(quizId);
-            if (!targetQuiz) throw new UnauthorizedException({message: "Quiz not found"});
+            let companyId: number = +req?.body?.companyId;
+            /*for Get*/
+            if (!companyId) companyId = +req?.query?.companyId;
+            /*for Del and Post*/
+            if (!companyId) {
+                if (isNaN(parseInt(req.query.id)))
+                    throw new UnauthorizedException({message: "Quiz ID is not a number"});
+                const quizId: number = parseInt(req.query.id);
+                const targetQuiz: Quiz | null = await this.quizService.findQuizById(quizId);
+                if (!targetQuiz) throw new UnauthorizedException({message: "Quiz not found"});
+                companyId = targetQuiz.company.id;
+            }
 
-            /*temporary in Role value present only Admin TODO */
+            /*temporary in Role value present only Admin */
             const listCompanysWhereAdmin: Role[] = userFromJwt.roles.filter((role: Role) => role.value);
             if (listCompanysWhereAdmin) {
                 // Check if user is the Admin of the company related to the quiz
                 const isQuizAdmin: boolean =
-                    listCompanysWhereAdmin.some((role: Role) => role.company.id === targetQuiz.company.id);
+                    listCompanysWhereAdmin.some((role: Role) => role.company.id === companyId);
                 if (isQuizAdmin) return true;
             }
 
             // Check maybe user is the owner of the current company
-            const isCompanyOwner: boolean = userFromJwt.company.some((company: Company) =>
-                company.id === targetQuiz.company.id);
+            const isCompanyOwner: boolean = userFromJwt.company.some((company: Company) => company.id === companyId);
             if (!isCompanyOwner)
                 throw new UnauthorizedException({message: "User is not the OWNER and isn't Admin in the company related to the quiz"});
-
             return true;
         } catch (e) {
             throw e;
