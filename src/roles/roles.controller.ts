@@ -28,7 +28,7 @@ export class RolesController {
 
     // 1. Owner assign admin role for user from this company
     // Endpoint: Post /roles/assign_admin
-    // Permissions: Only company owner
+    // Permissions: Only authtorisated user
     @Post('/assign_admin')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
@@ -38,7 +38,7 @@ export class RolesController {
 
     // 2. Owner removes the admin role from  this company
     // Endpoint: DELETE /roles/remove_admin
-    // Permissions: Only company owner
+    // Permissions: Only authtorisated user
     @Delete('/remove_admin')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
@@ -48,7 +48,7 @@ export class RolesController {
 
     // 3. Show all Admins for this company
     // Endpoint: GET /roles/admins
-    // Permissions: Only company owner
+    // Permissions: Only authtorisated user
     @Get('/admins')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))

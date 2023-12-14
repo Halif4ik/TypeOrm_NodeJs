@@ -5,6 +5,7 @@ import {Invite} from "../../invite/entities/invite.entity";
 import {Request} from "../../reqests/entities/reqest.entity";
 import {Role} from "../../roles/entities/role.entity";
 import {Quiz} from "../../quizz/entities/quizz.entity";
+import {Question} from "../../quizz/entities/question.entity";
 
 export interface IRespAuth {
     "auth": Auth
@@ -46,7 +47,7 @@ export type TRole = {
     "role": TRoleForResponse | TRoleForResponse[]
 }
 export type TRoleForResponse =
-    Omit<Role, 'company' | 'user'| 'deleteAt'> & {
+    Omit<Role, 'company' | 'user' | 'deleteAt'> & {
     user: TUserForResponse;
     company?: TCompanyForResponse;
 }
@@ -55,7 +56,9 @@ export type TQuiz = {
     "quiz": TQuizForResponse | TQuizForResponse[]
 }
 export type TQuizForResponse =
-    Omit<Quiz, 'company' | 'questions' | 'deleteAt'>
+    Omit<Quiz, 'company' | 'questions' | 'deleteAt'> & {
+    questions?: Question[];
+}
 
 
 export interface IDeleted {

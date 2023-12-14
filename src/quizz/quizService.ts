@@ -12,10 +12,9 @@ import {QuestionDto} from "./dto/question.dto";
 import {AnswerDto} from "./dto/answer.dto";
 import {Company} from "../company/entities/company.entity";
 import {UpdateQuizDto} from "./dto/update-quizz.dto";
-import {DeleteCompanyDto} from "../company/dto/delete-company.dto";
 import * as process from "process";
 import {PaginationsQuizDto} from "./dto/pagination-quiz.dto";
-
+import {DeleteQuizDto} from "./dto/delete-quiz.dto";
 
 @Injectable()
 export class QuizService {
@@ -26,14 +25,7 @@ export class QuizService {
                 @InjectRepository(Question) private questionRepository: Repository<Question>) {
     }
 
-    async createQuiz(userFromGuard: User, createQuizDto: CreateQuizDto): Promise<GeneralResponse<TQuiz>> {
-        const currentCompany: Company = userFromGuard.company.find((company: Company) =>
-            company.id === createQuizDto.companyId);
-        /*console.log('currentCompany-', currentCompany);
-        console.log('userFromGuard-', userFromGuard);*/
-        if (!currentCompany)
-            throw new HttpException("Incorrect company ID for this user", HttpStatus.NOT_FOUND);
-
+    async createQuiz(userFromGuard: User, createQuizDto: CreateQuizDto, companyFromGuard: Company): Promise<GeneralResponse<TQuiz>> {
         if (createQuizDto.questions.length < 2)
             throw new HttpException("You must add at least 2 questions", HttpStatus.BAD_REQUEST);
         createQuizDto.questions.some((question: QuestionDto) => {
@@ -44,7 +36,7 @@ export class QuizService {
         const newQuiz: Quiz = this.quizRepository.create({
             description: createQuizDto.description,
             frequencyInDay: createQuizDto.frequencyInDay,
-            company: currentCompany,
+            company: companyFromGuard,
         });
         const savedQuiz: Quiz = await this.quizRepository.save(newQuiz);
 
@@ -56,12 +48,10 @@ export class QuizService {
                 quiz: savedQuiz,
             });
             const savedNewQuestion: Question = await this.questionRepository.save(newQuestion);
-            console.log('savedN-', savedNewQuestion);
 
             const arrPromisesAnswers: Promise<Answers>[] = question.varsAnswers.map((oneVariantAnswer: AnswerDto) => {
                 const newVar: Answers = this.answersRepository.create({
-                    varAnswer: oneVariantAnswer.varAnswer,
-                    question: savedNewQuestion,/*todo*/
+                    varAnswer: oneVariantAnswer.varAnswer
                 });
                 return this.answersRepository.save(newVar);
             });
@@ -94,7 +84,7 @@ export class QuizService {
                 id: updateQuizDto.quizId,
                 company: {id: updateQuizDto.companyId},
             },
-            relations: ['questions', 'questions.varsAnswers', 'company'],
+            relations: ['questions', 'questions.varsAnswers'],
         });
         if (!quizToUpdate) throw new HttpException("Quiz not found", HttpStatus.NOT_FOUND);
         if (updateQuizDto.questions.length < 2)
@@ -155,10 +145,9 @@ export class QuizService {
 
     }
 
-    async deleteQuiz(userFromGuard: User, quizDeleteDTO: DeleteCompanyDto): Promise<GeneralResponse<IDeleted>> {
+    async deleteQuiz(userFromGuard: User, quizDeleteDTO: DeleteQuizDto): Promise<GeneralResponse<IDeleted>> {
         const quizToDelete: Quiz | undefined = await this.quizRepository.findOne({
-            where: {id: quizDeleteDTO.id},
-            relations: ['company'],
+            where: {id: quizDeleteDTO.quizId}
         });
 
         if (!quizToDelete) throw new HttpException("Quiz not found", HttpStatus.BAD_REQUEST);
@@ -186,12 +175,12 @@ export class QuizService {
             },
             relations: ['questions']
         });
-
-        const quizResponseCutedArr:TQuizForResponse[] = allQuiz.map((quiz: Quiz) => {
+        const quizResponseCutedArr: TQuizForResponse[] = allQuiz.map((quiz: Quiz) => {
             return {
                 id: quiz.id,
                 description: quiz.description,
                 frequencyInDay: quiz.frequencyInDay,
+                questions: quiz.questions,
             };
         });
         return {

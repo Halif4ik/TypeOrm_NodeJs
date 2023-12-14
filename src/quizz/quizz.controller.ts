@@ -4,7 +4,6 @@ import {
     Post,
     Body,
     Patch,
-    Param,
     Delete,
     UseGuards,
     UsePipes,
@@ -15,17 +14,17 @@ import {QuizService} from './quizService';
 import {CreateQuizDto} from './dto/create-quiz.dto';
 import {Roles} from "../auth/role-auth-decor";
 import {UserRole} from "../roles/entities/role.entity";
-import {JwtRoleGuard} from "../auth/jwt-Role.guard";
 import {AuthGuard} from "@nestjs/passport";
 import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {UpdateQuizDto} from "./dto/update-quizz.dto";
-import {Quiz} from "./entities/quizz.entity";
-import {IDeleted, TQuiz, TQuizForResponse} from "../GeneralResponse/interface/customResponces";
-import {DeleteCompanyDto} from "../company/dto/delete-company.dto";
+import {IDeleted, TQuiz} from "../GeneralResponse/interface/customResponces";
 import {JwtRoleAdminGuard} from "../auth/jwt-Role-Admin.guard";
 import {PaginationsQuizDto} from "./dto/pagination-quiz.dto";
+import {DeleteQuizDto} from "./dto/delete-quiz.dto";
+import {CompanyDec} from "../auth/decor-company-fromJwt";
+import {Company} from "../company/entities/company.entity";
 
 
 @Controller('quiz')
@@ -40,8 +39,9 @@ export class QuizzController {
     @Roles(UserRole.ADMIN)
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    createQuiz(@UserDec() userFromGuard: User, @Body() createQuizDto: CreateQuizDto): Promise<GeneralResponse<TQuiz>> {
-        return this.quizzService.createQuiz(userFromGuard, createQuizDto);
+    createQuiz(@UserDec() userFromGuard: User, @CompanyDec() companyFromGuard: Company,
+               @Body() createQuizDto: CreateQuizDto): Promise<GeneralResponse<TQuiz>> {
+        return this.quizzService.createQuiz(userFromGuard, createQuizDto, companyFromGuard);
     }
 
     //2.Admin and Owner can update quiz
@@ -62,7 +62,7 @@ export class QuizzController {
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     @Roles(UserRole.ADMIN)
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
-    deleteQuiz(@UserDec() userFromGuard: User, @Query() quizDeleteDTO: DeleteCompanyDto):Promise<GeneralResponse<IDeleted>> {
+    deleteQuiz(@UserDec() userFromGuard: User, @Query() quizDeleteDTO: DeleteQuizDto): Promise<GeneralResponse<IDeleted>> {
         return this.quizzService.deleteQuiz(userFromGuard, quizDeleteDTO);
     }
 
@@ -72,7 +72,7 @@ export class QuizzController {
     @Get('/all')
     @Roles(UserRole.ADMIN)
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
-    getAllQuiz(@Query()paginationsQuizDto: PaginationsQuizDto): Promise<GeneralResponse<TQuiz>> {
+    getAllQuiz(@Query() paginationsQuizDto: PaginationsQuizDto): Promise<GeneralResponse<TQuiz>> {
         return this.quizzService.findAll(paginationsQuizDto);
     }
 }

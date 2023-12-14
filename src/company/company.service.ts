@@ -82,11 +82,11 @@ export class CompanyService {
 
     }
 
-    async getCompanyById(companyId: number): Promise<Company | undefined> {
+    async getCompanyById(companyId: number): Promise<Company | null> {
         return this.companyRepository.findOne({where: {id: companyId}});
     }
 
-    async getCompanyByIdAndOwner(companyId: number, targetUserId: number, owner: User): Promise<Company | undefined> {
+    async getCompanyByIdAndOwner(companyId: number, targetUserId: number, owner: User): Promise<Company | null> {
         return this.companyRepository.findOne({
             where: {
                 id: companyId,
@@ -97,7 +97,7 @@ export class CompanyService {
         });
     }
 
-    async getCompanyByIdOnlyOwner(companyId: number, owner: User): Promise<Company | undefined> {
+    async getCompanyByIdOnlyOwner(companyId: number, owner: User): Promise<Company | null> {
         return this.companyRepository.findOne({
             where: {
                 id: companyId,
@@ -108,7 +108,7 @@ export class CompanyService {
     }
 
     async removeUserFromCompany(ownerFromGuard: User, deleteUserDto: DeleteUserDto,): Promise<GeneralResponse<IDeleted>> {
-        const targetCompany: Company | undefined = await this.companyRepository.findOne({
+        const targetCompany: Company | null = await this.companyRepository.findOne({
             where: {
                 id: deleteUserDto.companyId,
                 owner: ownerFromGuard,
@@ -161,7 +161,7 @@ export class CompanyService {
     }
 
     async removeMembership(user: User, removeMembershipDto: RemoveMembershipDto): Promise<GeneralResponse<IDeleted>> {
-        const targetCompany: Company | undefined = await this.companyRepository.findOne({
+        const targetCompany: Company | null = await this.companyRepository.findOne({
             where: {
                 id: removeMembershipDto.companyId,
             },

@@ -17,7 +17,6 @@ export class JwtStrategyAuth extends PassportStrategy(Strategy, "jwt-auth") {
     async validate(payload: unknown): Promise<User | null> {
         const id: number | undefined = payload['id'];
         if (typeof id !== "number") return null;
-        console.log('return-', 'JwtStrategyAuth');
         return this.userService.getUserByIdCompTargInviteRole(id);
     }
 }
