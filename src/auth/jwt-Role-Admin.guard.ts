@@ -27,10 +27,10 @@ export class JwtRoleAdminGuard implements CanActivate {
             /*we made verify in strategy */
             const userFromJwt: User | null = req.user;
             /*if for Post*/  /* ||if for Get*/
-            let companyIdFromRequest: number = +req?.body?.companyId || +req?.query?.companyId;
+            let companyIdFromRequest: number | undefined = +req?.body?.companyId || +req?.query?.companyId;
             /* if empty body and query for Del case*/
             if (!companyIdFromRequest) {
-                const quizId: number | null = parseInt(req.query.quizId);
+                const quizId: number | null  = parseInt(req.query.quizId);
                 if (isNaN(quizId))
                     throw new UnauthorizedException({message: "Quiz ID is not a number or not present in query"});
                 const targetQuiz: Quiz | null = await this.quizService.findQuizById(quizId);

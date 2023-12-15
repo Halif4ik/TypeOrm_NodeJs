@@ -173,7 +173,7 @@ export class QuizService {
             order: {
                 id: order,
             },
-            relations: ['questions']
+            relations: ['questions','questions.varsAnswers'],
         });
         const quizResponseCutedArr: TQuizForResponse[] = allQuiz.map((quiz: Quiz) => {
             return {

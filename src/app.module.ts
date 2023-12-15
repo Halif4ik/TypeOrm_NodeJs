@@ -10,6 +10,7 @@ import { InviteModule } from './invite/invite.module';
 import { RequestsModule } from './reqests/requestsModule';
 import { RolesModule } from './roles/roles.module';
 import { QuizzModule } from './quizz/quizz.module';
+import { WorkFlowModule } from './work-flow/work-flow.module';
 
 @Module({
     controllers: [GenRespController],
@@ -36,6 +37,7 @@ import { QuizzModule } from './quizz/quizz.module';
         RequestsModule,
         RolesModule,
         QuizzModule,
+        WorkFlowModule,
     ],
 })
 export class AppModule {
