@@ -6,6 +6,7 @@ import {User} from "../../user/entities/user.entity";
 import {Invite} from "../../invite/entities/invite.entity";
 import {Request} from "../../reqests/entities/reqest.entity";
 import {Role} from "../../roles/entities/role.entity";
+import {Quiz} from "../../quizz/entities/quizz.entity";
 
 @Entity()
 export class Company {
@@ -39,4 +40,7 @@ export class Company {
 
     @OneToMany(() => Role, role => role.company)
     roles: Role[];
+
+    @OneToMany(() => Quiz, quiz => quiz.company)
+    quiz: Quiz[];
 }

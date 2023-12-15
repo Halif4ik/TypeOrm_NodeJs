@@ -5,7 +5,7 @@ import {AuthGuard} from "@nestjs/passport";
 import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {IDeleted, IInvite, IRequests} from "../GeneralResponse/interface/customResponces";
+import {IDeleted, TInvite, IRequests} from "../GeneralResponse/interface/customResponces";
 import {AcceptInviteDto} from "./dto/update-invite.dto";
 
 @Controller('invite')
@@ -15,7 +15,7 @@ export class InviteController {
   @Post('/create')
   @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  createInvite(@UserDec() userFromGuard: User,@Body() createInviteDto: CreateOrDelInviteDto): Promise<GeneralResponse<IInvite>> {
+  createInvite(@UserDec() userFromGuard: User,@Body() createInviteDto: CreateOrDelInviteDto): Promise<GeneralResponse<TInvite>> {
     return this.inviteService.create(userFromGuard,createInviteDto);
   }
 
@@ -38,7 +38,7 @@ export class InviteController {
   // Permissions: Authenticated owner
   @Get('/my')
   @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
-  listMyRequests(@UserDec() userFromGuard: User,):Promise<GeneralResponse<IInvite>>{
+  listMyRequests(@UserDec() userFromGuard: User,):Promise<GeneralResponse<TInvite>>{
     return this.inviteService.listUserInvites(userFromGuard);
   }
 }

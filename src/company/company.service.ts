@@ -32,16 +32,15 @@ export class CompanyService {
     }
 
     async update(userFromGuard: User, updateCompanyData: UpdateCompanyDto): Promise<GeneralResponse<ICompany>> {
-        let findedCompany: Company = userFromGuard.company.find((company: Company): boolean => company.id === updateCompanyData.id);
+        const findedCompany: Company = userFromGuard.company.find((company: Company): boolean => company.id === updateCompanyData.id);
         if (!findedCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
         await this.companyRepository.update({id: updateCompanyData.id}, updateCompanyData);
 
-        findedCompany = {...findedCompany, owner: null, ...updateCompanyData}
         this.logger.log(`Changed name/description for new-'${updateCompanyData.name}' company`);
         return {
             "status_code": HttpStatus.OK,
             "detail": {
-                "company": findedCompany,
+                "company": {...findedCompany, owner: null, ...updateCompanyData},
             },
             "result": "update"
         };
@@ -83,11 +82,11 @@ export class CompanyService {
 
     }
 
-    async getCompanyById(companyId: number): Promise<Company | undefined> {
+    async getCompanyById(companyId: number): Promise<Company | null> {
         return this.companyRepository.findOne({where: {id: companyId}});
     }
 
-    async getCompanyByIdAndOwner(companyId: number, targetUserId: number, owner: User): Promise<Company | undefined> {
+    async getCompanyByIdAndOwner(companyId: number, targetUserId: number, owner: User): Promise<Company | null> {
         return this.companyRepository.findOne({
             where: {
                 id: companyId,
@@ -98,7 +97,7 @@ export class CompanyService {
         });
     }
 
-    async getCompanyByIdOnlyOwner(companyId: number, owner: User): Promise<Company | undefined> {
+    async getCompanyByIdOnlyOwner(companyId: number, owner: User): Promise<Company | null> {
         return this.companyRepository.findOne({
             where: {
                 id: companyId,
@@ -109,7 +108,7 @@ export class CompanyService {
     }
 
     async removeUserFromCompany(ownerFromGuard: User, deleteUserDto: DeleteUserDto,): Promise<GeneralResponse<IDeleted>> {
-        const targetCompany: Company | undefined = await this.companyRepository.findOne({
+        const targetCompany: Company | null = await this.companyRepository.findOne({
             where: {
                 id: deleteUserDto.companyId,
                 owner: ownerFromGuard,
@@ -162,7 +161,7 @@ export class CompanyService {
     }
 
     async removeMembership(user: User, removeMembershipDto: RemoveMembershipDto): Promise<GeneralResponse<IDeleted>> {
-        const targetCompany: Company | undefined = await this.companyRepository.findOne({
+        const targetCompany: Company | null = await this.companyRepository.findOne({
             where: {
                 id: removeMembershipDto.companyId,
             },
