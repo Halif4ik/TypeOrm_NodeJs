@@ -1,6 +1,7 @@
 import {Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {Quiz} from "./quizz.entity";
 import {Answers} from "./answers.entity";
+import {PassedQuiz} from "../../work-flow/entities/passedQuiz.entity";
 
 @Entity()
 export class Question {

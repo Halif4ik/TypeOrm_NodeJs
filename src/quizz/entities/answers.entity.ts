@@ -1,4 +1,4 @@
-import {Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Column, DeleteDateColumn, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 import {Question} from "./question.entity";
 
 @Entity()
@@ -15,6 +15,5 @@ export class Answers {
     @ManyToOne(() => Question, {cascade: true, onDelete: 'CASCADE'})
     @JoinColumn()
     question: Question;
-
 
 }

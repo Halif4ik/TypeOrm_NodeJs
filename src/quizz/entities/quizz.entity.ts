@@ -1,6 +1,7 @@
 import {Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {Question} from "./question.entity";
 import {Company} from "../../company/entities/company.entity";
+import {PassedQuiz} from "../../work-flow/entities/passedQuiz.entity";
 
 @Entity()
 export class Quiz {
@@ -20,9 +21,13 @@ export class Quiz {
     questions: Question[];
 
     @ManyToOne(() => Company, company => company.quiz, {
-        onDelete: 'CASCADE',
-        eager: true
+        onDelete: 'CASCADE'/*,
+        eager: true*/
     })
     @JoinColumn()
     company: Company;
+
+    @OneToMany(() => PassedQuiz, passedQuiz => passedQuiz.targetQuiz)
+    passedQuiz: PassedQuiz[];
+
 }

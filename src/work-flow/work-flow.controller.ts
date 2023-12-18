@@ -1,17 +1,41 @@
-import {Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UsePipes, ValidationPipe} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+  Query
+} from '@nestjs/common';
 import { WorkFlowService } from './work-flow.service';
 import { CreateWorkFlowDto } from './dto/create-work-flow.dto';
-import { UpdateWorkFlowDto } from './dto/update-work-flow.dto';
 import {AuthGuard} from "@nestjs/passport";
-import {JwtRoleAdminGuard} from "../auth/jwt-Role-Admin.guard";
 import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
+import {PaginationsQuizDto} from "../quizz/dto/pagination-quiz.dto";
+import {AdditionalUpdateQuizId} from "../quizz/dto/update-quizz.dto";
+import {QuizService} from "../quizz/quizService";
 import {TQuiz} from "../GeneralResponse/interface/customResponces";
 
 @Controller('work-flow')
 export class WorkFlowController {
   constructor(private readonly workFlowService: WorkFlowService) {}
+
+  //1.Logined users can start some  quiz for checked company
+  //Endpoint: Get /work-flow/start?quiz=1
+  //Permissions: All logged Users
+    @Get('/start')
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    start(@UserDec() userFromGuard: User, @Query() quizIdDto: AdditionalUpdateQuizId): Promise<GeneralResponse<any>> {
+        return this.workFlowService.start(userFromGuard,quizIdDto.quizId);
+    }
+
 
   @Post('/answer')
   @UseGuards(AuthGuard(['auth0', 'jwt-auth']))

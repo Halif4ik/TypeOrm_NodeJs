@@ -6,6 +6,7 @@ import {Request} from "../../reqests/entities/reqest.entity";
 import {Role} from "../../roles/entities/role.entity";
 import {Quiz} from "../../quizz/entities/quizz.entity";
 import {Question} from "../../quizz/entities/question.entity";
+import {PassedQuiz} from "../../work-flow/entities/passedQuiz.entity";
 
 export interface IRespAuth {
     "auth": Auth
@@ -34,10 +35,14 @@ export type TInviteForResponse = Omit<Invite, 'deleteAt' | 'ownerUser' | 'target
 
 export type TUserForResponse =
     Omit<User, 'password' | 'deleteAt' | 'auth' | 'company' | 'invite' | 'targetForInvite' |
-        'companyMember' | 'requests' | 'roles'>
+        'companyMember' | 'requests' | 'roles' | 'passedQuiz'>
 
 export type TCompanyForResponse = Omit<Company, 'deleteAt' | 'owner' | 'members' | 'invites' |
     'quiz' | 'roles' | 'requests'>
+
+export type TPassedQuizForResponce = Omit<PassedQuiz,'user'> & {
+    user: TUserForResponse;
+}
 
 export interface IRequests {
     "request": Request | Request[]
@@ -56,7 +61,7 @@ export type TQuiz = {
     "quiz": TQuizForResponse | TQuizForResponse[]
 }
 export type TQuizForResponse =
-    Omit<Quiz, 'company' | 'questions' | 'deleteAt'> & {
+    Omit<Quiz, 'company' | 'questions' | 'deleteAt' | 'passedQuiz'> & {
     questions?: Question[];
 }
 

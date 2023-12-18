@@ -68,10 +68,11 @@ export class QuizzController {
 
     //4.Admin and Owner can get all quiz for company
     //Endpoint: Get /quiz/all
-    //Permissions: Only Admin and Owner
+    //Permissions: All logened Users
     @Get('/all')
     @Roles(UserRole.ADMIN)
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     getAllQuiz(@Query() paginationsQuizDto: PaginationsQuizDto): Promise<GeneralResponse<TQuiz>> {
         return this.quizzService.findAll(paginationsQuizDto);
     }

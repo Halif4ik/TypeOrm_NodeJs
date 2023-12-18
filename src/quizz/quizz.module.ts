@@ -18,6 +18,7 @@ import {Answers} from "./entities/answers.entity";
     CompanyModule,
     TypeOrmModule.forFeature([Quiz,Question,Answers]),
     JwtModule, PassportModule
-  ]
+  ],
+  exports: [QuizService]
 })
 export class QuizzModule {}

@@ -7,16 +7,16 @@ import {TypeOrmModule} from "@nestjs/typeorm";
 import {Quiz} from "../quizz/entities/quizz.entity";
 import {JwtModule} from "@nestjs/jwt";
 import {PassportModule} from "@nestjs/passport";
-import {WorkFlow} from "./entities/work-flow.entity";
+import {PassedQuiz} from "./entities/passedQuiz.entity";
+import {QuizService} from "../quizz/quizService";
+import {QuizzModule} from "../quizz/quizz.module";
 
 @Module({
     controllers: [WorkFlowController],
     providers: [WorkFlowService],
     imports: [
-        UserModule,
-        CompanyModule,
-        Quiz,
-        TypeOrmModule.forFeature([WorkFlow]),
+        QuizzModule,
+        TypeOrmModule.forFeature([PassedQuiz]),
         JwtModule, PassportModule
     ]
 })
