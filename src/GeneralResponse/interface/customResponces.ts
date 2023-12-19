@@ -40,11 +40,13 @@ export type TUserForResponse =
 export type TCompanyForResponse = Omit<Company, 'deleteAt' | 'owner' | 'members' | 'invites' |
     'quiz' | 'roles' | 'requests'>
 
-export type TPassedQuizForResponce = Omit<PassedQuiz, 'user' | 'targetQuiz'> & {
+export type TPassedQuizForResponce = Omit<PassedQuiz, 'user' | 'targetQuiz' | 'rightAnswers'> & {
     user?: TUserForResponse;
-    targetQuiz?: Quiz;
+    targetQuiz?: TQuizForResponse;
 }
-
+export type TPassedQuiz = {
+    "quiz": TPassedQuizForResponce
+}
 export interface IRequests {
     "request": Request | Request[]
 }
