@@ -34,7 +34,10 @@ export class CompanyService {
     async update(userFromGuard: User, updateCompanyData: UpdateCompanyDto): Promise<GeneralResponse<ICompany>> {
         const findedCompany: Company = userFromGuard.company.find((company: Company): boolean => company.id === updateCompanyData.id);
         if (!findedCompany) throw new HttpException("Incorrect company name for this user", HttpStatus.NOT_FOUND);
-        await this.companyRepository.update({id: updateCompanyData.id}, updateCompanyData);
+        console.log('partialEntyty-', updateCompanyData);
+        console.log('critr', {id: updateCompanyData.id});
+        const temp = await this.companyRepository.update({id: updateCompanyData.id}, updateCompanyData);
+        console.log('temp', temp);
 
         this.logger.log(`Changed name/description for new-'${updateCompanyData.name}' company`);
         return {

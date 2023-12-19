@@ -40,8 +40,9 @@ export type TUserForResponse =
 export type TCompanyForResponse = Omit<Company, 'deleteAt' | 'owner' | 'members' | 'invites' |
     'quiz' | 'roles' | 'requests'>
 
-export type TPassedQuizForResponce = Omit<PassedQuiz,'user'> & {
-    user: TUserForResponse;
+export type TPassedQuizForResponce = Omit<PassedQuiz, 'user' | 'targetQuiz'> & {
+    user?: TUserForResponse;
+    targetQuiz?: Quiz;
 }
 
 export interface IRequests {

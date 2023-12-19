@@ -1,14 +1,10 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {CreateWorkFlowDto} from './dto/create-work-flow.dto';
-import {UpdateWorkFlowDto} from './dto/update-work-flow.dto';
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {TPassedQuizForResponce, TQuiz, TQuizForResponse} from "../GeneralResponse/interface/customResponces";
 import {InjectRepository} from "@nestjs/typeorm";
-import {Quiz} from "../quizz/entities/quizz.entity";
 import {Repository} from "typeorm";
-import {Answers} from "../quizz/entities/answers.entity";
-import {Question} from "../quizz/entities/question.entity";
 import {QuizService} from "../quizz/quizService";
 import {PassedQuiz} from "./entities/passedQuiz.entity";
 
@@ -32,53 +28,56 @@ export class WorkFlowService {
         };
     }
 
+
     async start(userFromGuard: User, quizId: number): Promise<GeneralResponse<any>> {
-        const quizForStart: TQuizForResponse = await this.quizService.findQuizByIdQuestion(quizId);
-        if (!quizForStart)
+        const quizForStartFlow: TQuizForResponse = await this.quizService.findQuizByIdQuestion(quizId);
+        if (!quizForStartFlow)
             throw new HttpException("Quiz not found", HttpStatus.NOT_FOUND);
-        const userHasThisQuiz: PassedQuiz = await this.passedQuizRepository.findOne({
+        const startedQuizByUser: PassedQuiz = await this.passedQuizRepository.findOne({
             where: {
                 user: {id: userFromGuard.id},
-                targetQuiz: {id: quizForStart.id}
+                targetQuiz: {id: quizForStartFlow.id}
             }
         });
-        let newStartedQuiz: PassedQuiz;
-        if (!userHasThisQuiz) {
-             newStartedQuiz = this.passedQuizRepository.create({
+        let savedStartedQuizCuted;
+        if (!startedQuizByUser) {
+            const newStartedQuiz: PassedQuiz = this.passedQuizRepository.create({
                 user: userFromGuard,
-                targetQuiz: quizForStart,
+                targetQuiz: quizForStartFlow,
                 rightAnswers: []
             });
+            const savedStartedQuizByUser: PassedQuiz = await this.passedQuizRepository.save(newStartedQuiz);
+            savedStartedQuizCuted = {
+                ...savedStartedQuizByUser,
+                user: {
+                    id: savedStartedQuizByUser.user.id,
+                    email: savedStartedQuizByUser.user.email,
+                    firstName: savedStartedQuizByUser.user.firstName,
+                    isActive: null
+                },
+            }
         } else {
-            console.log('Diff-', new Date(userHasThisQuiz.updateAt).getTime() - new Date(userHasThisQuiz.createDate).getTime());
-            const frequencyInMilisec: number = 86400000 * quizForStart.frequencyInDay;
-            //check expiration time
-            if (new Date(userHasThisQuiz.updateAt).getTime() - new Date(userHasThisQuiz.createDate).getTime()
-                < frequencyInMilisec)
+            const frequencyInMillisec: number = 86400000 * quizForStartFlow.frequencyInDay;
+            //check expiration time for this user to this quiz
+            const howMuchTimeLeft: number = new Date(startedQuizByUser.updateAt).getTime() - new Date(startedQuizByUser.createDate).getTime();
+            console.log('Diff-', howMuchTimeLeft);
+            console.log('frequencyInMillisec-', frequencyInMillisec);
+            if (howMuchTimeLeft < frequencyInMillisec)
                 throw new HttpException("Expiration time for this User to this quiz", HttpStatus.BAD_REQUEST);
-            /*todo*/
-           /* userHasThisQuiz.$set('updateAt', []);*/
-             newStartedQuiz = this.passedQuizRepository.create({
-                user: userFromGuard,
-                targetQuiz: quizForStart,
-                rightAnswers: []
+
+            await this.passedQuizRepository.update({id: startedQuizByUser.id}, {
+                createDate: startedQuizByUser.updateAt,
+                updateAt: new Date(),
             });
+            savedStartedQuizCuted = {
+                createDate: startedQuizByUser.updateAt,
+                updateAt: new Date(),
+            };
 
         }
 
 
-        console.log('newStartedQuiz-', newStartedQuiz);
-        const savedStartedQuiz: PassedQuiz = await this.passedQuizRepository.save(newStartedQuiz);
-        const savedStartedQuizCuted: TPassedQuizForResponce = {
-            ...savedStartedQuiz,
-            user: {
-                id: savedStartedQuiz.user.id,
-                email: savedStartedQuiz.user.email,
-                firstName: savedStartedQuiz.user.firstName,
-                isActive: null
-            },
-        }
-        this.logger.log(`User ${userFromGuard.email} started do quiz ${quizForStart}`);
+        this.logger.log(`User ${userFromGuard.email} started do quiz ${quizForStartFlow}`);
         return {
             "status_code": HttpStatus.OK,
             "detail": {
