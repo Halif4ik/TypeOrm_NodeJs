@@ -7,6 +7,8 @@ import {Role} from "../../roles/entities/role.entity";
 import {Quiz} from "../../quizz/entities/quizz.entity";
 import {Question} from "../../quizz/entities/question.entity";
 import {PassedQuiz} from "../../work-flow/entities/passedQuiz.entity";
+import {Answers} from "../../quizz/entities/answers.entity";
+import {AvgRating} from "../../work-flow/entities/averageRating.entity";
 
 export interface IRespAuth {
     "auth": Auth
@@ -35,18 +37,20 @@ export type TInviteForResponse = Omit<Invite, 'deleteAt' | 'ownerUser' | 'target
 
 export type TUserForResponse =
     Omit<User, 'password' | 'deleteAt' | 'auth' | 'company' | 'invite' | 'targetForInvite' |
-        'companyMember' | 'requests' | 'roles' | 'passedQuiz'>
+        'companyMember' | 'requests' | 'roles' | 'passedQuiz' | 'averageRating'>
 
 export type TCompanyForResponse = Omit<Company, 'deleteAt' | 'owner' | 'members' | 'invites' |
-    'quiz' | 'roles' | 'requests'>
+    'quiz' | 'roles' | 'requests' | 'averageRating'>
 
-export type TPassedQuizForResponce = Omit<PassedQuiz, 'user' | 'targetQuiz' | 'rightAnswers'> & {
+export type TPassedQuizForResponce = Omit<PassedQuiz, 'user' | 'targetQuiz' | 'rightAnswers' | 'averageRating'> & {
     user?: TUserForResponse;
     targetQuiz?: TQuizForResponse;
+    averageRating?: AvgRating;
 }
 export type TPassedQuiz = {
     "quiz": TPassedQuizForResponce
 }
+
 export interface IRequests {
     "request": Request | Request[]
 }
@@ -62,6 +66,9 @@ export type TRoleForResponse =
 
 export type TQuiz = {
     "quiz": TQuizForResponse | TQuizForResponse[]
+}
+export type TAnswers = {
+    "answers": Answers[]
 }
 export type TQuizForResponse =
     Omit<Quiz, 'company' | 'questions' | 'deleteAt' | 'passedQuiz'> & {

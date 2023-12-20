@@ -10,13 +10,14 @@ import {PassportModule} from "@nestjs/passport";
 import {PassedQuiz} from "./entities/passedQuiz.entity";
 import {QuizService} from "../quizz/quizService";
 import {QuizzModule} from "../quizz/quizz.module";
+import {AvgRating} from "./entities/averageRating.entity";
 
 @Module({
     controllers: [WorkFlowController],
     providers: [WorkFlowService],
     imports: [
         QuizzModule,
-        TypeOrmModule.forFeature([PassedQuiz]),
+        TypeOrmModule.forFeature([PassedQuiz,AvgRating]),
         JwtModule, PassportModule
     ]
 })

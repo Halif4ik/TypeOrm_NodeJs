@@ -3,6 +3,7 @@ import {CreateWorkFlowDto} from './dto/create-work-flow.dto';
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {
+    TAnswers,
     TPassedQuiz,
     TPassedQuizForResponce,
     TQuizForResponse
@@ -13,26 +14,27 @@ import {QuizService} from "../quizz/quizService";
 import {PassedQuiz} from "./entities/passedQuiz.entity";
 import {Question} from "../quizz/entities/question.entity";
 import {Answers} from "../quizz/entities/answers.entity";
+import {AvgRating} from "./entities/averageRating.entity";
 
 @Injectable()
 export class WorkFlowService {
     private readonly logger: Logger = new Logger(WorkFlowService.name);
 
     constructor(private quizService: QuizService,
-                @InjectRepository(PassedQuiz) private passedQuizRepository: Repository<PassedQuiz>,) {
+                @InjectRepository(PassedQuiz) private passedQuizRepository: Repository<PassedQuiz>,
+                @InjectRepository(AvgRating) private avgRatingRepository: Repository<AvgRating>,) {
     }
 
-    async create(userFromGuard: User, createWorkFlowDto: CreateWorkFlowDto): Promise<GeneralResponse<any>> {
+    async createAnswers(userFromGuard: User, createWorkFlowDto: CreateWorkFlowDto): Promise<GeneralResponse<TAnswers>> {
         const startedQuizByUser: PassedQuiz = await this.passedQuizRepository.findOne({
             where: {
                 user: {id: userFromGuard.id},
                 targetQuiz: {id: createWorkFlowDto.quizId}
             },
-            relations: ['targetQuiz.questions', 'targetQuiz.questions.varsAnswers']
+            relations: ['targetQuiz.questions', 'targetQuiz.questions.varsAnswers', 'targetQuiz.company']
         });
         if (!startedQuizByUser)
             throw new HttpException("Quiz not found", HttpStatus.NOT_FOUND);
-        console.log('!!1startedQuizByUser-', startedQuizByUser.targetQuiz);
         const questionsWithRightAnswer: Question[] = startedQuizByUser.targetQuiz.questions.filter((questionFromBd: Question) => {
             return createWorkFlowDto.questions.find(questUserResponse => {
                 if (questionFromBd.id === questUserResponse.id) {
@@ -42,23 +44,50 @@ export class WorkFlowService {
                 }
             });
         });
-        console.log('questionsWithRightAnswer-', questionsWithRightAnswer);
-
         const rightAnswers: Answers[] = questionsWithRightAnswer.map((oneQuestion: Question) => {
             return oneQuestion.varsAnswers.find((answer: Answers) =>
-                 answer.varAnswer.toLowerCase().trim() === oneQuestion.rightAnswer.toLowerCase().trim()
+                answer.varAnswer.toLowerCase().trim() === oneQuestion.rightAnswer.toLowerCase().trim()
             );
         });
-        console.log('rightAnswers-', rightAnswers);
-        await this.passedQuizRepository.update({id: startedQuizByUser.id}, {
-            rightAnswers: rightAnswers,
-            updateAt: new Date(),
-        });
+
+        startedQuizByUser.updateAt = new Date();
+        startedQuizByUser.rightAnswers = rightAnswers;
+        await this.passedQuizRepository.save(startedQuizByUser);
+
         this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with ${questionsWithRightAnswer.length} right answers`);
+
+        /*calculate average rating for user */
+        const avgRateForUserCurrentComp: AvgRating = await this.avgRatingRepository.findOne({
+            where: {
+                user: {id: userFromGuard.id},
+                passedCompany: {id: startedQuizByUser.targetQuiz.company.id}
+            },
+        });
+
+        const calculateAvgRatingForUserByComp: number = questionsWithRightAnswer.length / startedQuizByUser.targetQuiz.questions.length * 10;
+        console.log('CALC-', calculateAvgRatingForUserByComp);
+        if (!avgRateForUserCurrentComp) {
+            const newAvgRateForUserByComp: AvgRating = this.avgRatingRepository.create({
+                user: userFromGuard,
+                passedCompany: startedQuizByUser.targetQuiz.company,
+                averageRating: calculateAvgRatingForUserByComp,
+                ratingInsideCompany: calculateAvgRatingForUserByComp,
+            });
+            await this.avgRatingRepository.save(newAvgRateForUserByComp);
+            this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with ${questionsWithRightAnswer.length} right answers and got ${calculateAvgRatingForUserByComp} rating from 10`);
+        }else {
+            await this.avgRatingRepository.update({id: avgRateForUserCurrentComp.id}, {
+                averageRating: calculateAvgRatingForUserByComp,
+                ratingInsideCompany: calculateAvgRatingForUserByComp,
+                updateAt: new Date(),
+            });
+            this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with ${questionsWithRightAnswer.length} right answers and got ${calculateAvgRatingForUserByComp} rating from 10`);
+        }
+
         return {
             "status_code": HttpStatus.OK,
             "detail": {
-                "quiz": {},
+                "answers": rightAnswers,
             },
             "result": "finished"
         };
@@ -93,7 +122,7 @@ export class WorkFlowService {
                 },
                 targetQuiz: {
                     ...savedStartedQuizByUser.targetQuiz,
-                    questions: savedStartedQuizByUser.targetQuiz.questions.map(question => ({
+                    questions: savedStartedQuizByUser.targetQuiz.questions.map((question: Question) => ({
                         ...question,
                         rightAnswer: null
                     }))

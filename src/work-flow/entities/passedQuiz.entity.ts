@@ -2,7 +2,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
-    JoinColumn,
+    JoinColumn, JoinTable,
     ManyToMany,
     ManyToOne,
     PrimaryGeneratedColumn,
@@ -11,6 +11,7 @@ import {
 import {User} from "../../user/entities/user.entity";
 import {Quiz} from "../../quizz/entities/quizz.entity";
 import {Answers} from "../../quizz/entities/answers.entity";
+import {AvgRating} from "./averageRating.entity";
 
 @Entity()
 export class PassedQuiz {
@@ -37,7 +38,10 @@ export class PassedQuiz {
     targetQuiz: Quiz;
 
     @ManyToMany(() => Answers)
-    @JoinColumn()
+    @JoinTable()
     rightAnswers: Answers[];
 
+    @ManyToOne(() => AvgRating, avgRating => avgRating.passedQuiz)
+    @JoinColumn()
+    averageRating: AvgRating;
 }

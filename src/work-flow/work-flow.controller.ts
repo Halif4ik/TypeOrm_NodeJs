@@ -43,8 +43,8 @@ export class WorkFlowController {
     @Post('/answer')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    create(@UserDec() userFromGuard: User, @Body() createWorkFlowDto: CreateWorkFlowDto): Promise<GeneralResponse<any>> {
-        return this.workFlowService.create(userFromGuard, createWorkFlowDto);
+    createAnswers(@UserDec() userFromGuard: User, @Body() createWorkFlowDto: CreateWorkFlowDto): Promise<GeneralResponse<any>> {
+        return this.workFlowService.createAnswers(userFromGuard, createWorkFlowDto);
     }
 
 
