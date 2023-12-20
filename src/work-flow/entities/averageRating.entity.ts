@@ -40,7 +40,8 @@ export class AvgRating {
     @JoinColumn()
     passedCompany: Company;
 
-    @OneToMany(() => PassedQuiz, passedQuiz => passedQuiz.averageRating)
+    @ManyToMany(() => PassedQuiz)
+    @JoinTable()
     passedQuiz: PassedQuiz[];
 
 }

@@ -53,36 +53,10 @@ export class WorkFlowService {
         startedQuizByUser.updateAt = new Date();
         startedQuizByUser.rightAnswers = rightAnswers;
         await this.passedQuizRepository.save(startedQuizByUser);
+        this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with
+         ${rightAnswers.length} right answers`);
 
-        this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with ${questionsWithRightAnswer.length} right answers`);
-
-        /*calculate average rating for user */
-        const avgRateForUserCurrentComp: AvgRating = await this.avgRatingRepository.findOne({
-            where: {
-                user: {id: userFromGuard.id},
-                passedCompany: {id: startedQuizByUser.targetQuiz.company.id}
-            },
-        });
-
-        const calculateAvgRatingForUserByComp: number = questionsWithRightAnswer.length / startedQuizByUser.targetQuiz.questions.length * 10;
-        console.log('CALC-', calculateAvgRatingForUserByComp);
-        if (!avgRateForUserCurrentComp) {
-            const newAvgRateForUserByComp: AvgRating = this.avgRatingRepository.create({
-                user: userFromGuard,
-                passedCompany: startedQuizByUser.targetQuiz.company,
-                averageRating: calculateAvgRatingForUserByComp,
-                ratingInsideCompany: calculateAvgRatingForUserByComp,
-            });
-            await this.avgRatingRepository.save(newAvgRateForUserByComp);
-            this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with ${questionsWithRightAnswer.length} right answers and got ${calculateAvgRatingForUserByComp} rating from 10`);
-        }else {
-            await this.avgRatingRepository.update({id: avgRateForUserCurrentComp.id}, {
-                averageRating: calculateAvgRatingForUserByComp,
-                ratingInsideCompany: calculateAvgRatingForUserByComp,
-                updateAt: new Date(),
-            });
-            this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with ${questionsWithRightAnswer.length} right answers and got ${calculateAvgRatingForUserByComp} rating from 10`);
-        }
+        this.calculeteAvgRatingForUserByComp(rightAnswers, startedQuizByUser, userFromGuard, createWorkFlowDto);
 
         return {
             "status_code": HttpStatus.OK,
@@ -91,6 +65,61 @@ export class WorkFlowService {
             },
             "result": "finished"
         };
+    }
+
+    private async calculeteAvgRatingForUserByComp(rightAnswers: Answers[], startedQuizByUser: PassedQuiz, userFromGuard: User, createWorkFlowDto: CreateWorkFlowDto):Promise<void> {
+        /*calculate average rating for user in this company*/
+        const avgRateUsers: AvgRating = await this.avgRatingRepository.findOne({
+            where: {
+                user: {id: userFromGuard.id},
+                passedCompany: {id: startedQuizByUser.targetQuiz.company.id}
+            },
+            relations: ['passedQuiz.targetQuiz.questions', 'passedQuiz.rightAnswers']
+        });
+
+        if (!avgRateUsers) {/*if user fill once quiz for this company*/
+            console.log('rightAnswers-', rightAnswers.length);
+            console.log('allquestions-', startedQuizByUser.targetQuiz.questions.length);
+            const calculateAvgRatingForUserByComp: number = rightAnswers.length /
+                startedQuizByUser.targetQuiz.questions.length * 10;
+            const newAvgRateForUserByComp: AvgRating = this.avgRatingRepository.create({
+                user: userFromGuard,
+                passedCompany: startedQuizByUser.targetQuiz.company,
+                averageRating: calculateAvgRatingForUserByComp,
+                ratingInsideCompany: calculateAvgRatingForUserByComp,
+                passedQuiz: [startedQuizByUser]
+            });
+
+            await this.avgRatingRepository.save(newAvgRateForUserByComp);
+            this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} in company ${
+                startedQuizByUser.targetQuiz.company.id}  with ${rightAnswers.length} right answers and got ${calculateAvgRatingForUserByComp} rating from 10`);
+        } else {//user  already has rating fo current  company and we need to update it
+            const oldRightAnswers: number[] = avgRateUsers.passedQuiz.map((passedQuiz: PassedQuiz) =>
+                passedQuiz.rightAnswers.length);
+            console.log('oldRightAnswers-', oldRightAnswers);
+            const oldAllQuestions: number[] = avgRateUsers.passedQuiz.map((passedQuiz: PassedQuiz) =>
+                passedQuiz.targetQuiz.questions.length);
+            console.log('oldAllQuestions-', oldAllQuestions);
+            const oldAllRightAnswersCount: number = oldRightAnswers.reduce((a, b) => a + b, 0);
+            console.log('oldAllRightAnswersCount-', oldAllRightAnswersCount);
+            const oldAllQuestionsCount: number = oldAllQuestions.reduce((a, b) => a + b, 0);
+            console.log('oldAllQuestionsCount-', oldAllQuestionsCount);
+            const newAllRightAnswersCount: number = oldAllRightAnswersCount + rightAnswers.length;
+            const newAllQuestionsCount: number = oldAllQuestionsCount + startedQuizByUser.targetQuiz.questions.length;
+            const newAverageRating: number = newAllRightAnswersCount / newAllQuestionsCount * 10;
+
+            console.log('newAllRightAnswersCount-', newAllRightAnswersCount);
+            console.log('newAllQuestionsCount-', newAllQuestionsCount);
+            console.log('newAverageRating-', newAverageRating);
+
+            await this.avgRatingRepository.update({id: avgRateUsers.id}, {
+                averageRating: newAverageRating,
+                ratingInsideCompany: newAverageRating,
+                updateAt: new Date(),
+            });
+            this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} in company ${
+                startedQuizByUser.targetQuiz.company.id}  with ${rightAnswers.length} right answers and got ${newAverageRating} rating from 10`);
+        }
     }
 
     async start(userFromGuard: User, quizId: number): Promise<GeneralResponse<TPassedQuiz>> {

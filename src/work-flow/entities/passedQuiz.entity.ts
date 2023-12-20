@@ -41,7 +41,4 @@ export class PassedQuiz {
     @JoinTable()
     rightAnswers: Answers[];
 
-    @ManyToOne(() => AvgRating, avgRating => avgRating.passedQuiz)
-    @JoinColumn()
-    averageRating: AvgRating;
 }
