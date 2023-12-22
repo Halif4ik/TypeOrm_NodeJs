@@ -8,8 +8,9 @@ export class PaginationsDto {
     @IsOptional()
      page?: number;
 
-    @IsBoolean()
-    @IsOptional({message: 'revert should be boolean'})
+    @Transform(({value}) => value.toString() === 'true')
+    @IsBoolean({message: 'Revert should be boolean'})
+    @IsOptional()
      revert?: boolean;
 
 }

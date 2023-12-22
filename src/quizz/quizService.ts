@@ -173,7 +173,6 @@ export class QuizService {
             order: {
                 id: order,
             },
-            relations: ['questions']
         });
         const quizResponseCutedArr: TQuizForResponse[] = allQuiz.map((quiz: Quiz) => {
             return {
@@ -196,6 +195,12 @@ export class QuizService {
         return this.quizRepository.findOne({
             where: {id: quizId},
             relations: ['company'],
+        });
+    }
+    async findQuizByIdQuestion(quizId: number): Promise<Quiz | null> {
+        return this.quizRepository.findOne({
+            where: {id: quizId},
+            relations: ['questions'],
         });
     }
 }

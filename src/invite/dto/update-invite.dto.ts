@@ -13,6 +13,6 @@ export class AcceptInviteDto extends PartialType(CreateOrDelInviteDto) {
 
     @Transform(({value}) => value.toString() === 'true')
     @IsNotEmpty()
-    @IsBoolean({message: 'id company for delete should be number'})
+    @IsBoolean({message: 'Accept invite should be Boolean'})
     readonly accept: boolean;
 }
