@@ -15,17 +15,12 @@ import {Company} from "../../company/entities/company.entity";
 import {PassedQuiz} from "./passedQuiz.entity";
 
 @Entity()
-export class AvgRating {
+export class GeneralRating {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column({type: "float"})
-    averageRating: number;
-
-
-    @UpdateDateColumn()
-    updateAt: Date;
-
+    ratingInSystem: number;
 
     @ManyToOne(() => User, user => user.averageRating, {
         onDelete: 'CASCADE'
@@ -33,14 +28,7 @@ export class AvgRating {
     @JoinColumn()
     user: User;
 
-    @ManyToOne(() => Company, company => company.averageRating, {
-        onDelete: 'CASCADE'
-    })
-    @JoinColumn()
-    passedCompany: Company;
-
-    @ManyToMany(() => PassedQuiz)
-    @JoinTable()
-    passedQuiz: PassedQuiz[];
+    @UpdateDateColumn()
+    updateAt: Date;
 
 }

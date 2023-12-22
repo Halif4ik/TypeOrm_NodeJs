@@ -11,13 +11,14 @@ import {PassedQuiz} from "./entities/passedQuiz.entity";
 import {QuizService} from "../quizz/quizService";
 import {QuizzModule} from "../quizz/quizz.module";
 import {AvgRating} from "./entities/averageRating.entity";
+import {GeneralRating} from "./entities/avgRatingAll.entity";
 
 @Module({
     controllers: [WorkFlowController],
     providers: [WorkFlowService],
     imports: [
         QuizzModule,
-        TypeOrmModule.forFeature([PassedQuiz,AvgRating]),
+        TypeOrmModule.forFeature([PassedQuiz,AvgRating,GeneralRating]),
         JwtModule, PassportModule
     ]
 })

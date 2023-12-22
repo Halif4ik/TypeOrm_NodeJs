@@ -15,13 +15,14 @@ import {PassedQuiz} from "./entities/passedQuiz.entity";
 import {Question} from "../quizz/entities/question.entity";
 import {Answers} from "../quizz/entities/answers.entity";
 import {AvgRating} from "./entities/averageRating.entity";
+import {GeneralRating} from "./entities/avgRatingAll.entity";
 
 @Injectable()
 export class WorkFlowService {
     private readonly logger: Logger = new Logger(WorkFlowService.name);
-
     constructor(private quizService: QuizService,
                 @InjectRepository(PassedQuiz) private passedQuizRepository: Repository<PassedQuiz>,
+                @InjectRepository(GeneralRating) private generalRatingRepository: Repository<GeneralRating>,
                 @InjectRepository(AvgRating) private avgRatingRepository: Repository<AvgRating>,) {
     }
 
@@ -33,8 +34,9 @@ export class WorkFlowService {
             },
             relations: ['targetQuiz.questions', 'targetQuiz.questions.varsAnswers', 'targetQuiz.company']
         });
-        if (!startedQuizByUser)
-            throw new HttpException("Quiz not found", HttpStatus.NOT_FOUND);
+        if (!startedQuizByUser || !startedQuizByUser.isStarted)
+            throw new HttpException("Quiz not found or not started", HttpStatus.BAD_REQUEST);
+
         const questionsWithRightAnswer: Question[] = startedQuizByUser.targetQuiz.questions.filter((questionFromBd: Question) => {
             return createWorkFlowDto.questions.find(questUserResponse => {
                 if (questionFromBd.id === questUserResponse.id) {
@@ -52,12 +54,17 @@ export class WorkFlowService {
 
         startedQuizByUser.updateAt = new Date();
         startedQuizByUser.rightAnswers = rightAnswers;
+        startedQuizByUser.isStarted = false;
+
         await this.passedQuizRepository.save(startedQuizByUser);
+
+        const avgRateUser: AvgRating = await this.calculeteAvgRatingForUserByComp(rightAnswers,
+            startedQuizByUser, userFromGuard);
+
         this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with
          ${rightAnswers.length} right answers`);
-
-        this.calculeteAvgRatingForUserByComp(rightAnswers, startedQuizByUser, userFromGuard, createWorkFlowDto);
-
+        this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} in company ${
+            startedQuizByUser.targetQuiz.company.id}  with ${rightAnswers.length} right answers and got ${avgRateUser.averageRating} rating from 10`);
         return {
             "status_code": HttpStatus.OK,
             "detail": {
@@ -67,65 +74,76 @@ export class WorkFlowService {
         };
     }
 
-    private async calculeteAvgRatingForUserByComp(rightAnswers: Answers[], startedQuizByUser: PassedQuiz, userFromGuard: User, createWorkFlowDto: CreateWorkFlowDto):Promise<void> {
-        /*calculate average rating for user in this company*/
-        const avgRateUsers: AvgRating = await this.avgRatingRepository.findOne({
+    private async calculeteAvgRatingForUserByComp(rightAnswers: Answers[], startedQuizByUser: PassedQuiz,
+                                                  userFromGuard: User): Promise<AvgRating> {
+        const listUserAvgRating: AvgRating[] = await this.avgRatingRepository.find({
             where: {
                 user: {id: userFromGuard.id},
-                passedCompany: {id: startedQuizByUser.targetQuiz.company.id}
             },
-            relations: ['passedQuiz.targetQuiz.questions', 'passedQuiz.rightAnswers']
+            relations: ['passedQuiz.targetQuiz.questions', 'passedQuiz.rightAnswers', 'passedCompany']
         });
 
-        if (!avgRateUsers) {/*if user fill once quiz for this company*/
-            console.log('rightAnswers-', rightAnswers.length);
-            console.log('allquestions-', startedQuizByUser.targetQuiz.questions.length);
+        /*calculate average rating for user in this company*/
+        let avgRateUser: AvgRating | undefined = listUserAvgRating.find((avgRating: AvgRating) =>
+            avgRating.passedCompany.id === startedQuizByUser.targetQuiz.company.id);
+
+
+        /*if user fill once quiz for this company*/
+        if (!avgRateUser) {
             const calculateAvgRatingForUserByComp: number = rightAnswers.length /
-                startedQuizByUser.targetQuiz.questions.length * 10;
-            const newAvgRateForUserByComp: AvgRating = this.avgRatingRepository.create({
+                startedQuizByUser.targetQuiz.questions.length;
+            avgRateUser = this.avgRatingRepository.create({
                 user: userFromGuard,
                 passedCompany: startedQuizByUser.targetQuiz.company,
                 averageRating: calculateAvgRatingForUserByComp,
-                ratingInsideCompany: calculateAvgRatingForUserByComp,
                 passedQuiz: [startedQuizByUser]
             });
-
-            await this.avgRatingRepository.save(newAvgRateForUserByComp);
-            this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} in company ${
-                startedQuizByUser.targetQuiz.company.id}  with ${rightAnswers.length} right answers and got ${calculateAvgRatingForUserByComp} rating from 10`);
-        } else {//user  already has rating fo current  company and we need to update it
-            const oldRightAnswers: number[] = avgRateUsers.passedQuiz.map((passedQuiz: PassedQuiz) =>
+        } else {
+            //user  already has rating fo current  company and we need to update it
+            const oldRightAnswers: number[] = avgRateUser.passedQuiz.map((passedQuiz: PassedQuiz) =>
                 passedQuiz.rightAnswers.length);
-            console.log('oldRightAnswers-', oldRightAnswers);
-            const oldAllQuestions: number[] = avgRateUsers.passedQuiz.map((passedQuiz: PassedQuiz) =>
+            const oldAllQuestions: number[] = avgRateUser.passedQuiz.map((passedQuiz: PassedQuiz) =>
                 passedQuiz.targetQuiz.questions.length);
-            console.log('oldAllQuestions-', oldAllQuestions);
             const oldAllRightAnswersCount: number = oldRightAnswers.reduce((a, b) => a + b, 0);
-            console.log('oldAllRightAnswersCount-', oldAllRightAnswersCount);
             const oldAllQuestionsCount: number = oldAllQuestions.reduce((a, b) => a + b, 0);
-            console.log('oldAllQuestionsCount-', oldAllQuestionsCount);
             const newAllRightAnswersCount: number = oldAllRightAnswersCount + rightAnswers.length;
             const newAllQuestionsCount: number = oldAllQuestionsCount + startedQuizByUser.targetQuiz.questions.length;
-            const newAverageRating: number = newAllRightAnswersCount / newAllQuestionsCount * 10;
+            const newAverageRating: number = newAllRightAnswersCount / newAllQuestionsCount;
 
-            console.log('newAllRightAnswersCount-', newAllRightAnswersCount);
-            console.log('newAllQuestionsCount-', newAllQuestionsCount);
-            console.log('newAverageRating-', newAverageRating);
-
-            await this.avgRatingRepository.update({id: avgRateUsers.id}, {
-                averageRating: newAverageRating,
-                ratingInsideCompany: newAverageRating,
-                updateAt: new Date(),
-            });
-            this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} in company ${
-                startedQuizByUser.targetQuiz.company.id}  with ${rightAnswers.length} right answers and got ${newAverageRating} rating from 10`);
+            /*fixing bug apdating relation many-to many when i used update*/
+            avgRateUser.passedQuiz.push(startedQuizByUser);
+            avgRateUser.averageRating = newAverageRating;
+            avgRateUser.updateAt = new Date();
         }
+
+        /*re-calculating rating in user in all passed company */
+        let generalRating: GeneralRating = await this.generalRatingRepository.findOne({
+            where: {
+                user: {id: userFromGuard.id},
+            },
+        });
+        if (!generalRating) {
+            generalRating = this.generalRatingRepository.create({
+                user: userFromGuard,
+                ratingInSystem: avgRateUser.averageRating
+            });
+        } else {
+            const summUserOldRatings: number = listUserAvgRating.reduce((sum: number, avgRating: AvgRating) => {
+                return sum + avgRating.averageRating;
+            }, 0);
+            generalRating.ratingInSystem = (summUserOldRatings + avgRateUser.averageRating) / (listUserAvgRating.length + 1);
+        }
+
+        await this.avgRatingRepository.save(avgRateUser);
+        await this.generalRatingRepository.save(generalRating);
+        return avgRateUser;
     }
 
     async start(userFromGuard: User, quizId: number): Promise<GeneralResponse<TPassedQuiz>> {
         const quizForStartFlow: TQuizForResponse = await this.quizService.findQuizByIdQuestion(quizId);
         if (!quizForStartFlow)
             throw new HttpException("Quiz not found", HttpStatus.NOT_FOUND);
+
         const startedQuizByUser: PassedQuiz = await this.passedQuizRepository.findOne({
             where: {
                 user: {id: userFromGuard.id},
@@ -138,7 +156,8 @@ export class WorkFlowService {
             const newStartedQuiz: PassedQuiz = this.passedQuizRepository.create({
                 user: userFromGuard,
                 targetQuiz: quizForStartFlow,
-                rightAnswers: []
+                rightAnswers: [],
+                isStarted: true
             });
             const savedStartedQuizByUser: PassedQuiz = await this.passedQuizRepository.save(newStartedQuiz);
             savedStartedQuizCuted = {
@@ -168,6 +187,7 @@ export class WorkFlowService {
             await this.passedQuizRepository.update({id: startedQuizByUser.id}, {
                 createDate: startedQuizByUser.updateAt,
                 updateAt: new Date(),
+                isStarted: true
             });
             this.logger.log(`User ${userFromGuard.email} started do quiz ${quizForStartFlow.id} again`);
             /*made object for response*/
@@ -182,8 +202,8 @@ export class WorkFlowService {
                 id: startedQuizByUser.id,
                 createDate: startedQuizByUser.updateAt,
                 updateAt: new Date(),
+                isStarted: startedQuizByUser.isStarted,
             };
-
         }
         return {
             "status_code": HttpStatus.OK,

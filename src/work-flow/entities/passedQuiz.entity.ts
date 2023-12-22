@@ -24,6 +24,9 @@ export class PassedQuiz {
     @UpdateDateColumn()
     updateAt: Date;
 
+    @Column({type: 'boolean', default: false})
+    isStarted: boolean;
+
     @ManyToOne(() => User, user => user.passedQuiz, {
         onDelete: 'CASCADE',
         eager: true
