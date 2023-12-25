@@ -1,5 +1,6 @@
 import {GenRespController} from "./GeneralResponse/gen-resp.controller";
 import {Module} from "@nestjs/common";
+import { RedisModule } from 'nestjs-redis';
 import {GenRespService} from "./GeneralResponse/gen-resp.service";
 import {TypeOrmModule} from '@nestjs/typeorm';
 import {ConfigModule} from "@nestjs/config";
@@ -19,6 +20,11 @@ import { WorkFlowModule } from './work-flow/work-flow.module';
         ConfigModule.forRoot({
             envFilePath: `.env`
         }),
+      /*  RedisModule.register({
+            host: process.env.REDIS_HOST,
+            port: +process.env.REDIS_PORT,
+            password: process.env.REDIS_PASSWORD,
+        }),*/
         TypeOrmModule.forRoot({
             type: 'postgres',
             host: process.env.POSTGRES_HOST,
@@ -27,7 +33,7 @@ import { WorkFlowModule } from './work-flow/work-flow.module';
             password: process.env.POSTGRES_ROOT_PASSWORD,
             database: process.env.POSTGRES_DATABASE,
             //entities: [User,Auth],
-            synchronize: false,//only for course
+            synchronize: false,// tru only for course with out migration
             autoLoadEntities: true,
         }),
         UserModule,

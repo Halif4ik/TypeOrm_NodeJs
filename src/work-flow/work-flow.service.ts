@@ -16,14 +16,21 @@ import {Question} from "../quizz/entities/question.entity";
 import {Answers} from "../quizz/entities/answers.entity";
 import {AvgRating} from "./entities/averageRating.entity";
 import {GeneralRating} from "./entities/avgRatingAll.entity";
+import {RedisService} from "@songkeys/nestjs-redis";
+import Redis from 'ioredis';
+import {createClient} from 'redis';
+import * as process from "process";
+
 
 @Injectable()
 export class WorkFlowService {
     private readonly logger: Logger = new Logger(WorkFlowService.name);
+
     constructor(private quizService: QuizService,
                 @InjectRepository(PassedQuiz) private passedQuizRepository: Repository<PassedQuiz>,
                 @InjectRepository(GeneralRating) private generalRatingRepository: Repository<GeneralRating>,
-                @InjectRepository(AvgRating) private avgRatingRepository: Repository<AvgRating>,) {
+                @InjectRepository(AvgRating) private avgRatingRepository: Repository<AvgRating>,
+                private readonly redisService: RedisService,) {
     }
 
     async createAnswers(userFromGuard: User, createWorkFlowDto: CreateWorkFlowDto): Promise<GeneralResponse<TAnswers>> {
@@ -136,6 +143,16 @@ export class WorkFlowService {
 
         await this.avgRatingRepository.save(avgRateUser);
         await this.generalRatingRepository.save(generalRating);
+
+
+        const client: Redis = this.redisService.getClient();
+        console.log('******-', client);
+        // Use the Redis client to perform operations todo
+        await client.set(`userId:${userFromGuard.id}startedQuiz:${startedQuizByUser.targetQuiz.id}`, avgRateUser.toString(),
+            'EX', +process.env.REDIS_TIME_EXPIRATION );
+        const result: string = await client.get(`startedQuiz:${userFromGuard.id}:${startedQuizByUser.targetQuiz.id}`);
+        console.log('Redis-', result); // Output: value
+
         return avgRateUser;
     }
 
