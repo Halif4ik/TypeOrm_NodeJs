@@ -37,7 +37,7 @@ export type TInviteForResponse = Omit<Invite, 'deleteAt' | 'ownerUser' | 'target
 
 export type TUserForResponse =
     Omit<User, 'password' | 'deleteAt' | 'auth' | 'company' | 'invite' | 'targetForInvite' |
-        'companyMember' | 'requests' | 'roles' | 'passedQuiz' | 'averageRating'>
+        'companyMember' | 'requests' | 'roles' | 'passedQuiz' | 'averageRating' | 'isActive'>
 
 export type TCompanyForResponse = Omit<Company, 'deleteAt' | 'owner' | 'members' | 'invites' |
     'quiz' | 'roles' | 'requests' | 'averageRating'>
@@ -64,17 +64,39 @@ export type TRoleForResponse =
     company?: TCompanyForResponse;
 }
 
-export type TQuiz = {
-    "quiz": TQuizForResponse | TQuizForResponse[]
-}
-export type TAnswers = {
-    "answers": Answers[]
-}
-export type TQuizForResponse =
-    Omit<Quiz, 'company' | 'questions' | 'deleteAt' | 'passedQuiz'> & {
-    questions?: Question[];
-}
+export type TQuiz = { "quiz": TQuizForResponse | TQuizForResponse[] }
 
+export type TAnswers = { "answers": Answers[] }
+
+export type TQuizForResponse =
+    Omit<Quiz, 'company' | 'questions' | 'deleteAt' | 'passedQuiz' | 'frequencyInDay' | 'description'>
+    & {
+    questions?: Question[];
+    frequencyInDay?: number;
+    description?: string;
+}
+export type TQuizForResponseRedis =
+    Omit<Quiz, 'company' | 'questions' | 'deleteAt' | 'passedQuiz' | 'frequencyInDay' | 'description'>
+    & {
+    questions?: TQuestion[];
+    frequencyInDay?: number;
+    description?: string;
+}
+export type TQuestion = Omit<Question, 'rightAnswer' | 'deleteAt' | 'quiz' | 'varsAnswers'> & {
+    rightAnswer?: string;
+    deleteAt?: Date;
+    quiz?: TQuizForResponse;
+    varsAnswers?: TAnswers;
+}
+export type TRedisData = {
+    user: TUserForResponse;
+    company: TCompanyForResponse;
+    targetQuiz: TQuizForResponseRedis;
+    userAnswers?: {
+        'id': number,
+        "userAnswer": string,
+    } []
+}
 
 export interface IDeleted {
     "company"?: null

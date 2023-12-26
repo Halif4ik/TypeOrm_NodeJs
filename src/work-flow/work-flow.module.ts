@@ -9,23 +9,21 @@ import {QuizzModule} from '../quizz/quizz.module';
 import {AvgRating} from './entities/averageRating.entity';
 import {GeneralRating} from './entities/avgRatingAll.entity';
 import {RedisModule} from '@songkeys/nestjs-redis';
-import {ConfigService} from "@nestjs/config";
-
-const configService = new ConfigService();
-import * as process from "process";
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
     controllers: [WorkFlowController],
     providers: [WorkFlowService],
     imports: [
         QuizzModule,
+        ConfigModule.forRoot(),
         TypeOrmModule.forFeature([PassedQuiz, AvgRating, GeneralRating]),
         RedisModule.forRoot({
                 readyLog: true,
                 config: {
-                    host: 'redis-17773.c55.eu-central-1-1.ec2.cloud.redislabs.com',
-                    port: configService.get<number>('REDIS_PORT') || 17773,
-                    password: configService.get<string>('REDIS_PASSWORD') || process.env.REDIS_PASSWORD || 'SiS0iQ7T7ZnKZyoIXjOvF9LRF95Vkj8I'
+                    host: new ConfigService().get<string>('REDIS_HOST'),
+                    port: new ConfigService().get<number>('REDIS_PORT') ,
+                    password: new ConfigService().get<string>('REDIS_PASSWORD') ,
                 }
             },
             false

@@ -70,19 +70,16 @@ export class AuthService {
             email: userFromBd.email,
             id: userFromBd.id,
             firstName: userFromBd.firstName,
-            isActive: userFromBd.isActive
         }, {expiresIn: process.env.EXPIRE_ACTION, secret: process.env.SECRET_ACTION});
         const refreshToken: string = this.jwtService.sign({
             email: userFromBd.email,
             id: userFromBd.id,
             firstName: userFromBd.firstName,
-            isActive: userFromBd.isActive
         }, {expiresIn: process.env.EXPIRE_REFRESH, secret: process.env.SECRET_REFRESH});
         const accessToken: string = this.jwtService.sign({
             email: userFromBd.email,
             id: userFromBd.id,
             firstName: userFromBd.firstName,
-            isActive: userFromBd.isActive
         }, {expiresIn: +process.env.EXPIRE_ACCESS, secret: process.env.SECRET_ACCESS});
         let authUserDataSave: Auth;
         if (authData) {

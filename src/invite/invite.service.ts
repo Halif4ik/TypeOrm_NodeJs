@@ -55,13 +55,11 @@ export class InviteService {
                 id: inviteResponsce.ownerUser.id,
                 email: inviteResponsce.ownerUser.email,
                 firstName: inviteResponsce.ownerUser.firstName,
-                isActive: null,
             },
             targetUser: {
                 id: inviteResponsce.ownerUser.id,
                 email: inviteResponsce.ownerUser.email,
                 firstName: inviteResponsce.ownerUser.firstName,
-                isActive: inviteResponsce.ownerUser.isActive,
             }
         }
 
@@ -129,7 +127,6 @@ export class InviteService {
                 id: inviteResponsce.targetUser.id,
                 email: inviteResponsce.targetUser.email,
                 firstName: inviteResponsce.targetUser.firstName,
-                isActive: inviteResponsce.targetUser.isActive,
             },
         }
         return {
