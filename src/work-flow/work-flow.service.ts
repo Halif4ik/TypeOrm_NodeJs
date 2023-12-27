@@ -20,6 +20,7 @@ import {RedisService} from "@songkeys/nestjs-redis";
 import Redis from 'ioredis';
 import * as process from "process";
 import {Quiz} from "../quizz/entities/quizz.entity";
+import {ConfigService} from "@nestjs/config"; /**/
 
 
 @Injectable()
@@ -31,6 +32,7 @@ export class WorkFlowService {
                 @InjectRepository(GeneralRating) private generalRatingRepository: Repository<GeneralRating>,
                 @InjectRepository(AvgRating) private avgRatingRepository: Repository<AvgRating>,
                 private readonly redisService: RedisService,
+                private readonly configService: ConfigService,
     ) {
     }
 
@@ -267,5 +269,26 @@ export class WorkFlowService {
         if (cachedData)
             return JSON.parse(cachedData);
         return null;
+    }
+
+    async exportQuizDataFromRedis(userFromGuard quizId: number, format: 'json' | 'csv'): Promise<string> {
+        const userId=1;
+        const client: Redis = this.redisService.getClient();
+        const redisKey: string = `startedQuiz:${userId}:${quizId}`;
+        const cachedData: string | null = await client.get(redisKey);
+
+        if (cachedData) {
+            const data = JSON.parse(cachedData);
+
+            if (format === 'json') {
+                return JSON.stringify(data);
+            } else if (format === 'csv') {
+                // Convert data to CSV format (you may need to customize this part based on your data structure)
+                const csvContent = `${Object.values(data.user).join(',')}\n`;
+                return csvContent;
+            }
+        }
+
+        return '';
     }
 }
