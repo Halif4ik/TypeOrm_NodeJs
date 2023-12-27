@@ -17,7 +17,7 @@ import {Answers} from "../quizz/entities/answers.entity";
 import {AvgRating} from "./entities/averageRating.entity";
 import {GeneralRating} from "./entities/avgRatingAll.entity";
 import {RedisService} from "@songkeys/nestjs-redis";
-import Redis from 'ioredis';
+import Redis, {Command} from 'ioredis';
 import * as process from "process";
 import {Quiz} from "../quizz/entities/quizz.entity";
 
@@ -64,8 +64,8 @@ export class WorkFlowService {
         startedQuizByUser.rightAnswers = rightAnswers;
         startedQuizByUser.isStarted = false;
 
-        const redisResponce: string = await this.savePaasedQuizToRedis(startedQuizByUser, createWorkFlowDto);
-        if (redisResponce === 'OK')
+        const redisResponce = await this.savePaasedQuizToRedis(startedQuizByUser, createWorkFlowDto);
+        if (parseInt(redisResponce.toString()) < 1)
             this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} and save to redis with out error `);
 
         await this.passedQuizRepository.save(startedQuizByUser);
@@ -87,7 +87,7 @@ export class WorkFlowService {
         };
     }
 
-    private async savePaasedQuizToRedis(startedQuizByUser: PassedQuiz, createWorkFlowDto: CreateWorkFlowDto): Promise<string> {
+    private async savePaasedQuizToRedis(startedQuizByUser: PassedQuiz, createWorkFlowDto: CreateWorkFlowDto): Promise<unknown> {
         const client: Redis = this.redisService.getClient();
         const redisKey: string = `startedQuiz:${startedQuizByUser.user.id}:${startedQuizByUser.targetQuiz.id}`;
         const dataForRedis: TRedisData = {
@@ -117,10 +117,10 @@ export class WorkFlowService {
             }))
         }
         const value: string = JSON.stringify(dataForRedis);
-
-        return client.set(redisKey, value,
-            'EX', +process.env.REDIS_TIME_EXPIRATION);
-        ;
+        /*await client.set(redisKey + 0, value,'EX', +process.env.REDIS_TIME_EXPIRATION)
+        client.expire(redisKey, +process.env.REDIS_TIME_EXPIRATION);*/
+        await client.sendCommand(new Command('JSON.SET', [redisKey, '.', value, 'NX']));
+        return client.sendCommand(new Command('EXPIRE', [redisKey + 8, +process.env.REDIS_TIME_EXPIRATION]));
     }
 
     private async calculeteAvgRatingForUserByComp(rightAnswers: Answers[], startedQuizByUser: PassedQuiz,
