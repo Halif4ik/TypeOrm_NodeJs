@@ -20,6 +20,7 @@ import {RedisService} from "@songkeys/nestjs-redis";
 import Redis, {Command} from 'ioredis';
 import {Quiz} from "../quizz/entities/quizz.entity";
 import {ConfigService} from "@nestjs/config";
+import {GetRedisQuizDto} from "../quizz/dto/update-quizz.dto";
 
 
 @Injectable()
@@ -124,12 +125,12 @@ export class WorkFlowService {
         return client.sendCommand(new Command('EXPIRE', [redisKey, this.configService.get<string>('REDIS_TIME_EXPIRATION')]));
     }
 
-    private async getQuizFromRedis(redisKey: string): Promise<any> {
+    private async getQuizFromRedis(redisKey: string): Promise<string | null> {
         const client: Redis = this.redisService.getClient();
         const cachedData = await client.sendCommand(new Command('JSON.GET', [redisKey]));
         /* const cachedData = await client.sendCommand(['JSON.GET', redisKey]);*/
         if (cachedData)
-            return JSON.parse(cachedData.toString());
+            return cachedData.toString()
         return null;
     }
 
@@ -272,33 +273,22 @@ export class WorkFlowService {
     }
 
 
-    private async getQuizFromRedis(redisKey: string): Promise<PassedQuiz | null> {
-        const client: Redis = this.redisService.getClient();
-        const cachedData: string | null = await client.get(redisKey);
-        if (cachedData)
-            return JSON.parse(cachedData);
-        return null;
-    }
-
-    async exportQuizDataFromRedis(userFromGuard, quizId: number, format: 'json' | 'csv'): Promise<string> {
-        const userId = 1;
-        const client: Redis = this.redisService.getClient();
-        const redisKey: string = `startedQuiz:${userId}:${quizId}`;
-        const cachedData: string | null = await client.get(redisKey);
-
+    async exportQuizDataFromRedis(userFromGuard: User, quizId: number, getRedisQuizDto: GetRedisQuizDto): Promise<string | null> {
+        const redisKey: string = `startedQuiz:${userFromGuard.id}:${quizId}`;
+        console.log('userFromGuard-', userFromGuard);
+        /*  const cachedData: string | null = await client.get(redisKey);*/
+        const cachedData: string | null = await this.getQuizFromRedis(redisKey);
+        console.log('cachedData-', cachedData);
         if (cachedData) {
-            const data = JSON.parse(cachedData);
-
-            if (format === 'json') {
-                return JSON.stringify(data);
-            } else if (format === 'csv') {
+            if (getRedisQuizDto.format === 'json') {
+                return cachedData;
+            } else if (getRedisQuizDto.format === 'csv') {
                 // Convert data to CSV format (you may need to customize this part based on your data structure)
-                const csvContent = `${Object.values(data.user).join(',')}\n`;
+                const csvContent = `${Object.values(JSON.parse(cachedData)?.user).join(',')}\n`;
                 return csvContent;
             }
         }
-
-        return '';
+        return null;
     }
 
 }

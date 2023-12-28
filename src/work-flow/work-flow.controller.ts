@@ -54,8 +54,9 @@ export class WorkFlowController {
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleMemberGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     async expoerQuiz(@UserDec() userFromGuard: User, @Param() quizIdDto: AdditionalUpdateQuizId,
-                     @Query() paginationDto: GetRedisQuizDto): Promise<GeneralResponse<any>> {
-        return this.workFlowService.exportQuizDataFromRedis(userFromGuard, quizIdDto.quizId, paginationDto);
+                     @Query() getRedisQuizDto: GetRedisQuizDto) {
+        return this.workFlowService.exportQuizDataFromRedis(userFromGuard, quizIdDto.quizId,
+            getRedisQuizDto);
     }
 
 
