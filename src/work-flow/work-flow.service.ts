@@ -22,6 +22,7 @@ import {Quiz} from "../quizz/entities/quizz.entity";
 import {ConfigService} from "@nestjs/config";
 
 
+
 @Injectable()
 export class WorkFlowService {
     private readonly logger: Logger = new Logger(WorkFlowService.name);
@@ -271,5 +272,41 @@ export class WorkFlowService {
         };
     }
 
+
+    private async getQuizFromRedis(redisKey: string): Promise<PassedQuiz | null> {
+        const client: Redis = this.redisService.getClient();
+        const cachedData: string | null = await client.get(redisKey);
+        if (cachedData)
+            return JSON.parse(cachedData);
+        return null;
+    }
+
+    async exportQuizDataFromRedis(userFromGuard,
+
+    quizId: number
+,
+    format: 'json' | 'csv'
+):
+
+    Promise<string> {
+        const userId = 1;
+        const client: Redis = this.redisService.getClient();
+        const redisKey: string = `startedQuiz:${userId}:${quizId}`;
+        const cachedData: string | null = await client.get(redisKey);
+
+        if (cachedData) {
+            const data = JSON.parse(cachedData);
+
+            if (format === 'json') {
+                return JSON.stringify(data);
+            } else if (format === 'csv') {
+                // Convert data to CSV format (you may need to customize this part based on your data structure)
+                const csvContent = `${Object.values(data.user).join(',')}\n`;
+                return csvContent;
+            }
+        }
+
+        return '';
+    }
 
 }

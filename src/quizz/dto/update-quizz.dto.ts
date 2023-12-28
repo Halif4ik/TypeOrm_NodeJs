@@ -4,6 +4,14 @@ import {Transform, Type} from "class-transformer";
 import {IntersectionType, OmitType, PartialType} from "@nestjs/mapped-types";
 
 /*required Field quizId*/
+export class GetRedisQuizDto {
+    @Transform(({value}) => isNaN(parseInt(value)) ? 0 : parseInt(value),)
+    @IsNotEmpty()
+    @IsNumber({}, {message: 'quizId for UpdateQuiz should be number'})
+    @Min(1)
+    readonly quizId: number;
+}
+
 export class AdditionalUpdateQuizId {
     @Transform(({value}) => isNaN(parseInt(value)) ? 0 : parseInt(value),)
     @IsNotEmpty()
