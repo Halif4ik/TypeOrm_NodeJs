@@ -74,8 +74,7 @@ export class WorkFlowService {
         const avgRateUser: AvgRating = await this.calculeteAvgRatingForUserByComp(rightAnswers,
             startedQuizByUser, userFromGuard);
 
-        const temp = await this.getQuizFromRedis(`startedQuiz:${startedQuizByUser.user.id}:${startedQuizByUser.targetQuiz.id}`);
-        console.log('temp-', temp);
+        /*const temp = await this.getQuizFromRedis(`startedQuiz:${startedQuizByUser.user.id}:${startedQuizByUser.targetQuiz.id}`);*/
         this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with
          ${rightAnswers.length} right answers`);
         this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} in company ${
@@ -121,8 +120,6 @@ export class WorkFlowService {
         const value: string = JSON.stringify(dataForRedis);
         /*await client.set(redisKey + 0, value,'EX', +process.env.REDIS_TIME_EXPIRATION)
         client.expire(redisKey, +process.env.REDIS_TIME_EXPIRATION);*/
-        const temp = this.configService.get<string>('REDIS_TIME_EXPIRATION');
-        console.log('temp-', temp);
         await client.sendCommand(new Command('JSON.SET', [redisKey, '.', value, 'NX']));
         return client.sendCommand(new Command('EXPIRE', [redisKey, this.configService.get<string>('REDIS_TIME_EXPIRATION')]));
     }

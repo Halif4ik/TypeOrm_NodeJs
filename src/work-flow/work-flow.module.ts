@@ -16,13 +16,13 @@ import {ConfigModule, ConfigService} from '@nestjs/config';
     providers: [WorkFlowService],
     imports: [
         QuizzModule,
-        ConfigModule,
+        ConfigModule.forRoot({envFilePath: `.env`}),
         TypeOrmModule.forFeature([PassedQuiz, AvgRating, GeneralRating]),
         RedisModule.forRoot({
                 readyLog: true,
                 config: {
                     host: new ConfigService().get<string>('REDIS_HOST'),
-                    port: +new ConfigService().get<number>('REDIS_PORT'),
+                    port: new ConfigService().get<number>('REDIS_PORT'),
                     password: new ConfigService().get<string>('REDIS_PASSWORD'),
                 }
             },
