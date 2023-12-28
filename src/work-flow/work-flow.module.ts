@@ -9,7 +9,7 @@ import {QuizzModule} from '../quizz/quizz.module';
 import {AvgRating} from './entities/averageRating.entity';
 import {GeneralRating} from './entities/avgRatingAll.entity';
 import {RedisModule} from '@songkeys/nestjs-redis';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import {ConfigModule, ConfigService} from '@nestjs/config';
 
 @Module({
     controllers: [WorkFlowController],
@@ -21,7 +21,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         RedisModule.forRoot({
                 readyLog: true,
                 config: {
-                    host: this.ConfigService.get('REDIS_HOST'),
+                    host: new ConfigService().get<string>('REDIS_HOST'),
+                    port: +new ConfigService().get<number>('REDIS_PORT'),
+                    password: new ConfigService().get<string>('REDIS_PASSWORD'),
                 }
             },
             false
