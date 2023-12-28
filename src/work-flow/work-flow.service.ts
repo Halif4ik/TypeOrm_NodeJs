@@ -18,8 +18,8 @@ import {AvgRating} from "./entities/averageRating.entity";
 import {GeneralRating} from "./entities/avgRatingAll.entity";
 import {RedisService} from "@songkeys/nestjs-redis";
 import Redis, {Command} from 'ioredis';
-import * as process from "process";
 import {Quiz} from "../quizz/entities/quizz.entity";
+import {ConfigService} from "@nestjs/config";
 
 
 @Injectable()
@@ -31,6 +31,7 @@ export class WorkFlowService {
                 @InjectRepository(GeneralRating) private generalRatingRepository: Repository<GeneralRating>,
                 @InjectRepository(AvgRating) private avgRatingRepository: Repository<AvgRating>,
                 private readonly redisService: RedisService,
+                private readonly configService: ConfigService,
     ) {
     }
 
@@ -64,7 +65,7 @@ export class WorkFlowService {
         startedQuizByUser.rightAnswers = rightAnswers;
         startedQuizByUser.isStarted = false;
 
-        const redisResponce = await this.savePaasedQuizToRedis(startedQuizByUser, createWorkFlowDto);
+        const redisResponce = await this.savePassedQuizToRedis(startedQuizByUser, createWorkFlowDto);
         if (parseInt(redisResponce.toString()) < 1)
             this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} and save to redis with out error `);
 
@@ -73,7 +74,8 @@ export class WorkFlowService {
         const avgRateUser: AvgRating = await this.calculeteAvgRatingForUserByComp(rightAnswers,
             startedQuizByUser, userFromGuard);
 
-        /*const temp = await this.getQuizFromRedis(`7`);*/
+        const temp = await this.getQuizFromRedis(`startedQuiz:${startedQuizByUser.user.id}:${startedQuizByUser.targetQuiz.id}`);
+        console.log('temp-', temp);
         this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with
          ${rightAnswers.length} right answers`);
         this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} in company ${
@@ -87,7 +89,7 @@ export class WorkFlowService {
         };
     }
 
-    private async savePaasedQuizToRedis(startedQuizByUser: PassedQuiz, createWorkFlowDto: CreateWorkFlowDto): Promise<unknown> {
+    private async savePassedQuizToRedis(startedQuizByUser: PassedQuiz, createWorkFlowDto: CreateWorkFlowDto): Promise<unknown> {
         const client: Redis = this.redisService.getClient();
         const redisKey: string = `startedQuiz:${startedQuizByUser.user.id}:${startedQuizByUser.targetQuiz.id}`;
         const dataForRedis: TRedisData = {
@@ -119,8 +121,19 @@ export class WorkFlowService {
         const value: string = JSON.stringify(dataForRedis);
         /*await client.set(redisKey + 0, value,'EX', +process.env.REDIS_TIME_EXPIRATION)
         client.expire(redisKey, +process.env.REDIS_TIME_EXPIRATION);*/
+        const temp = this.configService.get<string>('REDIS_TIME_EXPIRATION');
+        console.log('temp-', temp);
         await client.sendCommand(new Command('JSON.SET', [redisKey, '.', value, 'NX']));
-        return client.sendCommand(new Command('EXPIRE', [redisKey + 8, +process.env.REDIS_TIME_EXPIRATION]));
+        return client.sendCommand(new Command('EXPIRE', [redisKey, this.configService.get<string>('REDIS_TIME_EXPIRATION')]));
+    }
+
+    private async getQuizFromRedis(redisKey: string): Promise<any> {
+        const client: Redis = this.redisService.getClient();
+        const cachedData = await client.sendCommand(new Command('JSON.GET', [redisKey]));
+        /* const cachedData = await client.sendCommand(['JSON.GET', redisKey]);*/
+        if (cachedData)
+            return JSON.parse(cachedData.toString());
+        return null;
     }
 
     private async calculeteAvgRatingForUserByComp(rightAnswers: Answers[], startedQuizByUser: PassedQuiz,
@@ -261,11 +274,5 @@ export class WorkFlowService {
         };
     }
 
-    private async getQuizFromRedis(redisKey: string): Promise<PassedQuiz | null> {
-        const client: Redis = this.redisService.getClient();
-        const cachedData: string | null = await client.get(redisKey);
-        if (cachedData)
-            return JSON.parse(cachedData);
-        return null;
-    }
+
 }

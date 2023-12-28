@@ -32,8 +32,7 @@ import { WorkFlowModule } from './work-flow/work-flow.module';
             username: process.env.POSTGRES_USER,
             password: process.env.POSTGRES_ROOT_PASSWORD,
             database: process.env.POSTGRES_DATABASE,
-            //entities: [User,Auth],
-            synchronize: false,// tru only for course with out migration
+            synchronize: false,// true only for course with out migration
             autoLoadEntities: true,
         }),
         UserModule,
