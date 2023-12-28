@@ -22,7 +22,6 @@ import {Quiz} from "../quizz/entities/quizz.entity";
 import {ConfigService} from "@nestjs/config";
 
 
-
 @Injectable()
 export class WorkFlowService {
     private readonly logger: Logger = new Logger(WorkFlowService.name);
@@ -281,14 +280,7 @@ export class WorkFlowService {
         return null;
     }
 
-    async exportQuizDataFromRedis(userFromGuard,
-
-    quizId: number
-,
-    format: 'json' | 'csv'
-):
-
-    Promise<string> {
+    async exportQuizDataFromRedis(userFromGuard, quizId: number, format: 'json' | 'csv'): Promise<string> {
         const userId = 1;
         const client: Redis = this.redisService.getClient();
         const redisKey: string = `startedQuiz:${userId}:${quizId}`;
