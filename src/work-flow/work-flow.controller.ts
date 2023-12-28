@@ -49,7 +49,7 @@ export class WorkFlowController {
     }
 
     //3. Endpoint: Get /work-flow/export/:quizId?format=json
-    //   Permissions: Admin or the user whose data is being exported
+    //  Permissions: Admin or the user whose data is being exported
     @Get('/export/:quizId')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleMemberGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))

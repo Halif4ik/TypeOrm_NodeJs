@@ -271,8 +271,15 @@ export class WorkFlowService {
         return null;
     }
 
-    async exportQuizDataFromRedis(userFromGuard quizId: number, format: 'json' | 'csv'): Promise<string> {
-        const userId=1;
+    async exportQuizDataFromRedis(userFromGuard
+
+    quizId: number
+,
+    format: 'json' | 'csv'
+):
+
+    Promise<string> {
+        const userId = 1;
         const client: Redis = this.redisService.getClient();
         const redisKey: string = `startedQuiz:${userId}:${quizId}`;
         const cachedData: string | null = await client.get(redisKey);

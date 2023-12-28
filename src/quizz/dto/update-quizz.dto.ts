@@ -11,6 +11,7 @@ export class GetRedisQuizDto {
     @Min(1)
     readonly quizId: number;
 }
+
 export class AdditionalUpdateQuizId {
     @Transform(({value}) => isNaN(parseInt(value)) ? 0 : parseInt(value),)
     @IsNotEmpty()
