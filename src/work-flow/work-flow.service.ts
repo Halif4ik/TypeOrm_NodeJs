@@ -17,10 +17,10 @@ import {Answers} from "../quizz/entities/answers.entity";
 import {AvgRating} from "./entities/averageRating.entity";
 import {GeneralRating} from "./entities/avgRatingAll.entity";
 import {RedisService} from "@songkeys/nestjs-redis";
-import Redis from 'ioredis';
-import * as process from "process";
+import Redis, {Command} from 'ioredis';
 import {Quiz} from "../quizz/entities/quizz.entity";
-import {ConfigService} from "@nestjs/config"; /**/
+import {ConfigService} from "@nestjs/config";
+
 
 
 @Injectable()
@@ -66,8 +66,8 @@ export class WorkFlowService {
         startedQuizByUser.rightAnswers = rightAnswers;
         startedQuizByUser.isStarted = false;
 
-        const redisResponce: string = await this.savePaasedQuizToRedis(startedQuizByUser, createWorkFlowDto);
-        if (redisResponce === 'OK')
+        const redisResponce = await this.savePassedQuizToRedis(startedQuizByUser, createWorkFlowDto);
+        if (parseInt(redisResponce.toString()) < 1)
             this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} and save to redis with out error `);
 
         await this.passedQuizRepository.save(startedQuizByUser);
@@ -75,7 +75,7 @@ export class WorkFlowService {
         const avgRateUser: AvgRating = await this.calculeteAvgRatingForUserByComp(rightAnswers,
             startedQuizByUser, userFromGuard);
 
-        /*const temp = await this.getQuizFromRedis(`7`);*/
+        /*const temp = await this.getQuizFromRedis(`startedQuiz:${startedQuizByUser.user.id}:${startedQuizByUser.targetQuiz.id}`);*/
         this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with
          ${rightAnswers.length} right answers`);
         this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} in company ${
@@ -89,7 +89,7 @@ export class WorkFlowService {
         };
     }
 
-    private async savePaasedQuizToRedis(startedQuizByUser: PassedQuiz, createWorkFlowDto: CreateWorkFlowDto): Promise<string> {
+    private async savePassedQuizToRedis(startedQuizByUser: PassedQuiz, createWorkFlowDto: CreateWorkFlowDto): Promise<unknown> {
         const client: Redis = this.redisService.getClient();
         const redisKey: string = `startedQuiz:${startedQuizByUser.user.id}:${startedQuizByUser.targetQuiz.id}`;
         const dataForRedis: TRedisData = {
@@ -119,10 +119,19 @@ export class WorkFlowService {
             }))
         }
         const value: string = JSON.stringify(dataForRedis);
+        /*await client.set(redisKey + 0, value,'EX', +process.env.REDIS_TIME_EXPIRATION)
+        client.expire(redisKey, +process.env.REDIS_TIME_EXPIRATION);*/
+        await client.sendCommand(new Command('JSON.SET', [redisKey, '.', value, 'NX']));
+        return client.sendCommand(new Command('EXPIRE', [redisKey, this.configService.get<string>('REDIS_TIME_EXPIRATION')]));
+    }
 
-        return client.set(redisKey, value,
-            'EX', +process.env.REDIS_TIME_EXPIRATION);
-        ;
+    private async getQuizFromRedis(redisKey: string): Promise<any> {
+        const client: Redis = this.redisService.getClient();
+        const cachedData = await client.sendCommand(new Command('JSON.GET', [redisKey]));
+        /* const cachedData = await client.sendCommand(['JSON.GET', redisKey]);*/
+        if (cachedData)
+            return JSON.parse(cachedData.toString());
+        return null;
     }
 
     private async calculeteAvgRatingForUserByComp(rightAnswers: Answers[], startedQuizByUser: PassedQuiz,
@@ -263,6 +272,7 @@ export class WorkFlowService {
         };
     }
 
+
     private async getQuizFromRedis(redisKey: string): Promise<PassedQuiz | null> {
         const client: Redis = this.redisService.getClient();
         const cachedData: string | null = await client.get(redisKey);
@@ -271,7 +281,7 @@ export class WorkFlowService {
         return null;
     }
 
-    async exportQuizDataFromRedis(userFromGuard
+    async exportQuizDataFromRedis(userFromGuard,
 
     quizId: number
 ,
@@ -298,4 +308,5 @@ export class WorkFlowService {
 
         return '';
     }
+
 }
