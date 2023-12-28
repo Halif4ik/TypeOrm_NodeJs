@@ -273,22 +273,25 @@ export class WorkFlowService {
     }
 
 
-    async exportQuizDataFromRedis(userFromGuard: User, quizId: number, getRedisQuizDto: GetRedisQuizDto): Promise<string | null> {
-        const redisKey: string = `startedQuiz:${userFromGuard.id}:${quizId}`;
-        console.log('userFromGuard-', userFromGuard);
-        /*  const cachedData: string | null = await client.get(redisKey);*/
+    async exportQuizDataFromRedis(userFromGuard: User, getRedisQuizDto: GetRedisQuizDto): Promise<string | null | any> {
+        const redisKey: string = `startedQuiz:${userFromGuard.id}:${getRedisQuizDto.quizId}`;
         const cachedData: string | null = await this.getQuizFromRedis(redisKey);
         console.log('cachedData-', cachedData);
         if (cachedData) {
+            const redisData: TRedisData = JSON.parse(cachedData) as TRedisData;
+
             if (getRedisQuizDto.format === 'json') {
-                return cachedData;
+                return redisData;
             } else if (getRedisQuizDto.format === 'csv') {
-                // Convert data to CSV format (you may need to customize this part based on your data structure)
-                const csvContent = `${Object.values(JSON.parse(cachedData)?.user).join(',')}\n`;
-                return csvContent;
+                const header = 'question_id;userAnswer;questionText;targetQuiz;company_name;user_id';
+                const rows: string[] = redisData.userAnswers.map((answer: any) => {
+                    const question:TQuestion = redisData.targetQuiz.questions.find((q: any) => q.id === answer.id);
+                    return `${answer.id};${answer.userAnswer};${question.questionText};${redisData.targetQuiz.id};${redisData.company.name};${redisData.user.id}`;
+                });
+                return `${header}\n${rows.join('\n')}`;
             }
         }
-        return null;
+        return null;/*todo types responce*/
     }
 
 }

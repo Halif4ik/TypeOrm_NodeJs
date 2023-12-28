@@ -48,15 +48,13 @@ export class WorkFlowController {
         return this.workFlowService.createAnswers(userFromGuard, createWorkFlowDto);
     }
 
-    //3. Endpoint: Get /work-flow/export/:quizId?format=json
+    //3. Endpoint: Get /work-flow/export/?format=json&quizId=1
     //  Permissions: Admin or the user whose data is being exported
-    @Get('/export/:quizId')
+    @Get('/export')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleMemberGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    async expoerQuiz(@UserDec() userFromGuard: User, @Param() quizIdDto: AdditionalUpdateQuizId,
-                     @Query() getRedisQuizDto: GetRedisQuizDto) {
-        return this.workFlowService.exportQuizDataFromRedis(userFromGuard, quizIdDto.quizId,
-            getRedisQuizDto);
+    async exportQuiz(@UserDec() userFromGuard: User, @Query() getRedisQuizDto: GetRedisQuizDto) {
+        return this.workFlowService.exportQuizDataFromRedis(userFromGuard, getRedisQuizDto);
     }
 
 

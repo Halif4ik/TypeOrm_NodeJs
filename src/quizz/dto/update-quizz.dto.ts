@@ -6,11 +6,22 @@ import {IntersectionType, OmitType, PartialType} from "@nestjs/mapped-types";
 /*required Field quizId*/
 export class GetRedisQuizDto {
     @Transform(({value}) => {
-        if (!value.includes('format')) return '';
-    })
-    @MinLength(1,{message: 'format should be present in query'})
+        if (value.toLowerCase() === 'json' || value.toLowerCase() === 'csv') {
+            return value.toLowerCase();
+        }
+        return '';
+    },)
+    @IsNotEmpty({message: 'format for exportQuiz should be json or csv'})
     readonly format: string;
+
+    @Transform(({value}) => isNaN(parseInt(value)) ? 0 : parseInt(value))
+    @IsNotEmpty()
+    @IsNumber({}, {message: 'quizId for exportQuiz should be number'})
+    @Min(1)
+    readonly quizId: number;
+
 }
+
 
 export class AdditionalUpdateQuizId {
     @Transform(({value}) => isNaN(parseInt(value)) ? 0 : parseInt(value),)
