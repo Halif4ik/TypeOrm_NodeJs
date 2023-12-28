@@ -18,7 +18,8 @@ import { WorkFlowModule } from './work-flow/work-flow.module';
     providers: [GenRespService],
     imports: [
         ConfigModule.forRoot({
-            envFilePath: `.env`
+            envFilePath: `.env`,
+            isGlobal: true,
         }),
       /*  RedisModule.register({
             host: process.env.REDIS_HOST,

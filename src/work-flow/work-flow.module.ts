@@ -16,18 +16,19 @@ import {ConfigModule, ConfigService} from '@nestjs/config';
     providers: [WorkFlowService],
     imports: [
         QuizzModule,
-        ConfigModule.forRoot({envFilePath: `.env`}),
         TypeOrmModule.forFeature([PassedQuiz, AvgRating, GeneralRating]),
-        RedisModule.forRoot({
+        ConfigModule,
+        RedisModule.forRootAsync({
+            useFactory: async (configService: ConfigService) => ({
                 readyLog: true,
                 config: {
-                    host: new ConfigService().get<string>('REDIS_HOST'),
-                    port: new ConfigService().get<number>('REDIS_PORT'),
-                    password: new ConfigService().get<string>('REDIS_PASSWORD'),
-                }
-            },
-            false
-        ),
+                    host: configService.get<string>('REDIS_HOST'),
+                    port: configService.get<number>('REDIS_PORT'),
+                    password: configService.get<string>('REDIS_PASSWORD'),
+                },
+            }),
+            inject: [ConfigService],
+        }),
         JwtModule,
         PassportModule,
     ],
