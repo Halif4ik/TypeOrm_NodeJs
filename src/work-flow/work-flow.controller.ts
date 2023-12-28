@@ -18,7 +18,7 @@ import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {PaginationsQuizDto} from "../quizz/dto/pagination-quiz.dto";
-import {AdditionalUpdateQuizId} from "../quizz/dto/update-quizz.dto";
+import {AdditionalUpdateQuizId, GetRedisQuizDto} from "../quizz/dto/update-quizz.dto";
 import {QuizService} from "../quizz/quizService";
 import {TAnswers, TPassedQuiz, TQuiz} from "../GeneralResponse/interface/customResponces";
 import {JwtRoleMemberGuard} from "../auth/jwt-Role-Member.guard";
@@ -32,7 +32,7 @@ export class WorkFlowController {
     //Endpoint: Get /work-flow/start?quiz=1
     //Permissions: Only members
     @Get('/start')
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']),JwtRoleMemberGuard)
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleMemberGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     start(@UserDec() userFromGuard: User, @Query() quizIdDto: AdditionalUpdateQuizId): Promise<GeneralResponse<TPassedQuiz>> {
         return this.workFlowService.start(userFromGuard, quizIdDto.quizId);
@@ -42,10 +42,20 @@ export class WorkFlowController {
     //Endpoint: Post /work-flow/answer
     //Permissions: All member Users who started quiz
     @Post('/answer')
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']),JwtRoleMemberGuard)
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleMemberGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     createAnswers(@UserDec() userFromGuard: User, @Body() createWorkFlowDto: CreateWorkFlowDto): Promise<GeneralResponse<TAnswers>> {
         return this.workFlowService.createAnswers(userFromGuard, createWorkFlowDto);
+    }
+
+    //3. Endpoint: Get /work-flow/export/:quizId?format=json
+    //  Permissions: Admin or the user whose data is being exported
+    @Get('/export/:quizId')
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleMemberGuard)
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    async expoerQuiz(@UserDec() userFromGuard: User, @Param() quizIdDto: AdditionalUpdateQuizId,
+                     @Query() paginationDto: GetRedisQuizDto): Promise<GeneralResponse<any>> {
+        return this.workFlowService.exportQuizDataFromRedis(userFromGuard, quizIdDto.quizId, paginationDto);
     }
 
 
