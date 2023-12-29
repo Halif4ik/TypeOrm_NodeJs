@@ -70,7 +70,6 @@ export class QuizzController {
     //Endpoint: Get /quiz/all
     //Permissions: All logened Users
     @Get('/all')
-    @Roles(UserRole.ADMIN)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']))
     getAllQuiz(@Query() paginationsQuizDto: PaginationsQuizDto): Promise<GeneralResponse<TQuiz>> {

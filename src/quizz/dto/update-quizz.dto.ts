@@ -22,6 +22,29 @@ export class GetRedisQuizDto {
 
 }
 
+/*required Field quizId*/
+export class GetRedisAllQuizDto {
+    @Transform(({value}): string => {
+        if (value.toLowerCase() === 'json' || value.toLowerCase() === 'csv') return value.toLowerCase();
+        return '';
+    },)
+    @IsNotEmpty({message: 'format for exportQuiz should be json or csv'})
+    readonly format: string;
+
+    @Transform(({value}): number => isNaN(parseInt(value)) ? 0 : parseInt(value))
+    @IsOptional()
+    @IsNumber({}, {message: 'UserId for exportQuiz should be number'})
+    @Min(1)
+    readonly userId?: number;
+
+    @Transform(({value}): number => isNaN(parseInt(value)) ? 0 : parseInt(value))
+    @IsNotEmpty()
+    @IsNumber({}, {message: 'companyId for exportQuiz should be number'})
+    @Min(1)
+    readonly companyId?: number;
+
+}
+
 
 export class AdditionalUpdateQuizId {
     @Transform(({value}) => isNaN(parseInt(value)) ? 0 : parseInt(value),)

@@ -21,7 +21,8 @@ import {RedisService} from "@songkeys/nestjs-redis";
 import Redis, {Command} from 'ioredis';
 import {Quiz} from "../quizz/entities/quizz.entity";
 import {ConfigService} from "@nestjs/config";
-import {GetRedisQuizDto} from "../quizz/dto/update-quizz.dto";
+import {GetRedisAllQuizDto, GetRedisQuizDto} from "../quizz/dto/update-quizz.dto";
+import {Company} from "../company/entities/company.entity";
 
 @Injectable()
 export class WorkFlowService {
@@ -128,7 +129,6 @@ export class WorkFlowService {
     private async getQuizFromRedis(redisKey: string): Promise<string | null> {
         const client: Redis = this.redisService.getClient();
         const cachedData = await client.sendCommand(new Command('JSON.GET', [redisKey]));
-        /* const cachedData = await client.sendCommand(['JSON.GET', redisKey]);*/
         if (cachedData)
             return cachedData.toString()
         return null;
@@ -273,7 +273,7 @@ export class WorkFlowService {
     }
 
 
-    async exportQuizDataFromRedis(userFromGuard: User, getRedisQuizDto: GetRedisQuizDto): Promise< null | string> {
+    async exportQuizDataFromRedis(userFromGuard: User, getRedisQuizDto: GetRedisQuizDto): Promise<null | string> {
         const redisKey: string = `startedQuiz:${userFromGuard.id}:${getRedisQuizDto.quizId}`;
         const cachedData: string | null = await this.getQuizFromRedis(redisKey);
         if (cachedData) {
@@ -292,4 +292,30 @@ export class WorkFlowService {
         return null;
     }
 
+    async exportUserDataFromRedis(userFromGuard: User, getRedisAllQuizDto: GetRedisAllQuizDto) {
+        const client: Redis = this.redisService.getClient();
+        const redisKey: string = getRedisAllQuizDto.userId ? `startedQuiz:${getRedisAllQuizDto.userId}:*`
+            : `startedQuiz:*:*`;
+        const currentCompanyQuiz: Quiz[] = userFromGuard.company.find((curCompany: Company): boolean =>
+            curCompany.id === getRedisAllQuizDto.companyId).quiz;
+        const ownersQuizsId: number[] = currentCompanyQuiz.map((quiz: Quiz): number => quiz.id);
+
+        console.log('ownersQuizsId-', ownersQuizsId);
+        const redisKeys: string[] = await client.keys(redisKey);
+        console.log('redisKeys!-', redisKeys);
+
+        const keysForOwnerQuiz: string[] = redisKeys.filter((key: string): boolean => {
+            const quizId: number = +key.split(':')[2];
+            return ownersQuizsId.includes(quizId);
+        });
+        console.log('keysForOwnerQuiz!-', keysForOwnerQuiz);
+        /*const one = await client.get(keysForOwnerQuiz[0]);*/
+        const one = await client.sendCommand(new Command('JSON.GET', [keysForOwnerQuiz[1]]));
+        console.log('one!-', one.toString());
+        const quizData9 = await client.set('startedQuiz:6:999', one.toString(), 'EX', 60);
+        const quizData2 = await client.mget(['startedQuiz:6:999','startedQuiz:6:29'])
+const quizData = await client.sendCommand(new Command('JSON.MGET', [...['startedQuiz:6:27']]));
+        console.log('quizData!-', quizData);
+        return "";
+    }
 }

@@ -67,13 +67,13 @@ export class UserService {
     async getUserByEmailWCompTargInviteRole(email: string): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {email},
-            relations: ['company', 'targetForInvite','requests','roles','companyMember']
+            relations: ['company','company.quiz', 'targetForInvite','requests','roles','companyMember']
         });
     }
     async getUserByIdCompTargInviteRole(id: number): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {id},
-            relations: ['company', 'targetForInvite','requests','roles','roles.company','companyMember']
+            relations: ['company','company.quiz', 'targetForInvite','requests','roles','roles.company','companyMember']
         });
     }
     async getUserByIdWCompTargInvitRequsts(id: number): Promise<User | null> {
