@@ -92,10 +92,11 @@ export type TRedisData = {
     user: TUserForResponse;
     company: TCompanyForResponse;
     targetQuiz: TQuizForResponseRedis;
-    userAnswers?: {
-        'id': number,
-        "userAnswer": string,
-    } []
+    userAnswers?: idAndAnswer [];
+}
+export type idAndAnswer = {
+    'id': number,
+    "userAnswer": string,
 }
 
 export interface IDeleted {

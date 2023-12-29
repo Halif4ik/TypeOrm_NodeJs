@@ -3,13 +3,10 @@ import {
     Get,
     Post,
     Body,
-    Patch,
-    Param,
-    Delete,
     UseGuards,
     UsePipes,
     ValidationPipe,
-    Query
+    Query, Res, StreamableFile
 } from '@nestjs/common';
 import {WorkFlowService} from './work-flow.service';
 import {CreateWorkFlowDto} from './dto/create-work-flow.dto';
@@ -17,11 +14,13 @@ import {AuthGuard} from "@nestjs/passport";
 import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {PaginationsQuizDto} from "../quizz/dto/pagination-quiz.dto";
 import {AdditionalUpdateQuizId, GetRedisQuizDto} from "../quizz/dto/update-quizz.dto";
-import {QuizService} from "../quizz/quizService";
-import {TAnswers, TPassedQuiz, TQuiz} from "../GeneralResponse/interface/customResponces";
+import {TAnswers, TPassedQuiz, TRedisData,} from "../GeneralResponse/interface/customResponces";
 import {JwtRoleMemberGuard} from "../auth/jwt-Role-Member.guard";
+import type {Response} from 'express';
+import {createReadStream} from 'fs';
+import {join} from 'path';
+import {Readable} from 'stream';
 
 @Controller('work-flow')
 export class WorkFlowController {
@@ -53,8 +52,22 @@ export class WorkFlowController {
     @Get('/export')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleMemberGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    async exportQuiz(@UserDec() userFromGuard: User, @Query() getRedisQuizDto: GetRedisQuizDto) {
-        return this.workFlowService.exportQuizDataFromRedis(userFromGuard, getRedisQuizDto);
+    async exportQuiz(@UserDec() userFromGuard: User, @Query() getRedisQuizDto: GetRedisQuizDto,
+                     @Res({passthrough: true}) res: Response): Promise<StreamableFile> {
+        const csvContent: string | null = await this.workFlowService.exportQuizDataFromRedis(userFromGuard, getRedisQuizDto);
+        if (csvContent.indexOf('{"') == 0) {
+            res.set({
+                'Content-Type': 'application/json',
+                'Content-Disposition': `attachment; filename="${userFromGuard.email}.json"`,
+            });
+            return new StreamableFile(Readable.from([csvContent]));
+        } else {
+            res.set({
+                'Content-Type': 'text/csv',
+                'Content-Disposition': `attachment; filename="${userFromGuard.email}.csv"`,
+            });
+            return new StreamableFile(Readable.from([csvContent]));
+        }
     }
 
 
