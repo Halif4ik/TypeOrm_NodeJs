@@ -120,18 +120,18 @@ export class WorkFlowService {
             }))
         }
         const value: string = JSON.stringify(dataForRedis);
-        /*await client.set(redisKey + 0, value,'EX', +process.env.REDIS_TIME_EXPIRATION)
-        client.expire(redisKey, +process.env.REDIS_TIME_EXPIRATION);*/
-        await client.sendCommand(new Command('JSON.SET', [redisKey, '.', value, 'NX']));
-        return client.sendCommand(new Command('EXPIRE', [redisKey, this.configService.get<string>('REDIS_TIME_EXPIRATION')]));
+        return client.set(redisKey, value, 'EX', this.configService.get<string>('REDIS_TIME_EXPIRATION'))
+        /*await client.sendCommand(new Command('JSON.SET', [redisKey, '.', value, 'NX']));
+        return client.sendCommand(new Command('EXPIRE', [redisKey, this.configService.get<string>('REDIS_TIME_EXPIRATION')]));*/
     }
 
     private async getQuizFromRedis(redisKey: string): Promise<string | null> {
         const client: Redis = this.redisService.getClient();
-        const cachedData = await client.sendCommand(new Command('JSON.GET', [redisKey]));
+        return client.get(redisKey);
+        /*const cachedData = await client.sendCommand(new Command('JSON.GET', [redisKey]));
         if (cachedData)
             return cachedData.toString()
-        return null;
+        return null;*/
     }
 
     private async calculeteAvgRatingForUserByComp(rightAnswers: Answers[], startedQuizByUser: PassedQuiz,
@@ -273,49 +273,52 @@ export class WorkFlowService {
     }
 
 
-    async exportQuizDataFromRedis(userFromGuard: User, getRedisQuizDto: GetRedisQuizDto): Promise<null | string> {
+    async exportQuizDataFromRedis(userFromGuard: User, getRedisQuizDto: GetRedisQuizDto): Promise<string> {
         const redisKey: string = `startedQuiz:${userFromGuard.id}:${getRedisQuizDto.quizId}`;
         const cachedData: string | null = await this.getQuizFromRedis(redisKey);
-        if (cachedData) {
-            if (getRedisQuizDto.format === 'json') {
-                return cachedData;
-            } else if (getRedisQuizDto.format === 'csv') {
-                const redisData: TRedisData = JSON.parse(cachedData) as TRedisData;
-                const header: string = 'question_id;userAnswer;questionText;targetQuiz;company_name;user_id';
-                const rows: string[] = redisData.userAnswers.map((answer: idAndAnswer): string => {
-                    const question: TQuestion = redisData.targetQuiz.questions.find((q: TQuestion): boolean => q.id === answer.id);
-                    return `${answer.id};${answer.userAnswer};${question.questionText};${redisData.targetQuiz.id};${redisData.company.name};${redisData.user.id}`;
-                });
-                return `${header}\n${rows.join('\n')}`;
-            }
-        }
-        return null;
+        if (!cachedData) throw new HttpException(`Current user didnt pass  this quiz ${getRedisQuizDto.quizId}`, HttpStatus.NOT_FOUND);
+
+        if (getRedisQuizDto.format === 'json') return cachedData;
+        else if (getRedisQuizDto.format === 'csv') return this.parseToCsv([cachedData]);
     }
 
-    async exportUserDataFromRedis(userFromGuard: User, getRedisAllQuizDto: GetRedisAllQuizDto) {
+    private parseToCsv(cachedData: string[]): string {
+        const header: string = 'question_id;userAnswer;questionText;targetQuiz;company_name;user_id';
+        const redisData: TRedisData[] = cachedData.map((data: string): TRedisData => JSON.parse(data) as TRedisData);
+        const rows: string[] = redisData.map((data: TRedisData): string => {
+            return data.userAnswers.map((answer: idAndAnswer): string => {
+                const question: TQuestion = data.targetQuiz.questions.find((q: TQuestion): boolean => q.id === answer.id);
+                return `${answer.id};${answer.userAnswer};${question.questionText};${data.targetQuiz.id};${data.company.name};${data.user.id}`;
+            }).join('\n');
+        });
+        /* const rows: string[] = redisData.userAnswers.map((answer: idAndAnswer): string => {
+             const question: TQuestion = redisData.targetQuiz.questions.find((q: TQuestion): boolean => q.id === answer.id);
+             return `${answer.id};${answer.userAnswer};${question.questionText};${redisData.targetQuiz.id};${redisData.company.name};${redisData.user.id}`;
+         });*/
+        return `${header}\n${rows.join('\n')}`;
+    }
+
+    async exportUserDataFromRedis(userFromGuard: User, getRedisAllQuizDto: GetRedisAllQuizDto):Promise<string> {
         const client: Redis = this.redisService.getClient();
         const redisKey: string = getRedisAllQuizDto.userId ? `startedQuiz:${getRedisAllQuizDto.userId}:*`
             : `startedQuiz:*:*`;
-        const currentCompanyQuiz: Quiz[] = userFromGuard.company.find((curCompany: Company): boolean =>
-            curCompany.id === getRedisAllQuizDto.companyId).quiz;
+        const currentCompany: Company = userFromGuard.company.find((curCompany: Company): boolean =>
+            curCompany.id === getRedisAllQuizDto.companyId);
+        const currentCompanyQuiz: Quiz[] = currentCompany.quiz;
         const ownersQuizsId: number[] = currentCompanyQuiz.map((quiz: Quiz): number => quiz.id);
 
-        console.log('ownersQuizsId-', ownersQuizsId);
         const redisKeys: string[] = await client.keys(redisKey);
-        console.log('redisKeys!-', redisKeys);
 
         const keysForOwnerQuiz: string[] = redisKeys.filter((key: string): boolean => {
             const quizId: number = +key.split(':')[2];
             return ownersQuizsId.includes(quizId);
         });
-        console.log('keysForOwnerQuiz!-', keysForOwnerQuiz);
         /*const one = await client.get(keysForOwnerQuiz[0]);*/
-        const one = await client.sendCommand(new Command('JSON.GET', [keysForOwnerQuiz[1]]));
-        console.log('one!-', one.toString());
-        const quizData9 = await client.set('startedQuiz:6:999', one.toString(), 'EX', 60);
-        const quizData2 = await client.mget(['startedQuiz:6:999','startedQuiz:6:29'])
-const quizData = await client.sendCommand(new Command('JSON.MGET', [...['startedQuiz:6:27']]));
-        console.log('quizData!-', quizData);
-        return "";
+        const quizData: string[] = await client.mget(keysForOwnerQuiz)
+
+        if (!quizData) throw new HttpException(`Current company ${currentCompany.id} dosent have passed this 
+        quiz or this user ${getRedisAllQuizDto.userId} didnt pass any quiz at that company`, HttpStatus.NOT_FOUND);
+
+        return this.parseToCsv(quizData);
     }
 }

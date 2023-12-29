@@ -6,7 +6,7 @@ import {
     UseGuards,
     UsePipes,
     ValidationPipe,
-    Query, Res, StreamableFile
+    Query, Res, StreamableFile, HttpException, HttpStatus
 } from '@nestjs/common';
 import {WorkFlowService} from './work-flow.service';
 import {CreateWorkFlowDto} from './dto/create-work-flow.dto';
@@ -57,7 +57,7 @@ export class WorkFlowController {
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     async exportQuiz(@UserDec() userFromGuard: User, @Query() getRedisQuizDto: GetRedisQuizDto,
                      @Res({passthrough: true}) res: Response): Promise<StreamableFile> {
-        const csvContent: string | null = await this.workFlowService.exportQuizDataFromRedis(userFromGuard, getRedisQuizDto);
+        const csvContent: string  = await this.workFlowService.exportQuizDataFromRedis(userFromGuard, getRedisQuizDto);
         if (csvContent.indexOf('{"') == 0) {
             res.set({
                 'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ export class WorkFlowController {
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     async exportUser(@UserDec() userFromGuard: User, @Query() getRedisAllQuizDto: GetRedisAllQuizDto,
                      @Res({passthrough: true}) res: Response): Promise<StreamableFile> {
-        const csvContent: string | null = await this.workFlowService.exportUserDataFromRedis(userFromGuard, getRedisAllQuizDto);
+        const csvContent: string  = await this.workFlowService.exportUserDataFromRedis(userFromGuard, getRedisAllQuizDto);
         if (csvContent.indexOf('{"') === 0) {
             res.set({
                 'Content-Type': 'application/json',
