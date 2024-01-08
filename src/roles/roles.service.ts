@@ -54,7 +54,6 @@ export class RolesService {
                         id: newRole.user.id,
                         firstName: newRole.user.firstName,
                         email: newRole.user.email,
-                        isActive: null,
                     }
                 },
             },
@@ -126,7 +125,6 @@ export class RolesService {
                     id: role.user.id,
                     firstName: role.user.firstName,
                     email: role.user.email,
-                    isActive: null,
                 }
             } ;
         });

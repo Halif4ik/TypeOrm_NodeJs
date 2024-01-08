@@ -5,7 +5,7 @@ import {Repository} from "typeorm";
 import {Quiz} from "./entities/quizz.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {IDeleted, TQuiz, TQuizForResponse} from "../GeneralResponse/interface/customResponces";
+import {IDeleted, TQuestion, TQuiz, TQuizForResponse} from "../GeneralResponse/interface/customResponces";
 import {Answers} from "./entities/answers.entity";
 import {Question} from "./entities/question.entity";
 import {QuestionDto} from "./dto/question.dto";

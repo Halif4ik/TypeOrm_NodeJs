@@ -5,8 +5,8 @@ import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.inte
 import {
     TAnswers,
     TPassedQuiz,
-    TPassedQuizForResponce,
-    TQuizForResponse
+    TPassedQuizForResponce, TQuestion,
+    TRedisData
 } from "../GeneralResponse/interface/customResponces";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
@@ -16,14 +16,24 @@ import {Question} from "../quizz/entities/question.entity";
 import {Answers} from "../quizz/entities/answers.entity";
 import {AvgRating} from "./entities/averageRating.entity";
 import {GeneralRating} from "./entities/avgRatingAll.entity";
+import {RedisService} from "@songkeys/nestjs-redis";
+import Redis, {Command} from 'ioredis';
+import {Quiz} from "../quizz/entities/quizz.entity";
+import {ConfigService} from "@nestjs/config";
+
+
 
 @Injectable()
 export class WorkFlowService {
     private readonly logger: Logger = new Logger(WorkFlowService.name);
+
     constructor(private quizService: QuizService,
                 @InjectRepository(PassedQuiz) private passedQuizRepository: Repository<PassedQuiz>,
                 @InjectRepository(GeneralRating) private generalRatingRepository: Repository<GeneralRating>,
-                @InjectRepository(AvgRating) private avgRatingRepository: Repository<AvgRating>,) {
+                @InjectRepository(AvgRating) private avgRatingRepository: Repository<AvgRating>,
+                private readonly redisService: RedisService,
+                private readonly configService: ConfigService,
+    ) {
     }
 
     async createAnswers(userFromGuard: User, createWorkFlowDto: CreateWorkFlowDto): Promise<GeneralResponse<TAnswers>> {
@@ -56,11 +66,16 @@ export class WorkFlowService {
         startedQuizByUser.rightAnswers = rightAnswers;
         startedQuizByUser.isStarted = false;
 
+        const redisResponce = await this.savePassedQuizToRedis(startedQuizByUser, createWorkFlowDto);
+        if (parseInt(redisResponce.toString()) < 1)
+            this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} and save to redis with out error `);
+
         await this.passedQuizRepository.save(startedQuizByUser);
 
         const avgRateUser: AvgRating = await this.calculeteAvgRatingForUserByComp(rightAnswers,
             startedQuizByUser, userFromGuard);
 
+        /*const temp = await this.getQuizFromRedis(`startedQuiz:${startedQuizByUser.user.id}:${startedQuizByUser.targetQuiz.id}`);*/
         this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} with
          ${rightAnswers.length} right answers`);
         this.logger.log(`User ${userFromGuard.email} finished do quiz ${createWorkFlowDto.quizId} in company ${
@@ -72,6 +87,51 @@ export class WorkFlowService {
             },
             "result": "finished"
         };
+    }
+
+    private async savePassedQuizToRedis(startedQuizByUser: PassedQuiz, createWorkFlowDto: CreateWorkFlowDto): Promise<unknown> {
+        const client: Redis = this.redisService.getClient();
+        const redisKey: string = `startedQuiz:${startedQuizByUser.user.id}:${startedQuizByUser.targetQuiz.id}`;
+        const dataForRedis: TRedisData = {
+            user: {
+                id: startedQuizByUser.user.id,
+                email: startedQuizByUser.user.email,
+                firstName: startedQuizByUser.user.firstName,
+            },
+            company: {
+                id: startedQuizByUser.targetQuiz.company.id,
+                name: startedQuizByUser.targetQuiz.company.name,
+                description: startedQuizByUser.targetQuiz.company.description,
+            },
+            targetQuiz: {
+                id: startedQuizByUser.targetQuiz.id,
+                questions: startedQuizByUser.targetQuiz.questions.map((question: Question): TQuestion => ({
+                    id: question.id,
+                    questionText: question.questionText,
+                }))
+            },
+            userAnswers: createWorkFlowDto.questions.map((questionAndVarAnswer): {
+                id: number,
+                userAnswer: string
+            } => ({
+                id: questionAndVarAnswer.id,
+                userAnswer: questionAndVarAnswer.userAnswer,
+            }))
+        }
+        const value: string = JSON.stringify(dataForRedis);
+        /*await client.set(redisKey + 0, value,'EX', +process.env.REDIS_TIME_EXPIRATION)
+        client.expire(redisKey, +process.env.REDIS_TIME_EXPIRATION);*/
+        await client.sendCommand(new Command('JSON.SET', [redisKey, '.', value, 'NX']));
+        return client.sendCommand(new Command('EXPIRE', [redisKey, this.configService.get<string>('REDIS_TIME_EXPIRATION')]));
+    }
+
+    private async getQuizFromRedis(redisKey: string): Promise<any> {
+        const client: Redis = this.redisService.getClient();
+        const cachedData = await client.sendCommand(new Command('JSON.GET', [redisKey]));
+        /* const cachedData = await client.sendCommand(['JSON.GET', redisKey]);*/
+        if (cachedData)
+            return JSON.parse(cachedData.toString());
+        return null;
     }
 
     private async calculeteAvgRatingForUserByComp(rightAnswers: Answers[], startedQuizByUser: PassedQuiz,
@@ -140,7 +200,7 @@ export class WorkFlowService {
     }
 
     async start(userFromGuard: User, quizId: number): Promise<GeneralResponse<TPassedQuiz>> {
-        const quizForStartFlow: TQuizForResponse = await this.quizService.findQuizByIdQuestion(quizId);
+        const quizForStartFlow: Quiz = await this.quizService.findQuizByIdQuestion(quizId);
         if (!quizForStartFlow)
             throw new HttpException("Quiz not found", HttpStatus.NOT_FOUND);
 
@@ -166,7 +226,6 @@ export class WorkFlowService {
                     id: savedStartedQuizByUser.user.id,
                     email: savedStartedQuizByUser.user.email,
                     firstName: savedStartedQuizByUser.user.firstName,
-                    isActive: null
                 },
                 targetQuiz: {
                     ...savedStartedQuizByUser.targetQuiz,
@@ -196,7 +255,6 @@ export class WorkFlowService {
                     id: startedQuizByUser.user.id,
                     email: startedQuizByUser.user.email,
                     firstName: startedQuizByUser.user.firstName,
-                    isActive: null
                 },
                 targetQuiz: startedQuizByUser.targetQuiz,
                 id: startedQuizByUser.id,
@@ -213,4 +271,42 @@ export class WorkFlowService {
             "result": "created"
         };
     }
+
+
+    private async getQuizFromRedis(redisKey: string): Promise<PassedQuiz | null> {
+        const client: Redis = this.redisService.getClient();
+        const cachedData: string | null = await client.get(redisKey);
+        if (cachedData)
+            return JSON.parse(cachedData);
+        return null;
+    }
+
+    async exportQuizDataFromRedis(userFromGuard,
+
+    quizId: number
+,
+    format: 'json' | 'csv'
+):
+
+    Promise<string> {
+        const userId = 1;
+        const client: Redis = this.redisService.getClient();
+        const redisKey: string = `startedQuiz:${userId}:${quizId}`;
+        const cachedData: string | null = await client.get(redisKey);
+
+        if (cachedData) {
+            const data = JSON.parse(cachedData);
+
+            if (format === 'json') {
+                return JSON.stringify(data);
+            } else if (format === 'csv') {
+                // Convert data to CSV format (you may need to customize this part based on your data structure)
+                const csvContent = `${Object.values(data.user).join(',')}\n`;
+                return csvContent;
+            }
+        }
+
+        return '';
+    }
+
 }
