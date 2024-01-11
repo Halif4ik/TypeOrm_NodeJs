@@ -6,7 +6,7 @@ import {
     UseGuards,
     UsePipes,
     ValidationPipe,
-    Query, Res, StreamableFile, HttpException, HttpStatus
+    Query, Res, StreamableFile
 } from '@nestjs/common';
 import {WorkFlowService} from './work-flow.service';
 import {CreateWorkFlowDto} from './dto/create-work-flow.dto';
@@ -15,7 +15,7 @@ import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {AdditionalUpdateQuizId, GetRedisQuizDto, GetRedisAllQuizDto} from "../quizz/dto/update-quizz.dto";
-import {TAnswers, TPassedQuiz, TRedisData,} from "../GeneralResponse/interface/customResponces";
+import {FileResponse, TAnswers, TPassedQuiz, TRedisData,} from "../GeneralResponse/interface/customResponces";
 import {JwtRoleMemberGuard} from "../auth/jwt-Role-Member.guard";
 import type {Response} from 'express';
 import {createReadStream} from 'fs';
@@ -50,51 +50,29 @@ export class WorkFlowController {
         return this.workFlowService.createAnswers(userFromGuard, createWorkFlowDto);
     }
 
-    //3. Endpoint: Get /work-flow/export/?format=json&quizId=1
+    //3. Endpoint: Get /work-flow/export?format=json&quizId=1
     //  Permissions: Admin or the user whose data is being exported
     @Get('/export')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleMemberGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     async exportQuiz(@UserDec() userFromGuard: User, @Query() getRedisQuizDto: GetRedisQuizDto,
                      @Res({passthrough: true}) res: Response): Promise<StreamableFile> {
-        const csvContent: string  = await this.workFlowService.exportQuizDataFromRedis(userFromGuard, getRedisQuizDto);
-        if (csvContent.indexOf('{"') == 0) {
-            res.set({
-                'Content-Type': 'application/json',
-                'Content-Disposition': `attachment; filename="${userFromGuard.email}.json"`,
-            });
-            return new StreamableFile(Readable.from([csvContent]));
-        } else {
-            res.set({
-                'Content-Type': 'text/csv',
-                'Content-Disposition': `attachment; filename="${userFromGuard.email}.csv"`,
-            });
-            return new StreamableFile(Readable.from([csvContent]));
-        }
+        const fileResponse: FileResponse  = await this.workFlowService.exportQuizDataFromRedis(userFromGuard, getRedisQuizDto);
+            res.set(fileResponse.header);
+            return new StreamableFile(Readable.from([fileResponse.data]));
     }
-    //4. Endpoint: Get /work-flow/export-user/?format=json&userId=6&companyId=1
+
+    //4. Endpoint: Get /work-flow/export-user?format=csv&userId=6&companyId=1
     //  Permissions: Admin or owner of the company
     @Get('/export-user')
     @Roles(UserRole.ADMIN)
-    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
+   @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     async exportUser(@UserDec() userFromGuard: User, @Query() getRedisAllQuizDto: GetRedisAllQuizDto,
                      @Res({passthrough: true}) res: Response): Promise<StreamableFile> {
-        const csvContent: string  = await this.workFlowService.exportUserDataFromRedis(userFromGuard, getRedisAllQuizDto);
-        if (csvContent.indexOf('{"') === 0) {
-            res.set({
-                'Content-Type': 'application/json',
-                'Content-Disposition': `attachment; filename="${userFromGuard.email}.json"`,
-            });
-            return new StreamableFile(Readable.from([csvContent]));
-        } else {
-            res.set({
-                'Content-Type': 'text/csv',
-                'Content-Disposition': `attachment; filename="${userFromGuard.email}.csv"`,
-            });
-            return new StreamableFile(Readable.from([csvContent]));
-        }
+        const fileResponse: FileResponse = await this.workFlowService.exportUserDataFromRedis(userFromGuard, getRedisAllQuizDto);
+        res.set(fileResponse.header);
+        return new StreamableFile(Readable.from([fileResponse.data]));
     }
-
 
 }

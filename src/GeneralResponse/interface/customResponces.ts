@@ -108,3 +108,10 @@ export interface IDeleted {
     "removedUser"?: null
     "quiz"?: number
 }
+export  type FileResponse = {
+    header: {
+        'Content-Type': string,
+        'Content-Disposition': string,
+    },
+    data: string
+}

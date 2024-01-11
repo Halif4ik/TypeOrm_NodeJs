@@ -1,8 +1,9 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger, StreamableFile} from '@nestjs/common';
 import {CreateWorkFlowDto} from './dto/create-work-flow.dto';
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {
+    FileResponse,
     idAndAnswer,
     TAnswers,
     TPassedQuiz,
@@ -239,7 +240,7 @@ export class WorkFlowService {
         } else {
             const frequencyInMillisec: number = 86400000 * quizForStartFlow.frequencyInDay;
             //check expiration time for this user to this quiz
-            const howMuchTimeLeft: number = new Date(startedQuizByUser.updateAt).getTime() - new Date(startedQuizByUser.createDate).getTime();
+            const howMuchTimeLeft: number = new Date().getTime() - new Date(startedQuizByUser.updateAt).getTime();
             if (howMuchTimeLeft < frequencyInMillisec)
                 throw new HttpException("Expiration time for this User to this quiz", HttpStatus.BAD_REQUEST);
 
@@ -273,13 +274,27 @@ export class WorkFlowService {
     }
 
 
-    async exportQuizDataFromRedis(userFromGuard: User, getRedisQuizDto: GetRedisQuizDto): Promise<string> {
+    async exportQuizDataFromRedis(userFromGuard: User, getRedisQuizDto: GetRedisQuizDto): Promise<FileResponse> {
         const redisKey: string = `startedQuiz:${userFromGuard.id}:${getRedisQuizDto.quizId}`;
         const cachedData: string | null = await this.getQuizFromRedis(redisKey);
         if (!cachedData) throw new HttpException(`Current user didnt pass  this quiz ${getRedisQuizDto.quizId}`, HttpStatus.NOT_FOUND);
+        let csvContent: string;
+        if (getRedisQuizDto.format === 'json') csvContent = cachedData;
+        else if (getRedisQuizDto.format === 'csv') csvContent = this.parseToCsv([cachedData]);
+        else throw new HttpException(`Format ${getRedisQuizDto.format} not supported`, HttpStatus.BAD_REQUEST);
 
-        if (getRedisQuizDto.format === 'json') return cachedData;
-        else if (getRedisQuizDto.format === 'csv') return this.parseToCsv([cachedData]);
+
+        const result: FileResponse = {} as FileResponse;
+        if (csvContent.indexOf('{"') == 0) result.header = {
+            'Content-Type': 'application/json',
+            'Content-Disposition': `attachment; filename="${userFromGuard.email}.json"`,
+        };
+        else result.header = {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': `attachment; filename="${userFromGuard.email}.csv"`,
+        };
+        result.data = cachedData;
+        return result;
     }
 
     private parseToCsv(cachedData: string[]): string {
@@ -298,7 +313,7 @@ export class WorkFlowService {
         return `${header}\n${rows.join('\n')}`;
     }
 
-    async exportUserDataFromRedis(userFromGuard: User, getRedisAllQuizDto: GetRedisAllQuizDto):Promise<string> {
+    async exportUserDataFromRedis(userFromGuard: User, getRedisAllQuizDto: GetRedisAllQuizDto): Promise<FileResponse> {
         const client: Redis = this.redisService.getClient();
         const redisKey: string = getRedisAllQuizDto.userId ? `startedQuiz:${getRedisAllQuizDto.userId}:*`
             : `startedQuiz:*:*`;
@@ -319,6 +334,14 @@ export class WorkFlowService {
         if (!quizData) throw new HttpException(`Current company ${currentCompany.id} dosent have passed this 
         quiz or this user ${getRedisAllQuizDto.userId} didnt pass any quiz at that company`, HttpStatus.NOT_FOUND);
 
-        return this.parseToCsv(quizData);
+
+        const result: FileResponse = {} as FileResponse;
+        result.header = {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': `attachment; filename="${userFromGuard.email}.csv"`,
+        };
+        result.data = this.parseToCsv(quizData);
+        return result;
     }
+
 }
