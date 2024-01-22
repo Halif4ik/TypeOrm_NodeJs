@@ -9,7 +9,7 @@ import {CreateUserDto} from "./dto/create-user.dto";
 import {JwtService} from "@nestjs/jwt";
 import {Auth} from "../auth/entities/auth.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import { IUserInfo } from 'src/GeneralResponse/interface/customResponces';
+import {IUserInfo} from 'src/GeneralResponse/interface/customResponces';
 import {Company} from "../company/entities/company.entity";
 import {Request} from "../reqests/entities/reqest.entity";
 
@@ -67,19 +67,21 @@ export class UserService {
     async getUserByEmailWCompTargInviteRole(email: string): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {email},
-            relations: ['company','company.quiz', 'targetForInvite','requests','roles','companyMember']
+            relations: ['company', 'company.quiz', 'targetForInvite', 'requests', 'roles', 'companyMember']
         });
     }
+
     async getUserByIdCompTargInviteRole(id: number): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {id},
-            relations: ['company','company.quiz', 'targetForInvite','requests','roles','roles.company','companyMember']
+            relations: ['company', 'company.quiz', 'targetForInvite', 'requests', 'roles', 'roles.company', 'companyMember']
         });
     }
+
     async getUserByIdWCompTargInvitRequsts(id: number): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {id},
-            relations: ['company', 'targetForInvite','requests']
+            relations: ['company', 'targetForInvite', 'requests']
         });
     }
 
@@ -146,17 +148,17 @@ export class UserService {
 
     async addRelationToUser<T>(newRelation: T, targetUser: User): Promise<User> {
         let logMessage: string = '';
-        if(newRelation instanceof Auth){
-            logMessage ='Auth';
+        if (newRelation instanceof Auth) {
+            logMessage = 'Auth';
             targetUser.auth = newRelation;
         }
-        if(newRelation instanceof Request){
-            logMessage ='Request';
-            targetUser.requests =  [...targetUser.requests, newRelation];
+        if (newRelation instanceof Request) {
+            logMessage = 'Request';
+            targetUser.requests = [...targetUser.requests, newRelation];
         }
-        if(newRelation instanceof Company){
-            logMessage ='Company';
-            targetUser.companyMember = newRelation;
+        if (newRelation instanceof Company) {
+            logMessage = 'Company';
+            targetUser.companyMember.length ? targetUser.companyMember.push(newRelation) : targetUser.companyMember = [newRelation];
         }
 
         const temp: User = await this.usersRepository.save(targetUser);

@@ -1,5 +1,5 @@
 import {
-    Column, DeleteDateColumn, Entity, JoinColumn,
+    Column, DeleteDateColumn, Entity, JoinColumn, JoinTable, ManyToMany,
     ManyToOne, OneToMany, PrimaryGeneratedColumn
 } from "typeorm";
 import {User} from "../../user/entities/user.entity";
@@ -31,7 +31,11 @@ export class Company {
     @JoinColumn({name: "ownerId"})
     owner: User;
 
-    @OneToMany(() => User, user => user.companyMember)
+  /*  @OneToMany(() => User, user => user.companyMember)
+    members: User[];*/
+
+    @ManyToMany(() => User, user=> user.companyMember)
+    @JoinTable()
     members: User[];
 
     @OneToMany(() => Invite, invite => invite.ownerCompany)

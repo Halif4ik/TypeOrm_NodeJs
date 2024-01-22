@@ -1,4 +1,13 @@
-import {Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany, ManyToOne, DeleteDateColumn} from 'typeorm';
+import {
+    Entity,
+    Column,
+    PrimaryGeneratedColumn,
+    OneToOne,
+    OneToMany,
+    ManyToOne,
+    DeleteDateColumn,
+    ManyToMany
+} from 'typeorm';
 import {Auth} from "../../auth/entities/auth.entity";
 import {Company} from "../../company/entities/company.entity";
 import {Invite} from "../../invite/entities/invite.entity";
@@ -39,8 +48,10 @@ export class User {
     @OneToMany(() => Company, company => company.owner)
     company: Company[];
 
-    @ManyToOne(() => Company, company => company.members, {onDelete: 'CASCADE'})
-    companyMember: Company;
+    /*@ManyToOne(() => Company, company => company.members, {onDelete: 'CASCADE'})
+    companyMember: Company;*/
+    @ManyToMany(() => Company, company => company.members)
+    companyMember: Company[]
 
     @OneToMany(() => Request, request => request.requestUser)
     requests: Request[];

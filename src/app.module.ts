@@ -35,6 +35,7 @@ import { WorkFlowModule } from './work-flow/work-flow.module';
             database: process.env.POSTGRES_DATABASE,
             synchronize: false,// true only for course with out migration
             autoLoadEntities: true,
+            // ssl: { rejectUnauthorized: false },for  connect to render
         }),
         UserModule,
         AuthModule,
