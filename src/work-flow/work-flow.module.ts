@@ -16,8 +16,8 @@ import {ConfigModule, ConfigService} from '@nestjs/config';
     providers: [WorkFlowService],
     imports: [
         QuizzModule,
-        ConfigModule,
         TypeOrmModule.forFeature([PassedQuiz, AvgRating, GeneralRating]),
+        ConfigModule,
         RedisModule.forRootAsync({
             useFactory: async (configService: ConfigService) => ({
                 readyLog: true,
