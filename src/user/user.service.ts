@@ -60,7 +60,8 @@ export class UserService {
     async getUserByEmailWithAuth(email: string): Promise<User | null> {
         return this.usersRepository.findOne({
             where: {email},
-            relations: ['auth']
+            relations: ['auth'],
+            select: ['id', 'firstName', 'email', 'password']
         });
     }
 

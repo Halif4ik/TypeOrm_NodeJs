@@ -17,7 +17,7 @@ import {PassedQuiz} from "./entities/passedQuiz.entity";
 import {Question} from "../quizz/entities/question.entity";
 import {Answers} from "../quizz/entities/answers.entity";
 import {AvgRating} from "./entities/averageRating.entity";
-import {GeneralRating} from "./entities/avgRatingAll.entity";
+import {GeneralRating} from "./entities/generalRating.entity";
 import {RedisService} from "@songkeys/nestjs-redis";
 import Redis, {Command} from 'ioredis';
 import {Quiz} from "../quizz/entities/quizz.entity";

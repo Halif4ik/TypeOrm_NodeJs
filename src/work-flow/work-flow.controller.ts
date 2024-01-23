@@ -57,16 +57,16 @@ export class WorkFlowController {
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     async exportQuiz(@UserDec() userFromGuard: User, @Query() getRedisQuizDto: GetRedisQuizDto,
                      @Res({passthrough: true}) res: Response): Promise<StreamableFile> {
-        const fileResponse: FileResponse  = await this.workFlowService.exportQuizDataFromRedis(userFromGuard, getRedisQuizDto);
-            res.set(fileResponse.header);
-            return new StreamableFile(Readable.from([fileResponse.data]));
+        const fileResponse: FileResponse = await this.workFlowService.exportQuizDataFromRedis(userFromGuard, getRedisQuizDto);
+        res.set(fileResponse.header);
+        return new StreamableFile(Readable.from([fileResponse.data]));
     }
 
     //4. Endpoint: Get /work-flow/export-user?format=csv&userId=6&companyId=1
     //  Permissions: Admin or owner of the company
     @Get('/export-user')
     @Roles(UserRole.ADMIN)
-   @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
+    @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
     async exportUser(@UserDec() userFromGuard: User, @Query() getRedisAllQuizDto: GetRedisAllQuizDto,
                      @Res({passthrough: true}) res: Response): Promise<StreamableFile> {

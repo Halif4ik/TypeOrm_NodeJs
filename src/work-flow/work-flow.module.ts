@@ -7,7 +7,7 @@ import {PassportModule} from '@nestjs/passport';
 import {PassedQuiz} from './entities/passedQuiz.entity';
 import {QuizzModule} from '../quizz/quizz.module';
 import {AvgRating} from './entities/averageRating.entity';
-import {GeneralRating} from './entities/avgRatingAll.entity';
+import {GeneralRating} from './entities/generalRating.entity';
 import {RedisModule} from '@songkeys/nestjs-redis';
 import {ConfigModule, ConfigService} from '@nestjs/config';
 

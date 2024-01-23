@@ -27,7 +27,7 @@ export class User {
     @Column({type: "varchar", width: 255, unique: true})
     email: string;
     /*, select: false */
-    @Column({type: "varchar", width: 20})
+    @Column({type: "varchar", width: 20, select: false})
     password: string;
 
     @Column({default: true})
