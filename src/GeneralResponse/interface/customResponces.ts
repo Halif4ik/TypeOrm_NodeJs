@@ -34,6 +34,10 @@ export type TGeneralRating = {
     "general-rating": GeneralRating;
 }
 
+export type TAvgRating = {
+    "avg-rating": AvgRating[];
+}
+
 export type TInviteForResponse = Omit<Invite, 'deleteAt' | 'ownerUser' | 'targetUser'> & {
     ownerUser: TUserForResponse;
     targetUser: TUserForResponse;
@@ -112,6 +116,7 @@ export interface IDeleted {
     "removedUser"?: null
     "quiz"?: number
 }
+
 export  type FileResponse = {
     header: {
         'Content-Type': string,

@@ -11,7 +11,7 @@ import {AvgRating} from "../work-flow/entities/averageRating.entity";
 import {RedisService} from "@songkeys/nestjs-redis";
 import {ConfigService} from "@nestjs/config";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {TGeneralRating} from "../GeneralResponse/interface/customResponces";
+import {TAvgRating, TGeneralRating} from "../GeneralResponse/interface/customResponces";
 
 @Injectable()
 export class AnaliticService {
@@ -19,6 +19,7 @@ export class AnaliticService {
 
     constructor(private quizService: QuizService,
                 @InjectRepository(GeneralRating) private generalRatingRepository: Repository<GeneralRating>,
+                @InjectRepository(AvgRating) private avgRatingRepository: Repository<AvgRating>,
                 private readonly configService: ConfigService,
     ) {
     }
@@ -39,5 +40,23 @@ export class AnaliticService {
             "result": "found"
         };
 
+    }
+
+    async getAvgRating(userFromGuard: User): Promise<GeneralResponse<TAvgRating>> {
+        const avgRating: AvgRating[] = await this.avgRatingRepository.find({
+            where: {
+                user: {id: userFromGuard.id},
+            },
+            relations: ['passedCompany', 'passedQuiz']
+        });
+        if (!avgRating) throw new HttpException("Avg rating didnt create", HttpStatus.NOT_FOUND)
+
+        return {
+            "status_code": HttpStatus.OK,
+            "detail": {
+                "avg-rating": avgRating,
+            },
+            "result": "found"
+        };
     }
 }

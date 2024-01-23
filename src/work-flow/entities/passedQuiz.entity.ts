@@ -28,7 +28,6 @@ export class PassedQuiz {
 
     @ManyToOne(() => User, user => user.passedQuiz, {
         onDelete: 'CASCADE',
-        eager: true
     })
     @JoinColumn()
     user: User;
