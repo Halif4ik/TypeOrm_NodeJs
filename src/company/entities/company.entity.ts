@@ -1,6 +1,13 @@
 import {
-    Column, DeleteDateColumn, Entity, JoinColumn, JoinTable, ManyToMany,
-    ManyToOne, OneToMany, PrimaryGeneratedColumn
+    Column,
+    DeleteDateColumn,
+    Entity,
+    JoinColumn,
+    JoinTable,
+    ManyToMany,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn
 } from "typeorm";
 import {User} from "../../user/entities/user.entity";
 import {Invite} from "../../invite/entities/invite.entity";
@@ -26,7 +33,7 @@ export class Company {
 
     @ManyToOne(() => User, user => user.company, {
         onDelete: 'CASCADE',
-        eager: true
+       /* eager: true*/
     })
     @JoinColumn({name: "ownerId"})
     owner: User;

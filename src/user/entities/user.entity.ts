@@ -1,13 +1,4 @@
-import {
-    Entity,
-    Column,
-    PrimaryGeneratedColumn,
-    OneToOne,
-    OneToMany,
-    ManyToOne,
-    DeleteDateColumn,
-    ManyToMany
-} from 'typeorm';
+import {Column, DeleteDateColumn, Entity, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {Auth} from "../../auth/entities/auth.entity";
 import {Company} from "../../company/entities/company.entity";
 import {Invite} from "../../invite/entities/invite.entity";
@@ -63,7 +54,7 @@ export class User {
     passedQuiz: PassedQuiz[];
 
     @OneToMany(() => AvgRating, avgRating => avgRating.user)
-    averageRating: PassedQuiz[];
+    averageRating: AvgRating[];
 
 
 }
