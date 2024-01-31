@@ -1,29 +1,22 @@
-import {HttpException, HttpStatus, Injectable, Logger} from "@nestjs/common";
+import {HttpException, HttpStatus, Injectable} from "@nestjs/common";
 import {User} from "../user/entities/user.entity";
 import {GeneralRating} from "../work-flow/entities/generalRating.entity";
-import {QuizService} from "../quizz/quizService";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
 import {AvgRating} from "../work-flow/entities/averageRating.entity";
-import {ConfigService} from "@nestjs/config";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {IAllMembers, IUserInfo, TAvgRating, TGeneralRating,} from "../GeneralResponse/interface/customResponces";
-import {CompanyService} from "../company/company.service";
 import {UserService} from "../user/user.service";
 import {Company} from "../company/entities/company.entity";
 import {UserAndCompanyIdDto} from "../quizz/dto/update-quizz.dto";
 
 @Injectable()
 export class AnaliticService {
-   private readonly logger: Logger = new Logger(AnaliticService.name);
 
    constructor(
-       private quizService: QuizService,
        @InjectRepository(GeneralRating) private generalRatingRepository: Repository<GeneralRating>,
        @InjectRepository(AvgRating) private avgRatingRepository: Repository<AvgRating>,
-       private companyService: CompanyService,
        private userService: UserService,
-       private readonly configService: ConfigService,
    ) {
    }
 
@@ -83,7 +76,7 @@ export class AnaliticService {
       };
    }
 
-   async getUserAvgRating( userAndCompanyIdDto: UserAndCompanyIdDto): Promise<GeneralResponse<IUserInfo>> {
+   async getUserAvgRating(userAndCompanyIdDto: UserAndCompanyIdDto): Promise<GeneralResponse<IUserInfo>> {
       const currentUser: User = await this.userService.getUserByIdWithAvg(userAndCompanyIdDto.userId, userAndCompanyIdDto.companyId);
       if (!currentUser) throw new HttpException('User not found in this company', HttpStatus.NOT_FOUND);
       return {
@@ -95,17 +88,24 @@ export class AnaliticService {
       };
    }
 
-   async getUsersByCompany(companyId: number):Promise<GeneralResponse<any>> {
-      const currentUser = await this.companyService.getUsersWithAvg(companyId);
-      console.log('currentUser-',currentUser);
-      if (!currentUser) throw new HttpException('Users not found in this company', HttpStatus.NOT_FOUND);
+   async getUsersByCompany(companyId: number): Promise<GeneralResponse<TAvgRating>> {
+      const avgUsersCompany: AvgRating[] = await this.avgRatingRepository.find({
+         where: {
+            passedCompany: {id: companyId},
+         },
+         relations: ["user", "passedQuiz"]
+      });
+
+      if (!avgUsersCompany.length) throw new HttpException('Users not found in this company', HttpStatus.NOT_FOUND);
 
       return {
          status_code: HttpStatus.OK,
          detail: {
-            "members": currentUser,
+            "avg-rating": avgUsersCompany,
          },
          result: "found",
       };
    }
+
+
 }

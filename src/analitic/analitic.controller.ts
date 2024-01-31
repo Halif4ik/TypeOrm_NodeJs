@@ -58,7 +58,7 @@ export class AnaliticController {
    @Get("/users")
    @UseGuards(AuthGuard(["auth0", "jwt-auth"]), JwtRoleAdminGuard)
    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-   getUsers(@Query() companyIdDto: AdditionalUpdateQuizCompanyId,): Promise<GeneralResponse<any>> {
+   getUsers(@Query() companyIdDto: AdditionalUpdateQuizCompanyId,): Promise<GeneralResponse<TAvgRating>> {
       return this.analiticService.getUsersByCompany(companyIdDto.companyId);
    }
 

@@ -196,14 +196,4 @@ export class CompanyService {
       };
    }
 
-/*todo*/
-   async getUsersWithAvg(companyId: number): Promise<Company[]> {
-      return this.companyRepository.find({
-         where: {
-            id: companyId,
-            passedCompany: {id: companyId},
-         },
-         relations: ['members', 'members.averageRating', 'members.averageRating.passedCompany']
-      });
-   }
 }
