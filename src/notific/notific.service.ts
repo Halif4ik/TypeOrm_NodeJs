@@ -12,7 +12,6 @@ export class NotificService {
 
    constructor(
        @InjectRepository(Notific) private readonly notificRepository: Repository<Notific>,
-       @InjectRepository(Company) private readonly companyRepository: Repository<Company>,
        private readonly configService: ConfigService,
    ) {
    }
@@ -55,4 +54,12 @@ export class NotificService {
    }
 
 
+   async markNotificationAsRead(notificationId: number): Promise<Notific> {
+      const notification: Notific = await this.notificRepository.findOne({where: {id: notificationId}});
+      if (!notification) throw new NotFoundException('Notification not found');
+
+      notification.statusWatched = true;
+      this.logger.log(`Marking notification:${notification.id} as watched`);
+      return this.notificRepository.save(notification);
+   }
 }

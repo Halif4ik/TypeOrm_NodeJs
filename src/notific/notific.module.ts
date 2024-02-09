@@ -6,17 +6,15 @@ import {TypeOrmModule} from "@nestjs/typeorm";
 import {JwtModule} from "@nestjs/jwt";
 import {PassportModule} from "@nestjs/passport";
 import {Notific} from "./entities/notific.entity";
-import {Company} from "../company/entities/company.entity";
-import {User} from "../user/entities/user.entity";
-import {Quiz} from "../quizz/entities/quizz.entity";
-import {PassedQuiz} from "../work-flow/entities/passedQuiz.entity";
+import {UserModule} from "../user/user.module";
 
 @Module({
   controllers: [NotificController],
   providers: [NotificService],
   imports: [
+    UserModule,
     ConfigModule,
-    TypeOrmModule.forFeature([Notific,Company,User,Quiz,PassedQuiz]),
+    TypeOrmModule.forFeature([Notific]),
     JwtModule,
     PassportModule,
   ],
