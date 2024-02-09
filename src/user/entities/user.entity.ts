@@ -6,6 +6,7 @@ import {Request} from "../../reqests/entities/reqest.entity";
 import {Role} from "../../roles/entities/role.entity";
 import {PassedQuiz} from "../../work-flow/entities/passedQuiz.entity";
 import {AvgRating} from "../../work-flow/entities/averageRating.entity";
+import {Notific} from "../../notific/entities/notific.entity";
 
 @Entity()
 export class User {
@@ -56,5 +57,7 @@ export class User {
     @OneToMany(() => AvgRating, avgRating => avgRating.user)
     averageRating: AvgRating[];
 
+    @OneToMany(() => Notific, notific => notific.user)
+    notific: Notific[];
 
 }

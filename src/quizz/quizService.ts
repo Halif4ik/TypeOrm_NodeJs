@@ -5,7 +5,7 @@ import {Repository} from "typeorm";
 import {Quiz} from "./entities/quizz.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {IDeleted, TQuestion, TQuiz, TQuizForResponse} from "../GeneralResponse/interface/customResponces";
+import {IDeleted, TQuiz, TQuizForResponse} from "../GeneralResponse/interface/customResponces";
 import {Answers} from "./entities/answers.entity";
 import {Question} from "./entities/question.entity";
 import {QuestionDto} from "./dto/question.dto";
@@ -15,6 +15,7 @@ import {UpdateQuizDto} from "./dto/update-quizz.dto";
 import * as process from "process";
 import {PaginationsQuizDto} from "./dto/pagination-quiz.dto";
 import {DeleteQuizDto} from "./dto/delete-quiz.dto";
+import {NotificService} from "../notific/notific.service";
 
 @Injectable()
 export class QuizService {
@@ -22,7 +23,8 @@ export class QuizService {
 
     constructor(@InjectRepository(Quiz) private quizRepository: Repository<Quiz>,
                 @InjectRepository(Answers) private answersRepository: Repository<Answers>,
-                @InjectRepository(Question) private questionRepository: Repository<Question>) {
+                @InjectRepository(Question) private questionRepository: Repository<Question>,
+                private readonly notificService: NotificService,) {
     }
 
     async createQuiz(userFromGuard: User, createQuizDto: CreateQuizDto, companyFromGuard: Company): Promise<GeneralResponse<TQuiz>> {
@@ -61,7 +63,9 @@ export class QuizService {
             await this.questionRepository.save(savedNewQuestion);
         }
 
-        this.logger.log(`User ${userFromGuard.email} created quiz ${createQuizDto}`);
+        await this.notificService.createNotificationForCompany(companyFromGuard, savedQuiz.description);
+
+        this.logger.log(`User ${userFromGuard.email} created quiz ${savedQuiz.id}`);
         const quizResponseCuted: TQuizForResponse = {
             description: savedQuiz.description,
             frequencyInDay: savedQuiz.frequencyInDay,

@@ -75,7 +75,8 @@ export class UserService {
    async getUserByIdCompTargInviteRole(id: number): Promise<User | null> {
       return this.usersRepository.findOne({
          where: {id,},
-         relations: ['company', 'company.quiz', 'targetForInvite', 'requests', 'roles', 'roles.company', 'companyMember']
+         relations: ['company', 'company.quiz', 'targetForInvite', 'requests', 'roles', 'roles.company', 'companyMember',
+            'company.members']
       });
    }
 

@@ -45,7 +45,7 @@ export type TInviteForResponse = Omit<Invite, 'deleteAt' | 'ownerUser' | 'target
 
 export type TUserForResponse =
     Omit<User, 'password' | 'deleteAt' | 'auth' | 'company' | 'invite' | 'targetForInvite' |
-        'companyMember' | 'requests' | 'roles' | 'passedQuiz' | 'averageRating' | 'isActive'>
+        'companyMember' | 'requests' | 'roles' | 'passedQuiz' | 'averageRating' | 'isActive'| 'notific'>
 
 export type TCompanyForResponse = Omit<Company, 'deleteAt' | 'owner' | 'members' | 'invites' |
     'quiz' | 'roles' | 'requests' | 'averageRating'>
@@ -123,4 +123,12 @@ export  type FileResponse = {
         'Content-Disposition': string,
     },
     data: string
+}
+
+export type TJwtBody = {
+    id: number,
+    "email": string,
+    "firstName": string,
+    iat?: number,
+    exp?: number
 }

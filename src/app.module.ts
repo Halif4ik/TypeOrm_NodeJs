@@ -1,22 +1,27 @@
 import {GenRespController} from "./GeneralResponse/gen-resp.controller";
 import {Module} from "@nestjs/common";
-import { RedisModule } from 'nestjs-redis';
 import {GenRespService} from "./GeneralResponse/gen-resp.service";
 import {TypeOrmModule} from '@nestjs/typeorm';
 import {ConfigModule} from "@nestjs/config";
 import {UserModule} from './user/user.module';
 import {AuthModule} from './auth/auth.module';
-import { CompanyModule } from './company/company.module';
-import { InviteModule } from './invite/invite.module';
-import { RequestsModule } from './reqests/requestsModule';
-import { RolesModule } from './roles/roles.module';
-import { QuizzModule } from './quizz/quizz.module';
-import { WorkFlowModule } from './work-flow/work-flow.module';
-import { AnaliticModule } from './analitic/analitic.module';
+import {CompanyModule} from './company/company.module';
+import {InviteModule} from './invite/invite.module';
+import {RequestsModule} from './reqests/requestsModule';
+import {RolesModule} from './roles/roles.module';
+import {QuizzModule} from './quizz/quizz.module';
+import {WorkFlowModule} from './work-flow/work-flow.module';
+import {AnaliticModule} from './analitic/analitic.module';
+import {NotificModule} from './notific/notific.module';
+import {TransformResponseInterceptor} from "./interceptor/response.interceptor";
+import {APP_INTERCEPTOR} from "@nestjs/core";
 
 @Module({
     controllers: [GenRespController],
-    providers: [GenRespService],
+    providers: [GenRespService,{
+        provide: APP_INTERCEPTOR,
+        useClass: TransformResponseInterceptor,
+    },],
     imports: [
         ConfigModule.forRoot({
             envFilePath: `.env`,
@@ -47,6 +52,7 @@ import { AnaliticModule } from './analitic/analitic.module';
         QuizzModule,
         WorkFlowModule,
         AnaliticModule,
+        NotificModule,
     ],
 })
 export class AppModule {

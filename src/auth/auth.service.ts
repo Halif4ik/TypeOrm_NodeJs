@@ -10,7 +10,7 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {LoginUserDto} from "./dto/login-auth.dto";
 import * as process from "process";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {IRespAuth, IUserInfo} from "../GeneralResponse/interface/customResponces";
+import {IRespAuth, IUserInfo, TJwtBody} from "../GeneralResponse/interface/customResponces";
 
 
 @Injectable()
@@ -67,21 +67,18 @@ export class AuthService {
 
     private async containOrRefreshTokenAuthBd(userFromBd: User): Promise<Auth> {
         let authData: Auth | undefined = userFromBd.auth;
-        const action_token: string = this.jwtService.sign({
+        const jwtBody: TJwtBody = {
             email: userFromBd.email,
             id: userFromBd.id,
             firstName: userFromBd.firstName,
-        }, {expiresIn: process.env.EXPIRE_ACTION, secret: process.env.SECRET_ACTION});
-        const refreshToken: string = this.jwtService.sign({
-            email: userFromBd.email,
-            id: userFromBd.id,
-            firstName: userFromBd.firstName,
-        }, {expiresIn: process.env.EXPIRE_REFRESH, secret: process.env.SECRET_REFRESH});
-        const accessToken: string = this.jwtService.sign({
-            email: userFromBd.email,
-            id: userFromBd.id,
-            firstName: userFromBd.firstName,
-        }, {expiresIn: +process.env.EXPIRE_ACCESS, secret: process.env.SECRET_ACCESS});
+        }
+        const action_token: string = this.jwtService.sign(jwtBody,
+            {expiresIn: process.env.EXPIRE_ACTION, secret: process.env.SECRET_ACTION});
+        const refreshToken: string = this.jwtService.sign(jwtBody,
+            {expiresIn: process.env.EXPIRE_REFRESH, secret: process.env.SECRET_REFRESH});
+        const accessToken: string = this.jwtService.sign(jwtBody,
+            {expiresIn: +process.env.EXPIRE_ACCESS, secret: process.env.SECRET_ACCESS});
+
         let authUserDataSave: Auth;
         if (authData) {
             authData.refreshToken = refreshToken;

@@ -5,14 +5,14 @@ import {ROLE_KEY} from "./role-auth-decor";
 import {Role} from "../roles/entities/role.entity";
 import {Company} from "../company/entities/company.entity";
 import {Quiz} from "../quizz/entities/quizz.entity";
-import {InjectRepository} from "@nestjs/typeorm";
-import {Repository} from "typeorm";
 import {QuizService} from "../quizz/quizService";
+import {UserService} from "../user/user.service";
 
 @Injectable()
 export class JwtRoleAdminGuard implements CanActivate {
     constructor(private reflector: Reflector,
-                private readonly quizService: QuizService) {
+                private readonly quizService: QuizService,
+                private readonly userService: UserService) {
     }
 
     /*decode with Key word for refreshToken*/
@@ -25,12 +25,14 @@ export class JwtRoleAdminGuard implements CanActivate {
                 context.getClass(),
             ]);
             /*we made verify in strategy */
-            const userFromJwt: User | null = req.user;
+            const userFromJwt2: User | null = req.user;
+            const userFromJwt: User | null =  await this.userService.getUserByIdCompTargInviteRole(req.user.id)
+            console.log('userFromJwt',userFromJwt);
             /*if for Post*/  /* ||if for Get*/
             let companyIdFromRequest: number | undefined = +req?.body?.companyId || +req?.query?.companyId;
             /* if empty body and query for Del case*/
             if (!companyIdFromRequest) {
-                const quizId: number | null  = parseInt(req.query.quizId);
+                const quizId: number | null  = parseInt(req.query.quizId); /*todo test*/
                 if (isNaN(quizId))
                     throw new UnauthorizedException({message: "Quiz ID is not a number or not present in query"});
                 const targetQuiz: Quiz | null = await this.quizService.findQuizById(quizId);
@@ -56,6 +58,7 @@ export class JwtRoleAdminGuard implements CanActivate {
             const isCompanyOwner: Company = userFromJwt.company.find((company: Company) => company.id === companyIdFromRequest);
             if (!isCompanyOwner)
                 throw new UnauthorizedException({message: "User is not the OWNER and isn't Admin in the company related to the quiz"});
+            console.log('isCompanyOwner-',isCompanyOwner);
             req.company = isCompanyOwner;
             return true;
         } catch (e) {

@@ -270,11 +270,9 @@ export class WorkFlowService {
       await this.generalRatingRepository.save(generalRating);
       return avgRateUser;
    }
+   
 
-   async start(
-       userFromGuard: User,
-       quizId: number,
-   ): Promise<GeneralResponse<TPassedQuiz>> {
+   async start(userFromGuard: User, quizId: number,): Promise<GeneralResponse<TPassedQuiz>> {
       const quizForStartFlow: Quiz =
           await this.quizService.findQuizByIdQuestion(quizId);
       if (!quizForStartFlow)
@@ -364,10 +362,7 @@ export class WorkFlowService {
       };
    }
 
-   async exportQuizDataFromRedis(
-       userFromGuard: User,
-       getRedisQuizDto: GetRedisQuizDto,
-   ): Promise<FileResponse> {
+   async exportQuizDataFromRedis(userFromGuard: User, getRedisQuizDto: GetRedisQuizDto,): Promise<FileResponse> {
       const redisKey: string = `startedQuiz:${userFromGuard.id}:${getRedisQuizDto.quizId}`;
       const cachedData: string | null = await this.getQuizFromRedis(redisKey);
       if (!cachedData)

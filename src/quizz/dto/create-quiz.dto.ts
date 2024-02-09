@@ -5,7 +5,7 @@ import {Transform, Type} from "class-transformer";
 export class CreateQuizDto {
     @IsString({message: 'description should be string'})
     @IsNotEmpty()
-    @Length(4, 500,{ message:'description Min length 4 max length 500'})
+    @Length(3, 500,{ message:'description Min length 3 max length 500'})
     readonly description: string;
 
     @Transform(({value}) => isNaN(parseInt(value)) ? 0 : parseInt(value),)

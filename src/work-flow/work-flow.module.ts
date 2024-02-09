@@ -10,11 +10,13 @@ import {AvgRating} from './entities/averageRating.entity';
 import {GeneralRating} from './entities/generalRating.entity';
 import {RedisModule} from '@songkeys/nestjs-redis';
 import {ConfigModule, ConfigService} from '@nestjs/config';
+import {UserModule} from "../user/user.module";
 
 @Module({
     controllers: [WorkFlowController],
     providers: [WorkFlowService],
     imports: [
+        UserModule,
         QuizzModule,
         ConfigModule,
         TypeOrmModule.forFeature([PassedQuiz, AvgRating, GeneralRating]),

@@ -1,5 +1,5 @@
 import {Transform} from "class-transformer";
-import {IsArray, IsNotEmpty, IsNumber, Min, MinLength} from "class-validator";
+import {IsArray, IsNotEmpty, IsNumber, Min} from "class-validator";
 
 export class CreateWorkFlowDto {
     @Transform(({value}) => isNaN(parseInt(value)) ? 0 : parseInt(value),)
@@ -26,4 +26,5 @@ export class CreateWorkFlowDto {
     })
     @IsArray({message: 'questions should be array with objects'})
     readonly questions: [{ id: number, userAnswer: string }];
+
 }

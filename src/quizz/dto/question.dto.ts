@@ -1,11 +1,11 @@
-import {IsNotEmpty, IsNumber, IsOptional, IsString, Length, Min, ValidateNested} from "class-validator";
+import {IsNotEmpty, IsString, Length, ValidateNested} from "class-validator";
 import {AnswerDto} from "./answer.dto";
 import {Type} from "class-transformer";
 
 export class QuestionDto {
     @IsString({message: 'Question should be string'})
     @IsNotEmpty()
-    @Length(4, 500,{ message:'Question Min length 4 max length 500'})
+    @Length(3, 500,{ message:'Question Min length 3 max length 500'})
     questionText: string;
 
     @IsString({message: 'rightAnswer should be string'})

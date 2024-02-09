@@ -9,6 +9,7 @@ yarn install
 
 nest start --watch
 ```
+## Docker
 If you would like start this app in Docker make next steps:
 ```
 docker build -t health-check-img . 
@@ -25,6 +26,8 @@ For run application in Docker Compose with database execute next command:
 ```
 docker compose up
 ```
+## TypeOrm
+### Migration Creation:
 For migration i added dotenv packedje to  typeorm.config.ts
 For create empty migration for handler contains execute next command:
 ```
