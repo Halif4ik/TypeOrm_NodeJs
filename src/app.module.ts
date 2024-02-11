@@ -15,6 +15,7 @@ import {AnaliticModule} from './analitic/analitic.module';
 import {NotificModule} from './notific/notific.module';
 import {TransformResponseInterceptor} from "./interceptor/response.interceptor";
 import {APP_INTERCEPTOR} from "@nestjs/core";
+import {ScheduleModule} from "@nestjs/schedule";
 
 @Module({
     controllers: [GenRespController],
@@ -23,6 +24,7 @@ import {APP_INTERCEPTOR} from "@nestjs/core";
         useClass: TransformResponseInterceptor,
     },],
     imports: [
+        ScheduleModule.forRoot(), /*cron*/
         ConfigModule.forRoot({
             envFilePath: `.env`,
             isGlobal: true,
