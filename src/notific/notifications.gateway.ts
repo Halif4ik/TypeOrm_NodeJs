@@ -5,23 +5,25 @@ import {User} from "../user/entities/user.entity";
 
 @WebSocketGateway()
 export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private authService: AuthService) {}
-  @WebSocketServer() server: Server;
-  async handleConnection(client: Socket) {
-    try {
-      const user: User = await this.authService.validateUserByToken(client.request.headers.authorization);
-      await client.join(user.id.toString());
-    } catch (error: Error | any) {
-      client.emit('error', 'unauthorized');
-      client.disconnect();
-    }
-  }
+   constructor(private authService: AuthService) {
+   }
 
-  async handleDisconnect(client: Socket) {
-    await client.leave(client.nsp.name);
-  }
+   @WebSocketServer() server: Server;
+   async handleConnection(client: Socket): Promise<void> {
+      try {
+         const user: User = await this.authService.validateUserByToken(client.request.headers.authorization);
+         await client.join(user.id.toString());
+      } catch (error: Error | any) {
+         client.emit('error', 'unauthorized');
+         client.disconnect();
+      }
+   }
 
-  async sendNotificationToUser(userId: number, message: string): Promise<void> {
-    this.server.to(`${userId}`).emit('notification', message);
-  }
+   async handleDisconnect(client: Socket): Promise<void> {
+      await client.leave(client.nsp.name);
+   }
+
+   async sendNotificationToUser(userId: number, message: string): Promise<void> {
+      this.server.to(`${userId}`).emit('notification', message);
+   }
 }

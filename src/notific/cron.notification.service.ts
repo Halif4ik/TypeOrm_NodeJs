@@ -10,7 +10,7 @@ import {PassedQuiz} from "../work-flow/entities/passedQuiz.entity";
 
 @Injectable()
 export class CronNotificationService {
-   private readonly logger = new Logger(CronNotificationService.name);
+   private readonly logger: Logger = new Logger(CronNotificationService.name);
 
    constructor(
        private readonly notificationsGateway: NotificationsGateway,
@@ -27,7 +27,7 @@ export class CronNotificationService {
    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
    async sendQuizNotifications() {
       this.logger.log('Cron job started');
-      const users = await this.userRepository.find();
+      const users: User[] = await this.userRepository.find();
       for (const user of users) {
          await this.checkAndSendNotifications(user);
       }
@@ -35,25 +35,24 @@ export class CronNotificationService {
    }
 
    private async checkAndSendNotifications(user: User): Promise<void> {
-      const quizResults = await this.quizResultRepository.find({
+      const quizPassed: PassedQuiz[] = await this.quizResultRepository.find({
          where: {user: {id: user.id}},
          relations: ['targetQuiz'],
       });
-      for (const quizResult of quizResults) {
-         const quiz = quizResult.targetQuiz;
-         const lastQuizDate = quizResult.updateAt;
-         const nextQuizDate = new Date(lastQuizDate);
-         nextQuizDate.setDate(nextQuizDate.getDate() + quiz.frequencyInDay);
-         const currentDate = new Date();
-         if (currentDate > nextQuizDate && !(await this.notificationAlreadySent(user, quiz))) {
-            await this.sendNotification(user, quiz);
-         }
+      for (const oneQuizPassed of quizPassed) {
+         const targetQuiz: Quiz = oneQuizPassed.targetQuiz;
+         const lastQuizDate: Date = oneQuizPassed.updateAt;
+         const nextQuizDate: Date = new Date(lastQuizDate);
+         nextQuizDate.setDate(nextQuizDate.getDate() + targetQuiz.frequencyInDay);
+         const currentDate: Date = new Date();
+         if (currentDate > nextQuizDate && !(await this.notificationAlreadySent(user, targetQuiz)))
+            await this.sendNotification(user, targetQuiz);
       }
    }
 
    private async sendNotification(user: User, quiz: Quiz): Promise<void> {
-      const notificationText = `Не забудьте пройти тест "${quiz.description}"!`;
-      const notification = this.notificationRepository.create({
+      const notificationText: string = `Не забудьте пройти тест "${quiz.description}"!`;
+      const notification: Notific = this.notificationRepository.create({
          user,
          textNotification: notificationText,
          time: new Date(),
@@ -64,7 +63,7 @@ export class CronNotificationService {
    }
 
    private async notificationAlreadySent(user: User, quiz: Quiz): Promise<boolean> {
-      const existingNotification = await this.notificationRepository.findOne({
+      const existingNotification: Notific | null = await this.notificationRepository.findOne({
          where: {
             user: {id: user.id},
             statusWatched: true,

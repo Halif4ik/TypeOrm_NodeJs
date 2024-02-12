@@ -17,9 +17,7 @@ export class NotificService {
    }
 
    async createNotificationForCompany(company: Company, text: string): Promise<void> {
-      if (!company.members || !company.members.length) {
-         throw new NotFoundException('Company members not found');
-      }
+      if (!company.members || !company.members.length) throw new NotFoundException('Company members not found');
 
       const notificationsForMembers: Notific[] = company.members.map((member: User) => {
          return this.notificRepository.create({
