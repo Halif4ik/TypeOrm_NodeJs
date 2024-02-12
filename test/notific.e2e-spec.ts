@@ -1,7 +1,7 @@
 import {Test, TestingModule} from '@nestjs/testing';
 import {INestApplication} from '@nestjs/common';
 import * as request from 'supertest';
-import {AppModule} from './../src/app.module';
+import {AppModule} from '../src/app.module';
 import {CreateQuizDto} from "../src/quizz/dto/create-quiz.dto";
 import * as dotenv from 'dotenv';
 import * as process from "process";
@@ -76,6 +76,14 @@ describe('AppController (e2e)', () => {
           .set('Authorization', `Bearer ${configService.get<string>('TOKEN_ADMIN_TEST')}`);
       expect(response.status).toBe(200);
       expect(response.body.detail.quiz).toEqual(createdIdForTest);
+   });
+
+   it('/quiz/delete?quizId=41 (DELETE) - FAIL', async (): Promise<void> => {
+      const response = await request(app.getHttpServer())
+          .delete(`/quiz/delete?quizId=${createdIdForTest}`)
+          .set('Authorization', `Bearer ${configService.get<string>('TOKEN_ADMIN_TEST')}`);
+      expect(response.status).toBe(401);
+      expect(response.body["message"]).toEqual('Quiz not found when we thy authorize user by company');
    });
 
    afterAll(async (): Promise<void> => {

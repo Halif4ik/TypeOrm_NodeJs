@@ -154,7 +154,7 @@ export class QuizService {
             where: {id: quizDeleteDTO.quizId}
         });
 
-        if (!quizToDelete) throw new HttpException("Quiz not found", HttpStatus.BAD_REQUEST);
+        if (!quizToDelete) throw new HttpException("Quiz not found2", HttpStatus.NO_CONTENT);
 
         await this.quizRepository.softDelete(quizToDelete.id);
         this.logger.log(`User ${userFromGuard.email} deleted quiz ${quizToDelete}`);

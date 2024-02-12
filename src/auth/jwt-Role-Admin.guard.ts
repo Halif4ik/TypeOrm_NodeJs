@@ -35,7 +35,7 @@ export class JwtRoleAdminGuard implements CanActivate {
                 if (isNaN(quizId))
                     throw new UnauthorizedException({message: "Quiz ID is not a number or not present in query"});
                 const targetQuiz: Quiz | null = await this.quizService.findQuizById(quizId);
-                if (!targetQuiz) throw new UnauthorizedException({message: "Quiz not found"});
+                if (!targetQuiz) throw new UnauthorizedException({message: "Quiz not found when we thy authorize user by company"});
                 companyIdFromRequest = targetQuiz.company.id;
             }
 
