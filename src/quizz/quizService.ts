@@ -73,7 +73,7 @@ export class QuizService {
         }
 
         return {
-            "status_code": HttpStatus.OK,
+            "status_code": HttpStatus.CREATED,
             "detail": {
                 "quiz": quizResponseCuted,
             },

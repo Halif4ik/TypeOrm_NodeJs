@@ -17,8 +17,6 @@ export class NotificService {
    }
 
    async createNotificationForCompany(company: Company, text: string): Promise<void> {
-      console.log('company-', company);
-      console.log('text-', text);
       if (!company.members || !company.members.length) {
          throw new NotFoundException('Company members not found');
       }

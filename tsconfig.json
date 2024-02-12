@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["node", "typeorm"],
+    "types": ["node", "typeorm","jest"],
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
@@ -13,8 +13,8 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
+    "strictNullChecks": false, // Enable strict null checks
+    "noImplicitAny": false,     // Enable no implicit any true
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false

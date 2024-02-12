@@ -1,15 +1,4 @@
-import {
-    Controller,
-    Get,
-    Post,
-    Body,
-    Patch,
-    Delete,
-    UseGuards,
-    UsePipes,
-    ValidationPipe,
-    Query
-} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Patch, Post, Query, UseGuards, UsePipes, ValidationPipe} from '@nestjs/common';
 import {QuizService} from './quizService';
 import {CreateQuizDto} from './dto/create-quiz.dto';
 import {Roles} from "../auth/role-auth-decor";
@@ -35,6 +24,32 @@ export class QuizzController {
     //1.Admin and Owner can create quiz
     //Endpoint: Post /quiz/create
     //Permissions: Only Admin and Owner
+    /*expect{
+    "description": "Fourth quiz",
+    "frequencyInDay": "88",
+    "companyId": "1",
+    "questions": [
+        {
+            "questionText": "capital of Efiopia",
+            "rightAnswer": "AdisAbeba",
+            "varsAnswers": [
+                {"varAnswer": "AdisAbeba"},
+                {"varAnswer": "SadisAbeda"},
+                {"varAnswer": "VstavayAbeba"}
+            ]
+        },
+        {
+            "questionText": "bigest river world",
+            "rightAnswer": "Nil",
+            "varsAnswers": [
+                {"varAnswer": "inhul"},
+                {"varAnswer": "inhuletc"},
+                {"varAnswer": "Nil"}
+            ]
+        }
+    ]
+}
+ */
     @Post('/create')
     @Roles(UserRole.ADMIN)
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)

@@ -27,7 +27,6 @@ export class JwtRoleAdminGuard implements CanActivate {
             /*we made verify in strategy */
             const userFromJwt2: User | null = req.user;
             const userFromJwt: User | null =  await this.userService.getUserByIdCompTargInviteRole(req.user.id)
-            console.log('userFromJwt',userFromJwt);
             /*if for Post*/  /* ||if for Get*/
             let companyIdFromRequest: number | undefined = +req?.body?.companyId || +req?.query?.companyId;
             /* if empty body and query for Del case*/
@@ -58,7 +57,6 @@ export class JwtRoleAdminGuard implements CanActivate {
             const isCompanyOwner: Company = userFromJwt.company.find((company: Company) => company.id === companyIdFromRequest);
             if (!isCompanyOwner)
                 throw new UnauthorizedException({message: "User is not the OWNER and isn't Admin in the company related to the quiz"});
-            console.log('isCompanyOwner-',isCompanyOwner);
             req.company = isCompanyOwner;
             return true;
         } catch (e) {
