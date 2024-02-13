@@ -7,6 +7,7 @@ import {JwtModule} from "@nestjs/jwt";
 import {PassportModule} from "@nestjs/passport";
 import {Notific} from "./entities/notific.entity";
 import {UserModule} from "../user/user.module";
+import {Company} from "../company/entities/company.entity";
 
 @Module({
   controllers: [NotificController],
@@ -14,7 +15,7 @@ import {UserModule} from "../user/user.module";
   imports: [
     UserModule,
     ConfigModule,
-    TypeOrmModule.forFeature([Notific]),
+    TypeOrmModule.forFeature([Notific,Company]),
     JwtModule,
     PassportModule,
   ],

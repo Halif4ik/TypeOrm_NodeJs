@@ -13,11 +13,16 @@ export class NotificService {
    constructor(
        @InjectRepository(Notific) private readonly notificRepository: Repository<Notific>,
        private readonly configService: ConfigService,
+       @InjectRepository(Company) private readonly companyRepository: Repository<Company>,
    ) {
    }
 
    async createNotificationForCompany(company: Company, text: string): Promise<void> {
       if (!company.members || !company.members.length) throw new NotFoundException('Company members not found');
+      company = await this.companyRepository.findOne({
+         where: {id: company.id},
+         relations: ["members"],
+      });
 
       const notificationsForMembers: Notific[] = company.members.map((member: User) => {
          return this.notificRepository.create({
