@@ -12,6 +12,7 @@ import { RequestsModule } from './reqests/requestsModule';
 import { RolesModule } from './roles/roles.module';
 import { QuizzModule } from './quizz/quizz.module';
 import { WorkFlowModule } from './work-flow/work-flow.module';
+import { AnaliticModule } from './analitic/analitic.module';
 
 @Module({
     controllers: [GenRespController],
@@ -35,6 +36,7 @@ import { WorkFlowModule } from './work-flow/work-flow.module';
             database: process.env.POSTGRES_DATABASE,
             synchronize: false,// true only for course with out migration
             autoLoadEntities: true,
+            // ssl: { rejectUnauthorized: false },for  connect to render
         }),
         UserModule,
         AuthModule,
@@ -44,6 +46,7 @@ import { WorkFlowModule } from './work-flow/work-flow.module';
         RolesModule,
         QuizzModule,
         WorkFlowModule,
+        AnaliticModule,
     ],
 })
 export class AppModule {

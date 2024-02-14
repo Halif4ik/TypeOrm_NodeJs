@@ -17,6 +17,7 @@ const AppDataSource = new DataSource({
     migrations: ["src/migrations/*.ts"],
     logging: true,
     logger: "advanced-console",
+    /*ssl: { rejectUnauthorized: false },*/
 })
 
 AppDataSource.initialize()

@@ -35,7 +35,7 @@ export class JwtRoleMemberGuard implements CanActivate {
             const companyIdFromRequest: number = targetQuiz.company.id;
 
             // Check maybe user is the member of the current company
-            if (userFromJwt?.companyMember?.id === companyIdFromRequest) return true;
+            if (userFromJwt.companyMember.some(curentComp => curentComp.id === companyIdFromRequest)) return true;
             throw new UnauthorizedException({message: "User is not the Member in the company related to the quiz"});
         } catch (e) {
             throw e;

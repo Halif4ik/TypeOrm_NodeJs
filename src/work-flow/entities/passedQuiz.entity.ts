@@ -11,7 +11,6 @@ import {
 import {User} from "../../user/entities/user.entity";
 import {Quiz} from "../../quizz/entities/quizz.entity";
 import {Answers} from "../../quizz/entities/answers.entity";
-import {AvgRating} from "./averageRating.entity";
 
 @Entity()
 export class PassedQuiz {
@@ -29,7 +28,6 @@ export class PassedQuiz {
 
     @ManyToOne(() => User, user => user.passedQuiz, {
         onDelete: 'CASCADE',
-        eager: true
     })
     @JoinColumn()
     user: User;

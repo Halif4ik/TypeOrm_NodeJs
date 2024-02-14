@@ -9,6 +9,7 @@ import {Question} from "../../quizz/entities/question.entity";
 import {PassedQuiz} from "../../work-flow/entities/passedQuiz.entity";
 import {Answers} from "../../quizz/entities/answers.entity";
 import {AvgRating} from "../../work-flow/entities/averageRating.entity";
+import {GeneralRating} from "../../work-flow/entities/generalRating.entity";
 
 export interface IRespAuth {
     "auth": Auth
@@ -28,6 +29,13 @@ export interface ICompany {
 
 export type TInvite = {
     "invite": TInviteForResponse | TInviteForResponse[]
+}
+export type TGeneralRating = {
+    "general-rating": GeneralRating;
+}
+
+export type TAvgRating = {
+    "avg-rating": AvgRating[];
 }
 
 export type TInviteForResponse = Omit<Invite, 'deleteAt' | 'ownerUser' | 'targetUser'> & {
@@ -108,6 +116,7 @@ export interface IDeleted {
     "removedUser"?: null
     "quiz"?: number
 }
+
 export  type FileResponse = {
     header: {
         'Content-Type': string,

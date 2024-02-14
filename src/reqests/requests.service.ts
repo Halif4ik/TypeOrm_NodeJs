@@ -31,6 +31,7 @@ export class RequestsService {
                 targetCompany: {id: foundCompany.id},
             },
         });
+        console.log('requestFromBd-',requestFromBd);
         if (requestFromBd) throw new HttpException("You already send request to this company", HttpStatus.BAD_REQUEST);
 
         const newRequest: Request = this.requestRepository.create({
@@ -84,7 +85,7 @@ export class RequestsService {
                     owner: owner,
                 },
             },
-            relations: ['targetCompany', 'requestUser'],
+            relations: ['targetCompany', 'requestUser','requestUser.companyMember'],
         });
 
         if (!request)

@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany, ManyToOne, DeleteDateColumn} from 'typeorm';
+import {Column, DeleteDateColumn, Entity, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {Auth} from "../../auth/entities/auth.entity";
 import {Company} from "../../company/entities/company.entity";
 import {Invite} from "../../invite/entities/invite.entity";
@@ -18,7 +18,7 @@ export class User {
     @Column({type: "varchar", width: 255, unique: true})
     email: string;
     /*, select: false */
-    @Column({type: "varchar", width: 20})
+    @Column({type: "varchar", width: 20, select: false})
     password: string;
 
     @Column({default: true})
@@ -39,8 +39,10 @@ export class User {
     @OneToMany(() => Company, company => company.owner)
     company: Company[];
 
-    @ManyToOne(() => Company, company => company.members, {onDelete: 'CASCADE'})
-    companyMember: Company;
+    /*@ManyToOne(() => Company, company => company.members, {onDelete: 'CASCADE'})
+    companyMember: Company;*/
+    @ManyToMany(() => Company, company => company.members)
+    companyMember: Company[]
 
     @OneToMany(() => Request, request => request.requestUser)
     requests: Request[];
@@ -52,7 +54,7 @@ export class User {
     passedQuiz: PassedQuiz[];
 
     @OneToMany(() => AvgRating, avgRating => avgRating.user)
-    averageRating: PassedQuiz[];
+    averageRating: AvgRating[];
 
 
 }

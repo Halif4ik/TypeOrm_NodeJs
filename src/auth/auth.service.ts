@@ -25,6 +25,7 @@ export class AuthService {
         // should rewrite all tokens return one token
         const userFromBd: User = await this.userService.getUserByEmailWithAuth(loginDto.email);
         await this.checkUserCredentials(userFromBd, loginDto);
+
         /*contain auth table */
         return {
             "status_code": HttpStatus.OK,

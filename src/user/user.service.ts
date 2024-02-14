@@ -9,159 +9,186 @@ import {CreateUserDto} from "./dto/create-user.dto";
 import {JwtService} from "@nestjs/jwt";
 import {Auth} from "../auth/entities/auth.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import { IUserInfo } from 'src/GeneralResponse/interface/customResponces';
+import {IUserInfo} from 'src/GeneralResponse/interface/customResponces';
 import {Company} from "../company/entities/company.entity";
 import {Request} from "../reqests/entities/reqest.entity";
 
 @Injectable()
 export class UserService {
-    private readonly logger: Logger = new Logger(UserService.name);
+   private readonly logger: Logger = new Logger(UserService.name);
 
-    constructor(@InjectRepository(User) private usersRepository: Repository<User>,
-                private jwtService: JwtService) {
-    }
+   constructor(@InjectRepository(User) private usersRepository: Repository<User>,
+               private jwtService: JwtService) {
+   }
 
-    async findAll(needPage: number, revert: boolean): Promise<User[] | null> {
-        if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
-        const order = revert === true ? 'ASC' : 'DESC';
+   async findAll(needPage: number, revert: boolean): Promise<User[] | null> {
+      if (!needPage || isNaN(needPage) || needPage < 0) needPage = 1;
+      const order = revert === true ? 'ASC' : 'DESC';
 
-        return this.usersRepository.find({
-            take: +process.env.PAGE_PAGINATION,
-            skip: (+needPage - 1) * (+process.env.PAGE_PAGINATION),
-            order: {
-                id: order,
-            },
-            relations: [
-                "auth", // Include the Auth relation
-            ],
-        });
-    }
+      return this.usersRepository.find({
+         take: +process.env.PAGE_PAGINATION,
+         skip: (+needPage - 1) * (+process.env.PAGE_PAGINATION),
+         order: {
+            id: order,
+         },
+         relations: [
+            "auth", // Include the Auth relation
+         ],
+      });
+   }
 
-    async createUser(createUserDto: CreateUserDto): Promise<GeneralResponse<IUserInfo>> {
-        const userFromBd: User = await this.usersRepository.findOneBy({email: createUserDto.email});
-        if (userFromBd) throw new HttpException('User exist in bd', HttpStatus.CONFLICT);
-        const hashPassword: string = await bcrypt.hash(createUserDto.password, 5);
+   async createUser(createUserDto: CreateUserDto): Promise<GeneralResponse<IUserInfo>> {
+      const userFromBd: User = await this.usersRepository.findOneBy({email: createUserDto.email});
+      if (userFromBd) throw new HttpException('User exist in bd', HttpStatus.CONFLICT);
+      const hashPassword: string = await bcrypt.hash(createUserDto.password, 5);
 
-        const newUser: User = this.usersRepository.create({...createUserDto, password: hashPassword});
-        // Save the new user to the database
-        const createdUser: User = await this.usersRepository.save(newUser);
+      const newUser: User = this.usersRepository.create({...createUserDto, password: hashPassword});
+      // Save the new user to the database
+      const createdUser: User = await this.usersRepository.save(newUser);
 
-        const result: GeneralResponse<IUserInfo> = {
-            "status_code": HttpStatus.OK,
-            "detail": {
-                "user": createdUser
-            },
-            "result": "createUser"
-        }
-        this.logger.log(`Created new user- ${createdUser.email}`);
-        return result
-    }
+      const result: GeneralResponse<IUserInfo> = {
+         "status_code": HttpStatus.OK,
+         "detail": {
+            "user": createdUser
+         },
+         "result": "createUser"
+      }
+      this.logger.log(`Created new user- ${createdUser.email}`);
+      return result
+   }
 
-    async getUserByEmailWithAuth(email: string): Promise<User | null> {
-        return this.usersRepository.findOne({
-            where: {email},
-            relations: ['auth']
-        });
-    }
+   async getUserByEmailWithAuth(email: string): Promise<User | null> {
+      return this.usersRepository.findOne({
+         where: {email},
+         relations: ['auth'],
+         select: ['id', 'firstName', 'email', 'password']
+      });
+   }
 
-    async getUserByEmailWCompTargInviteRole(email: string): Promise<User | null> {
-        return this.usersRepository.findOne({
-            where: {email},
-            relations: ['company','company.quiz', 'targetForInvite','requests','roles','companyMember']
-        });
-    }
-    async getUserByIdCompTargInviteRole(id: number): Promise<User | null> {
-        return this.usersRepository.findOne({
-            where: {id},
-            relations: ['company','company.quiz', 'targetForInvite','requests','roles','roles.company','companyMember']
-        });
-    }
-    async getUserByIdWCompTargInvitRequsts(id: number): Promise<User | null> {
-        return this.usersRepository.findOne({
-            where: {id},
-            relations: ['company', 'targetForInvite','requests']
-        });
-    }
+   async getUserByEmailWCompTargInviteRole(email: string): Promise<User | null> {
+      return this.usersRepository.findOne({
+         where: {email},
+         relations: ['company', 'company.quiz', 'targetForInvite', 'requests', 'roles', 'companyMember']
+      });
+   }
 
-    async getUserByIdWithCompanyAuth(id: number): Promise<User | null> {
-        return this.usersRepository.findOne({
-            where: {id},
-            relations: ['company', 'auth']
-        });
-    }
+   async getUserByIdCompTargInviteRole(id: number): Promise<User | null> {
+      return this.usersRepository.findOne({
+         where: {id,},
+         relations: ['company', 'company.quiz', 'targetForInvite', 'requests', 'roles', 'roles.company', 'companyMember']
+      });
+   }
 
-    async findOne(id: number): Promise<User | null> {
-        const user: User = await this.usersRepository.findOneBy({id},);
-        if (!user) {
-            throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
-        } else {
-            const result: User = user;
-            return result;
-        }
-    }
+   async getUserByIdWCompTargInvitRequsts(id: number): Promise<User | null> {
+      return this.usersRepository.findOne({
+         where: {id},
+         relations: ['company', 'targetForInvite', 'requests']
+      });
+   }
 
-    async deleteUser(token: string, userData: UpdateUserDto): Promise<GeneralResponse<IUserInfo>> {
-        const userFromToken = this.jwtService.decode(token.slice(7));
-        if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
+   async getUserByIdWithCompanyAuth(id: number): Promise<User | null> {
+      return this.usersRepository.findOne({
+         where: {id},
+         relations: ['company', 'auth']
+      });
+   }
 
-        const userFromBd: User = await this.getUserByEmailWithAuth(userData.email);
-        if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+   async getUserByIdWithAvg(userId: number, companyId: number): Promise<User | null> {
+      return this.usersRepository.findOne({
+         where: {
+            id: userId,
+            averageRating: {passedCompany: {id: companyId}}
+         },
+         relations: ['averageRating', 'averageRating.passedCompany', 'averageRating.passedQuiz']
+      });
+   }
 
-        const removedUserFromBd: User = await this.usersRepository.remove(userFromBd);
-        const result: GeneralResponse<IUserInfo> = {
-            "status_code": HttpStatus.OK,
-            "detail": {
-                "user": removedUserFromBd
-            },
-            "result": "deleteUser"
-        };
-        this.logger.log(`Removed  user- ${removedUserFromBd.email}`);
-        return result;
-    }
 
-    async updateUserInfo(token: string, updateUserDto: UpdateUserDto): Promise<GeneralResponse<IUserInfo>> {
-        const userFromToken = this.jwtService.decode(token.slice(7));
-        if (updateUserDto.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
+   async findOne(id: number): Promise<User | null> {
+      const user: User = await this.usersRepository.findOneBy({id},);
+      if (!user) {
+         throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
+      } else {
+         const result: User = user;
+         return result;
+      }
+   }
 
-        const userFromBd: User = await this.usersRepository.findOneBy({email: updateUserDto.email});
-        if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-        // Update the user's properties
-        if (updateUserDto.firstName || updateUserDto.password) {
-            if (updateUserDto.password) userFromBd.password = await bcrypt.hash(updateUserDto.password, 5);
-            if (updateUserDto.firstName) userFromBd.firstName = updateUserDto.firstName;
-        } else throw new HttpException('Absent fields firstName or password ', HttpStatus.BAD_REQUEST);
+   async deleteUser(token: string, userData: UpdateUserDto): Promise<GeneralResponse<IUserInfo>> {
+      const userFromToken = this.jwtService.decode(token.slice(7));
+      if (userData.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for delete User"});
 
-        const updatedUser: User = await this.usersRepository.save(userFromBd);
+      const userFromBd: User = await this.getUserByEmailWithAuth(userData.email);
+      if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
-        const result: GeneralResponse<IUserInfo> = {
-            "status_code": HttpStatus.OK,
-            "detail": {
-                "user": updatedUser
-            },
-            "result": "updateUserInfo"
-        };
-        this.logger.log(`updated new - ${updatedUser.email}`);
-        return result;
-    }
+      const removedUserFromBd: User = await this.usersRepository.remove(userFromBd);
+      const result: GeneralResponse<IUserInfo> = {
+         "status_code": HttpStatus.OK,
+         "detail": {
+            "user": removedUserFromBd
+         },
+         "result": "deleteUser"
+      };
+      this.logger.log(`Removed  user- ${removedUserFromBd.email}`);
+      return result;
+   }
 
-    async addRelationToUser<T>(newRelation: T, targetUser: User): Promise<User> {
-        let logMessage: string = '';
-        if(newRelation instanceof Auth){
-            logMessage ='Auth';
-            targetUser.auth = newRelation;
-        }
-        if(newRelation instanceof Request){
-            logMessage ='Request';
-            targetUser.requests =  [...targetUser.requests, newRelation];
-        }
-        if(newRelation instanceof Company){
-            logMessage ='Company';
-            targetUser.companyMember = newRelation;
-        }
+   async updateUserInfo(token: string, updateUserDto: UpdateUserDto): Promise<GeneralResponse<IUserInfo>> {
+      const userFromToken = this.jwtService.decode(token.slice(7));
+      if (updateUserDto.email !== userFromToken['email']) throw new UnauthorizedException({message: "Incorrect credentials for updateUserInfo"});
 
-        const temp: User = await this.usersRepository.save(targetUser);
-        this.logger.log(`Added relation ${logMessage} for user - ${targetUser.email}`);
-        return temp;
-    }
+      const userFromBd: User = await this.usersRepository.findOneBy({email: updateUserDto.email});
+      if (!userFromBd) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      // Update the user's properties
+      if (updateUserDto.firstName || updateUserDto.password) {
+         if (updateUserDto.password) userFromBd.password = await bcrypt.hash(updateUserDto.password, 5);
+         if (updateUserDto.firstName) userFromBd.firstName = updateUserDto.firstName;
+      } else throw new HttpException('Absent fields firstName or password ', HttpStatus.BAD_REQUEST);
+
+      const updatedUser: User = await this.usersRepository.save(userFromBd);
+
+      const result: GeneralResponse<IUserInfo> = {
+         "status_code": HttpStatus.OK,
+         "detail": {
+            "user": updatedUser
+         },
+         "result": "updateUserInfo"
+      };
+      this.logger.log(`updated new - ${updatedUser.email}`);
+      return result;
+   }
+
+   async addRelationToUser<T>(newRelation: T, targetUser: User): Promise<User> {
+      let logMessage: string = '';
+      if (newRelation instanceof Auth) {
+         logMessage = 'Auth';
+         targetUser.auth = newRelation;
+      }
+      if (newRelation instanceof Request) {
+         logMessage = 'Request';
+         targetUser.requests = [...targetUser.requests, newRelation];
+      }
+      if (newRelation instanceof Company) {
+         logMessage = 'Company';
+         targetUser.companyMember.length ? targetUser.companyMember.push(newRelation) : targetUser.companyMember = [newRelation];
+      }
+
+      const temp: User = await this.usersRepository.save(targetUser);
+      this.logger.log(`Added relation ${logMessage} for user - ${targetUser.email}`);
+      return temp;
+   }
+
+   async findUsersAvgRating(companyId: number): Promise<User[]> {
+      return await this.usersRepository.find({
+         where: {
+            companyMember: {id: companyId},
+            averageRating: {passedCompany: {id: companyId}}
+         },
+         relations: ['averageRating']
+      });
+      ;
+
+   }
+
 
 }
