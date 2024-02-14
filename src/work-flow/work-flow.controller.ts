@@ -3,13 +3,10 @@ import {
     Get,
     Post,
     Body,
-    Patch,
-    Param,
-    Delete,
     UseGuards,
     UsePipes,
     ValidationPipe,
-    Query
+    Query, Res, StreamableFile
 } from '@nestjs/common';
 import {WorkFlowService} from './work-flow.service';
 import {CreateWorkFlowDto} from './dto/create-work-flow.dto';
@@ -17,11 +14,16 @@ import {AuthGuard} from "@nestjs/passport";
 import {UserDec} from "../auth/decor-pass-user";
 import {User} from "../user/entities/user.entity";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
-import {PaginationsQuizDto} from "../quizz/dto/pagination-quiz.dto";
-import {AdditionalUpdateQuizId, GetRedisQuizDto} from "../quizz/dto/update-quizz.dto";
-import {QuizService} from "../quizz/quizService";
-import {TAnswers, TPassedQuiz, TQuiz} from "../GeneralResponse/interface/customResponces";
+import {AdditionalUpdateQuizId, GetRedisQuizDto, GetRedisAllQuizDto} from "../quizz/dto/update-quizz.dto";
+import {FileResponse, TAnswers, TPassedQuiz, TRedisData,} from "../GeneralResponse/interface/customResponces";
 import {JwtRoleMemberGuard} from "../auth/jwt-Role-Member.guard";
+import type {Response} from 'express';
+import {createReadStream} from 'fs';
+import {join} from 'path';
+import {Readable} from 'stream';
+import {JwtRoleAdminGuard} from "../auth/jwt-Role-Admin.guard";
+import {Roles} from "../auth/role-auth-decor";
+import {UserRole} from "../roles/entities/role.entity";
 
 @Controller('work-flow')
 export class WorkFlowController {
@@ -48,15 +50,29 @@ export class WorkFlowController {
         return this.workFlowService.createAnswers(userFromGuard, createWorkFlowDto);
     }
 
-    //3. Endpoint: Get /work-flow/export/:quizId?format=json
+    //3. Endpoint: Get /work-flow/export?format=json&quizId=1
     //  Permissions: Admin or the user whose data is being exported
-    @Get('/export/:quizId')
+    @Get('/export')
     @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleMemberGuard)
     @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-    async expoerQuiz(@UserDec() userFromGuard: User, @Param() quizIdDto: AdditionalUpdateQuizId,
-                     @Query() paginationDto: GetRedisQuizDto): Promise<GeneralResponse<any>> {
-        return this.workFlowService.exportQuizDataFromRedis(userFromGuard, quizIdDto.quizId, paginationDto);
+    async exportQuiz(@UserDec() userFromGuard: User, @Query() getRedisQuizDto: GetRedisQuizDto,
+                     @Res({passthrough: true}) res: Response): Promise<StreamableFile> {
+        const fileResponse: FileResponse  = await this.workFlowService.exportQuizDataFromRedis(userFromGuard, getRedisQuizDto);
+            res.set(fileResponse.header);
+            return new StreamableFile(Readable.from([fileResponse.data]));
     }
 
+    //4. Endpoint: Get /work-flow/export-user?format=csv&userId=6&companyId=1
+    //  Permissions: Admin or owner of the company
+    @Get('/export-user')
+    @Roles(UserRole.ADMIN)
+   @UseGuards(AuthGuard(['auth0', 'jwt-auth']), JwtRoleAdminGuard)
+    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+    async exportUser(@UserDec() userFromGuard: User, @Query() getRedisAllQuizDto: GetRedisAllQuizDto,
+                     @Res({passthrough: true}) res: Response): Promise<StreamableFile> {
+        const fileResponse: FileResponse = await this.workFlowService.exportUserDataFromRedis(userFromGuard, getRedisAllQuizDto);
+        res.set(fileResponse.header);
+        return new StreamableFile(Readable.from([fileResponse.data]));
+    }
 
 }
