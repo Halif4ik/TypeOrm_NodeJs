@@ -24,7 +24,7 @@ const mockUserRepositoryMethods = {
 
 jest.mock('bcryptjs');
 
-describe('UsersService', () => {
+describe('UserService', () => {
    let userService: UserService;
    let jwtService: JwtService;
    let userRepository: Repository<User>;
@@ -34,8 +34,6 @@ describe('UsersService', () => {
       email: 'mock@test.com',
       password: '123456',
    };
-   const mockBdId = 1;
-
 
    beforeEach(async (): Promise<void> => {
       jest.clearAllMocks();
@@ -138,7 +136,7 @@ describe('UsersService', () => {
       /**/
    });
 
-   describe('deleteUser', ():void => {
+   describe('deleteUser', (): void => {
       it('should delete user', async (): Promise<void> => {
          const updateUserDto: UpdateUserDto = {
             firstName: 'UpdatedFirstNameMock',
@@ -152,6 +150,22 @@ describe('UsersService', () => {
 
          expect(userRepository.findOne).toHaveBeenCalledTimes(1);
          expect(result.detail.user).toEqual(mockCreatedUser);
+      });
+      /**/
+      it('should throw a NotFoundException if user not found', async (): Promise<void> => {
+         const updateUserDto: UpdateUserDto = {
+            firstName: 'UpdatedFirstNameMock',
+            email: 'mock@test.com',
+         }
+         jest.spyOn(jwtService, 'decode').mockReturnValue(mockCreatedUser);
+         jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
+         try {
+            await userService.deleteUser('tokenFromFront', updateUserDto);
+         } catch (error) {
+            expect(error.response).toEqual('User not found');
+            expect(error.status).toEqual(HttpStatus.NOT_FOUND);
+         }
+
       });
    });
 
