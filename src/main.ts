@@ -1,5 +1,5 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import {NestFactory} from '@nestjs/core';
+import {AppModule} from './app.module';
 
 !async function bootstrap() {
     const app = await NestFactory.create(AppModule,{
@@ -13,7 +13,7 @@ import { AppModule } from './app.module';
             'https://www.google.com',
             'http://91.214.247.147',
             'http://127.0.0.1:3008',
-            'http://localhost:3000',
+            'http://localhost:4200',
             'https://romanxeo.github.io',
             'https://romanxeo.github.io/internship-token',
         ],

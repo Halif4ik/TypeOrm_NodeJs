@@ -82,4 +82,7 @@ describe('NotificationsService', () => {
 
    });
 
+   /*ross-env NODE_ENV=test jest --config ./test/jest-e2e.json --maxWorkers=1 --detectOpenHandles --logHeapUsage --no-cache"
+"cross-env NODE_ENV=test jest --config ./test/jest-e2e.json --maxWorkers=1 --detectOpenHandles --logHeapUsage --no-cache",*/
+
 });
