@@ -35,6 +35,11 @@ describe('UserService', () => {
       password: '123456',
    };
 
+   const updateUserDto: UpdateUserDto = {
+      firstName: 'UpdatedFirstNameMock',
+      email: 'mock@test.com',
+   };
+
    beforeEach(async (): Promise<void> => {
       jest.clearAllMocks();
 
@@ -99,15 +104,13 @@ describe('UserService', () => {
 
    describe('updateUserInfo', () => {
       it('should update user info', async (): Promise<void> => {
-         const updateUserDto: UpdateUserDto = {
-            firstName: 'UpdatedFirstNameMock',
-            email: 'mock@test.com',
-         }
+
          jest.spyOn(jwtService, 'decode').mockReturnValue(mockCreatedUser);
          jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(mockCreatedUser);
          jest.spyOn(userRepository, 'save').mockResolvedValue({...mockCreatedUser, ...updateUserDto});
 
-         const result: GeneralResponse<IUserInfo> = await userService.updateUserInfo('tokenFromFront', updateUserDto);
+         const result: GeneralResponse<IUserInfo> = await userService.updateUserInfo('tokenFromFront',
+             updateUserDto);
 
          expect(result.detail.user).toEqual({...mockCreatedUser, ...updateUserDto});
          expect(userRepository.findOneBy).toHaveBeenCalledTimes(1);
@@ -131,17 +134,10 @@ describe('UserService', () => {
             expect(error.status).toEqual(HttpStatus.NOT_FOUND);
          }
       });
-
-
       /**/
    });
-
    describe('deleteUser', (): void => {
       it('should delete user', async (): Promise<void> => {
-         const updateUserDto: UpdateUserDto = {
-            firstName: 'UpdatedFirstNameMock',
-            email: 'mock@test.com',
-         }
          jest.spyOn(jwtService, 'decode').mockReturnValue(mockCreatedUser);
          jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockCreatedUser);
          jest.spyOn(userRepository, 'remove').mockResolvedValue(mockCreatedUser);

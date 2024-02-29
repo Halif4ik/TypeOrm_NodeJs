@@ -8,12 +8,14 @@ import {Auth} from "./entities/auth.entity";
 import {PassportModule} from "@nestjs/passport";
 import {Auth0Strategy} from "./auth0.strategy";
 import {JwtStrategyAuth} from "./jwt.strategy";
+import {ConfigModule} from "@nestjs/config";
 
 @Module({
     controllers: [AuthController],
     providers: [AuthService,Auth0Strategy,JwtStrategyAuth],
     imports: [
         UserModule,
+        ConfigModule,
         TypeOrmModule.forFeature([Auth]),
         JwtModule,PassportModule
     ],

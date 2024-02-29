@@ -11,6 +11,7 @@ import {LoginUserDto} from "./dto/login-auth.dto";
 import * as process from "process";
 import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.interface";
 import {IRespAuth, IUserInfo, TJwtBody} from "../GeneralResponse/interface/customResponces";
+import {ConfigService} from "@nestjs/config";
 
 
 @Injectable()
@@ -18,7 +19,8 @@ export class AuthService {
    private readonly logger: Logger = new Logger(AuthService.name);
 
    constructor(private userService: UserService, private jwtService: JwtService,
-               @InjectRepository(Auth) private authRepository: Repository<Auth>) {
+               @InjectRepository(Auth) private authRepository: Repository<Auth>,
+               private readonly configService: ConfigService,) {
    }
 
    async login(loginDto: LoginUserDto): Promise<GeneralResponse<IRespAuth>> {
@@ -73,11 +75,20 @@ export class AuthService {
          firstName: userFromBd.firstName,
       }
       const action_token: string = this.jwtService.sign(jwtBody,
-          {expiresIn: process.env.EXPIRE_ACTION, secret: process.env.SECRET_ACTION});
+          {
+             expiresIn: this.configService.get<string>("EXPIRE_ACTION"),
+             secret: this.configService.get<string>("SECRET_ACTION")
+          });
       const refreshToken: string = this.jwtService.sign(jwtBody,
-          {expiresIn: process.env.EXPIRE_REFRESH, secret: process.env.SECRET_REFRESH});
+          {
+             expiresIn: this.configService.get<string>("EXPIRE_REFRESH"),
+             secret: this.configService.get<string>("SECRET_REFRESH")
+          });
       const accessToken: string = this.jwtService.sign(jwtBody,
-          {expiresIn: +process.env.EXPIRE_ACCESS, secret: process.env.SECRET_ACCESS});
+          {
+             expiresIn: this.configService.get<string>("EXPIRE_ACCESS"),
+             secret: this.configService.get<string>("SECRET_ACCESS")
+          });
 
       let authUserDataSave: Auth;
       if (authData) {

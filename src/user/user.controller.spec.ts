@@ -9,6 +9,7 @@ import {IUserInfo} from "../GeneralResponse/interface/customResponces";
 import {HttpStatus} from "@nestjs/common";
 import {UserController} from "./user.controller";
 import {JwtService} from "@nestjs/jwt";
+import {UpdateUserDto} from "./dto/update-user.dto";
 
 const mockUserRepositoryMethods = {
    findOneBy: jest.fn(),
@@ -30,6 +31,12 @@ describe('UserController', () => {
       email: 'mock@test.com',
       password: '123456',
    };
+   const updateUserDto: UpdateUserDto = {
+      firstName: 'UpdatedFirstNameMock',
+      password: 'Updated123456',
+      email: 'mock@test.com',
+   };
+   const encryptedPassword: string | any = '$2a$05$OhWVMeoV9bojvxmPAaJnT.zdMwhjopG.otOoJX/AnqXUZZgLaza2e';
 
    beforeEach(async (): Promise<void> => {
       jest.clearAllMocks();
@@ -49,6 +56,7 @@ describe('UserController', () => {
       userController = module.get<UserController>(UserController);
       userService = module.get<UserService>(UserService);
       userRepository = module.get<Repository<User>>(getRepositoryToken(User));
+
    });
    /**/
    it('should be defined', () => {
@@ -57,7 +65,6 @@ describe('UserController', () => {
 
    describe('createUser', () => {
       it('should create a user', async (): Promise<void> => {
-
          jest.spyOn(userService, 'createUser').mockResolvedValue({
             "status_code": HttpStatus.OK,
             "detail": {
@@ -73,7 +80,25 @@ describe('UserController', () => {
 
       });
    });
+   /**/
+   describe('updateUser', (): void => {
+          it('should update user information', async (): Promise<void> => {
+             jest.spyOn(userService, 'updateUserInfo').mockResolvedValue({
+                "status_code": HttpStatus.OK,
+                "detail": {
+                   "user": {...mockCreatedUser, ...updateUserDto, password: encryptedPassword}
+                },
+                "result": "updateUser"
+             } as GeneralResponse<IUserInfo>);
 
+             const result: GeneralResponse<IUserInfo> = await userController.updateUserInfo(
+                 'tokenFromFront', updateUserDto);
+
+             expect(result.detail.user).toEqual({...mockCreatedUser, ...updateUserDto, password: encryptedPassword});
+             expect(userService.updateUserInfo).toHaveBeenCalledWith('tokenFromFront',updateUserDto);
+          });
+       }
+   );
    /**/
    const mockCreatedUser: User = {
       id: 1,
