@@ -123,9 +123,7 @@ export class WorkFlowService {
       };
    }
 
-   private async savePassedQuizToRedis(
-       startedQuizByUser: PassedQuiz,
-       createWorkFlowDto: CreateWorkFlowDto,
+   private async savePassedQuizToRedis(startedQuizByUser: PassedQuiz, createWorkFlowDto: CreateWorkFlowDto,
    ): Promise<unknown> {
       const client: Redis = this.redisService.getClient();
       const redisKey: string = `startedQuiz:${startedQuizByUser.user.id}:${startedQuizByUser.targetQuiz.id}`;
@@ -270,7 +268,7 @@ export class WorkFlowService {
       await this.generalRatingRepository.save(generalRating);
       return avgRateUser;
    }
-   
+
 
    async start(userFromGuard: User, quizId: number,): Promise<GeneralResponse<TPassedQuiz>> {
       const quizForStartFlow: Quiz =

@@ -4,14 +4,17 @@ import {Injectable} from '@nestjs/common';
 import {User} from "../user/entities/user.entity";
 import {UserService} from "../user/user.service";
 import {TJwtBody} from "../GeneralResponse/interface/customResponces";
+import {ConfigService} from '@nestjs/config';
 
 @Injectable()
 export class JwtStrategyAuth extends PassportStrategy(Strategy, "jwt-auth") {
-    constructor(private readonly userService: UserService) {
+    constructor(private readonly userService: UserService,
+                private readonly configService: ConfigService) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            ignoreExpiration: process.env.IGNORE_EXPIRATION_TOKEN === 'true',
-            secretOrKey: process.env.SECRET_ACCESS,
+            ignoreExpiration: configService.get<string>("IGNORE_EXPIRATION_TOKEN") === 'true',
+            secretOrKey: configService.get<string>("SECRET_ACCESS"),
+
         });
     }
 

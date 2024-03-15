@@ -13,7 +13,6 @@ import {GeneralResponse} from "../GeneralResponse/interface/generalResponse.inte
 import {IRespAuth, IUserInfo, TJwtBody} from "../GeneralResponse/interface/customResponces";
 import {ConfigService} from "@nestjs/config";
 
-
 @Injectable()
 export class AuthService {
    private readonly logger: Logger = new Logger(AuthService.name);

@@ -9,6 +9,7 @@ import {ConfigService} from "@nestjs/config";
 import {Auth} from "./entities/auth.entity";
 import * as bcrypt from "bcryptjs";
 import {LoginUserDto} from "./dto/login-auth.dto";
+import {UserService} from "../user/user.service";
 
 const mockUserRepositoryMethods = {
    findOneBy: jest.fn(),
@@ -36,7 +37,7 @@ describe('AuthService', () => {
       const module: TestingModule = await Test.createTestingModule({
          providers: [
             AuthService,
-            ConfigService,
+            UserService,
             {
                provide: JwtService, // Provide JwtService
                useValue: {
@@ -54,6 +55,10 @@ describe('AuthService', () => {
                provide: getRepositoryToken(User),
                useValue: mockUserRepositoryMethods,
             },
+            {
+               provide: getRepositoryToken(Auth),
+               useClass: Auth,
+            },
          ],
          imports: [PassportModule.register({})],
       }).compile();
@@ -67,18 +72,17 @@ describe('AuthService', () => {
       bcrypt.compare.mockResolvedValue(true);
    });
 
-   describe('login', () => {
-      it('should add new JWT tokens or create relation Auth User', async (): Promise<void> => {
 
-         jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(mockCreatedUser);
-         jest.spyOn(jwtService, 'sign').mockReturnValue('MOCK_TOKEN');
-         jest.spyOn(userRepository, 'save').mockResolvedValue(mockCreatedUser);
+   it('should add new JWT tokens or create relation Auth User', async (): Promise<void> => {
 
-         const result = await authService.login(loginUserDto);
-         expect(userRepository.findOneBy).toHaveBeenCalledWith({email: loginUserDto.email});
+      jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(mockCreatedUser);
+      jest.spyOn(jwtService, 'sign').mockReturnValue('MOCK_TOKEN');
+      jest.spyOn(jwtService, 'verify').mockReturnValue(mockCreatedUser);
+      jest.spyOn(userRepository, 'save').mockResolvedValue(mockCreatedUser);
 
-      });
-      /**/
+      const result = await authService.login(loginUserDto);
+      expect(userRepository.findOneBy).toHaveBeenCalledWith({email: loginUserDto.email});
+
    });
    /**/
    const loginUserDto: LoginUserDto = {
